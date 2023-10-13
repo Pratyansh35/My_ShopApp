@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">Parawale</string>
+    <string name="title">Parawale Store</string>
+    <string name="location">Pharenda, Maharajganj</string>
+    <string name="description">We Serves Best In-Quality products\non which you can\ntrust.Thank You.</string>
+    <string name="orderbuttontext">Menu</string>
+    <string name="title_activity_remember">Remember</string>
+    <string name="title_activity_login_screen">LoginScreen</string>
+    <string name="title_activity_nav_bar">NavBar</string>
+</resources>
