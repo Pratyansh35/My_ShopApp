@@ -44,6 +44,8 @@ fun MyApp() {
     val navController = rememberNavController()
     val scope = rememberCoroutineScope()
     Scaffold(
+        scaffoldState = scaffoldState,
+        drawerContent = { DrawerPanel(scaffoldState = scaffoldState, scope = scope) },
         topBar = { NavBar(scaffoldState = scaffoldState, scope = scope) },
         bottomBar = { MyBottomNavigation(navController = navController) }) {
 
@@ -64,56 +66,6 @@ fun MyApp() {
         }
     }
 }
-
-
-//@Composable
-//fun MyNavHost() {
-//    val navController = rememberNavController()
-//    val scaffoldState = rememberScaffoldState()
-//    val scope = rememberCoroutineScope()
-//    NavHost(navController = navController, startDestination = Home.route) {
-//        composable(Home.route) {
-//            Scaffold(
-//                scaffoldState = scaffoldState,
-//                drawerContent = {
-//                    DrawerPanel(scaffoldState = scaffoldState, scope = scope)
-//                },
-//                topBar = {
-//                    NavBar(scaffoldState = scaffoldState, scope = scope)
-//                },
-//
-//
-//
-//
-//    ) {
-//        Column {
-//            UpperPanel(navController)
-//            lowermainScreen()
-//
-//        }
-//    }
-//        }
-//        composable(Menu.route) {
-//            val materialBlue700 = Color(0xFF1976D2)
-//            val scaffoldState = rememberScaffoldState(rememberDrawerState(DrawerValue.Open))
-//            Scaffold(
-//                scaffoldState = scaffoldState,
-//                topBar = {
-//                    TopAppBar(
-//                        title = { Text(text = "Our Menu") },
-//                        contentColor = Color.White,
-//                        backgroundColor = materialBlue700
-//                    )
-//                },
-//                content = { paddingValues ->
-//                    MenuListScreen(paddingValues = paddingValues)
-//                }
-//            )
-//        }
-//    }
-//}
-
-
 
 
 @Composable

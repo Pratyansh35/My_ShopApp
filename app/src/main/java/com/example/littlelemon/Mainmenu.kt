@@ -5,8 +5,10 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -100,6 +102,45 @@ fun MenuCategory(category: String) {
 }
 
 @Composable
+fun MenuSlide(Slidess: Slidess){
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(8.dp)
+
+    ) {
+
+Row() {
+    Image(
+        painter = painterResource(id = Slidess.image),
+        contentDescription = "",
+        modifier = Modifier
+            .size(50.dp)
+            .padding(8.dp)
+    )
+
+        Column {
+
+            Text(
+                text = Slidess.Type,
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(start = 8.dp)
+            )
+            Text(
+                text = Slidess.Description,
+                fontSize = 14.sp,
+                modifier = Modifier.padding(start = 8.dp)
+            )
+        }
+
+
+    }
+}
+}
+
+
+@Composable
 fun MenuDish(Dish: Dish) {
     Card {
         Row(
@@ -143,7 +184,39 @@ val Categories = listOf(
     "Spices"
 )
 
+data class Slidess(
+    val Type: String,
+    val Description: String,
+    val image: Int,
+)
 
+val SlidesItems = listOf(
+    Slidess(
+        "Cart",
+        "see items added to cart",
+        R.drawable.ig_cart
+    ),
+    Slidess(
+        "Wishlist",
+        "see items added to wishlist",
+        R.drawable.wishheart
+    ),
+    Slidess(
+        "Orders",
+        "see your orders",
+        R.drawable.order_cardboard
+    ),
+    Slidess(
+        "Manage Account",
+        "edit your account details",
+        R.drawable.edit_account_logo
+    ),
+    Slidess(
+        "Settings",
+        "Notification, Language",
+        R.drawable.setting
+    )
+)
 data class Dish(
     val name: String,
     val price: String,
@@ -195,7 +268,7 @@ val Dishes = listOf(
         R.drawable.happilo339
     ),
     Dish(
-        "Nutraj Walnut Kernels,(2 X 250g)",
+        "Nutraj Walnut Kernels(2 X 250g)",
         "₹499",
         "Nutraj California Walnuts are a great source of protein, fibre...",
         R.drawable.nutralwallnut498
