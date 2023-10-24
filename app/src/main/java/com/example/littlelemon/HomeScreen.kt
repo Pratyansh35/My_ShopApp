@@ -37,7 +37,7 @@ fun HomeScreen() {
     }
 }
 
-
+@Preview(showBackground = true)
 @Composable
 fun UpperPanel() {
     val context = LocalContext.current
@@ -91,6 +91,7 @@ fun UpperPanel() {
                 fontWeight = FontWeight.Bold,
                 color = Color(0xFF333333)
             )
+
         }
     }
 }
@@ -123,7 +124,7 @@ fun WeeklySpecial(){
 }
 
 
-
+@Preview(showBackground = true)
 @Composable
 fun Lowerpanelmain(){
     LazyColumn {

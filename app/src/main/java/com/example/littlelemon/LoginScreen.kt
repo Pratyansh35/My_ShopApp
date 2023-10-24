@@ -5,12 +5,14 @@ import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.Button
 import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.Text
+import androidx.compose.material.TextButton
 import androidx.compose.material.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -25,12 +27,23 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 
+@Preview(showBackground = true)
 @Composable
-fun LoginScreen() {
+fun pre(){
+    var isUserLoggedIn by remember { mutableStateOf(false) }
+    LoginScreen(onLoginSuccess = {
+        // This block is executed when the login is successful.
+        isUserLoggedIn = true
+    })
+}
+@Composable
+fun LoginScreen(onLoginSuccess: () -> Unit) {
     val context = LocalContext.current
     var username by remember {
         mutableStateOf(TextFieldValue(""))
@@ -47,74 +60,79 @@ fun LoginScreen() {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Text(
-            text = "Parawale!",
-            fontSize = 60.sp,
-            color = Color.Red,
-            fontFamily = FontFamily.Cursive,
-            modifier = Modifier.padding(start = 16.dp)
-        )
-
-        Text(
-            text = "Pharenda",
-            fontSize = 30.sp,
-            color = Color.Black,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(start = 16.dp, bottom = 20.dp)
-        )
-        TextField(
-            value = username,
-            onValueChange = {
-                username = it
-            },
-            label = { Text(text = "Username") },
-            modifier = Modifier.padding(10.dp)
-        )
-        TextField(
-            value = password,
-            onValueChange = {
-                password = it
-            },
-            label = { Text(text = "Password") },
-            visualTransformation = PasswordVisualTransformation(),
-            modifier = Modifier.padding(10.dp),
-        )
-        Button(
-            onClick = {
-                Log.d("AAA", "${username.text}")
-                Log.d("AAA", "${password.text}")
-                if (username.text == "parawale"
-                    && password.text == "12345678"
-                ) {
-
-                    Toast.makeText(
-                        context,
-                        "Welcome to Parawale Kirana Store!",
-                        Toast.LENGTH_LONG
-                    ).show()
-                } else {
-                    Toast.makeText(
-                        context,
-                        "Invalid credentials."
-                                + "Please try again.",
-                        Toast.LENGTH_LONG
-                    ).show()
-                }
-            },
-            colors = ButtonDefaults.buttonColors(
-                Color(0xFF4D7467)
-            ),
-            modifier = Modifier.padding(10.dp)
-        )
-        {
+        Column(horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center) {
             Text(
-                text = "Login",
-                color = Color(0xFFEDEFEE)
+                text = "Parawale!",
+                fontSize = 60.sp,
+                color = Color.Red,
+                fontFamily = FontFamily.Cursive,
+                modifier = Modifier.padding(start = 16.dp)
             )
+
+            Text(
+                text = "Pharenda",
+                fontSize = 30.sp,
+                color = Color.Black,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(start = 16.dp, bottom = 20.dp)
+            )
+            TextField(
+                value = username,
+                onValueChange = {
+                    username = it
+                },
+                label = { Text(text = "Username") },
+                modifier = Modifier.padding(10.dp)
+            )
+            TextField(
+                value = password,
+                onValueChange = {
+                    password = it
+                },
+                label = { Text(text = "Password") },
+                visualTransformation = PasswordVisualTransformation(),
+
+            )
+            TextButton(onClick = { /*TODO*/ }, Modifier.align(Alignment.End) ) {
+                Text(text = "Forgot Password?", color = Color(0xFF4D7467), fontWeight = FontWeight.Bold,fontSize = 14.sp)
+
+            }
+            Button(
+                onClick = {
+                    Log.d("AAA", "${username.text}")
+                    Log.d("AAA", "${password.text}")
+                    if (username.text == "parawale35"
+                        && password.text == "12345678"
+                    ) {
+                        Toast.makeText(
+                            context,
+                            "Welcome to Parawale Kirana Store!",
+                            Toast.LENGTH_LONG
+                        ).show()
+                        onLoginSuccess()
+                    } else {
+                        Toast.makeText(
+                            context,
+                            "Invalid credentials."
+                                    + "Please try again.",
+                            Toast.LENGTH_LONG
+                        ).show()
+                    }
+                },
+                colors = ButtonDefaults.buttonColors( Color(0xFF4D7467)
+                ),
+                modifier = Modifier.padding(10.dp)
+            )
+            {
+                Text(
+                    text = "Login",
+                    color = Color(0xFFEDEFEE)
+                )
+            }
         }
     }
 }
-
 
 
 

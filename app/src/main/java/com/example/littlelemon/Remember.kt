@@ -1,5 +1,5 @@
 package com.example.littlelemon
-
+/*
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -18,6 +18,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.littlelemon.ui.theme.ui.theme.LittleLemonTheme
@@ -62,7 +63,9 @@ fun Greeting() {
                     }
                 }
             }
-            Button(onClick = { /*TODO*/ }, Modifier.fillMaxWidth()) {
+            Button(onClick = { */
+/*TODO*//*
+ }, Modifier.fillMaxWidth()) {
                 Text(text = "ADD")
             }
 
@@ -72,10 +75,8 @@ fun Greeting() {
 }
 
 
-
+@Preview(showBackground = true)
 @Composable
 fun GreetingPreview() {
-    LittleLemonTheme {
-
-    }
-}
+    Greeting()
+}*/

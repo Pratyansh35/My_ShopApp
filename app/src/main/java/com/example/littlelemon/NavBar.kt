@@ -19,13 +19,14 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
 
 @Composable
-fun NavBar(scaffoldState: ScaffoldState? = null, scope: CoroutineScope? = null){
-    Row(horizontalArrangement = Arrangement.SpaceAround ,
+fun NavBar(scaffoldState: ScaffoldState? = null, scope: CoroutineScope? = null , navController: NavController?){
+    Row(horizontalArrangement = Arrangement.SpaceBetween,
     modifier = Modifier.fillMaxWidth(),
     verticalAlignment = Alignment.CenterVertically) {
         IconButton(onClick = {
@@ -37,7 +38,9 @@ fun NavBar(scaffoldState: ScaffoldState? = null, scope: CoroutineScope? = null){
         }
         IconButton(onClick = {}) {
             Image(painter = painterResource(R.drawable.appicon), contentDescription = "Icon",
-                modifier = Modifier.padding(start = 40.dp).size(38.dp))
+                modifier = Modifier
+                    .padding(start = 40.dp)
+                    .size(38.dp))
         }
         Text(
             text = "Kirana Store!",
@@ -46,16 +49,14 @@ fun NavBar(scaffoldState: ScaffoldState? = null, scope: CoroutineScope? = null){
             fontFamily = FontFamily.Cursive,
             modifier = Modifier.padding(end = 30.dp)
         )
-        IconButton(onClick = {}) {
+        IconButton(onClick = {
+            navController?.navigate("cart")
+        }) {
             Icon(painter = painterResource(R.drawable.ig_cart),
                 contentDescription = "CartIcon",
-            modifier = Modifier.size(24.dp))
+            modifier = Modifier.size(35.dp).padding(start = 10.dp))
         }
+
     }
 }
 
-@Preview(showBackground = true)
-@Composable
-fun PreviewNavBar(){
-    NavBar()
-}
