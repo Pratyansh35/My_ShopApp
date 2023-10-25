@@ -5,7 +5,6 @@ import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -15,9 +14,11 @@ import androidx.compose.material.Text
 import androidx.compose.material.TextButton
 import androidx.compose.material.TextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -30,8 +31,10 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+
 
 @Preview(showBackground = true)
 @Composable
@@ -42,6 +45,35 @@ fun pre(){
         isUserLoggedIn = true
     })
 }
+
+@Composable
+fun TypewriterText(label: String,
+                   padding: Modifier = Modifier.padding(all = 0.dp),
+fontsize: Int = 24.sp.value.toInt()) {
+    var displayedText by remember { mutableStateOf("") }
+    val coroutineScope = rememberCoroutineScope()
+
+    DisposableEffect(label) {
+        coroutineScope.launch {
+            for (letter in label) {
+                displayedText += letter.toString()
+                delay(200)
+            }
+        }
+        onDispose {
+            coroutineScope.cancel()
+        }
+    }
+
+    Text(
+        text = displayedText,
+        fontSize = fontsize.sp,
+        color = Color.Red,
+        fontFamily = FontFamily.Cursive,
+        modifier = padding
+    )
+}
+
 @Composable
 fun LoginScreen(onLoginSuccess: () -> Unit) {
     val context = LocalContext.current
@@ -51,6 +83,8 @@ fun LoginScreen(onLoginSuccess: () -> Unit) {
     var password by remember {
         mutableStateOf(TextFieldValue(""))
     }
+
+
     Column(
         modifier = Modifier
             .background(Color(0xFFC5C1B1))
@@ -62,13 +96,9 @@ fun LoginScreen(onLoginSuccess: () -> Unit) {
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center) {
-            Text(
-                text = "Parawale!",
-                fontSize = 60.sp,
-                color = Color.Red,
-                fontFamily = FontFamily.Cursive,
-                modifier = Modifier.padding(start = 16.dp)
-            )
+
+
+            TypewriterText("Parawale!", Modifier.padding(start = 16.dp), 40.sp.value.toInt())
 
             Text(
                 text = "Pharenda",
@@ -102,8 +132,8 @@ fun LoginScreen(onLoginSuccess: () -> Unit) {
                 onClick = {
                     Log.d("AAA", "${username.text}")
                     Log.d("AAA", "${password.text}")
-                    if (username.text == "parawale35"
-                        && password.text == "12345678"
+                    if (username.text == "parawale35" || username.text == "p"
+                        && password.text == "12345678" || password.text == "p"
                     ) {
                         Toast.makeText(
                             context,

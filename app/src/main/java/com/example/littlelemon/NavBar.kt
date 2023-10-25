@@ -2,17 +2,22 @@ package com.example.littlelemon
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.material.ScaffoldState
 import androidx.compose.material.Text
+import androidx.compose.material.rememberScaffoldState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontFamily
@@ -20,6 +25,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
@@ -42,21 +48,41 @@ fun NavBar(scaffoldState: ScaffoldState? = null, scope: CoroutineScope? = null ,
                     .padding(start = 40.dp)
                     .size(38.dp))
         }
-        Text(
-            text = "Kirana Store!",
-            fontSize = 24.sp,
-            color = Color.Red,
-            fontFamily = FontFamily.Cursive,
-            modifier = Modifier.padding(end = 30.dp)
-        )
-        IconButton(onClick = {
-            navController?.navigate("cart")
-        }) {
-            Icon(painter = painterResource(R.drawable.ig_cart),
-                contentDescription = "CartIcon",
-            modifier = Modifier.size(35.dp).padding(start = 10.dp))
+        TypewriterText("Kirana Store!", Modifier.padding(end = 30.dp), 24.sp.value.toInt())
+
+
+        Box {
+            IconButton(onClick = {
+                navController?.navigate("cart")
+            }) {
+                Icon(painter = painterResource(R.drawable.ig_cart),
+                    contentDescription = "CartIcon",
+                    modifier = Modifier.size(35.dp).padding(start = 10.dp))
+            }
+
+            // Display the cart item count
+            if (countItems > 0) {
+                Text(
+                    text = countItems.toString(),
+                    fontSize = 16.sp,
+                    color = Color.Black,
+                    fontFamily = FontFamily.SansSerif,
+                    modifier = Modifier
+                        .padding(4.dp)
+                        .clip(CircleShape)
+
+                )
+            }
         }
 
     }
 }
 
+@Preview(showBackground = true)
+@Composable
+fun PreviewNavBar(){
+    val scaffoldState = rememberScaffoldState()
+    val navController = rememberNavController()
+    val scope = rememberCoroutineScope()
+    NavBar(scaffoldState = scaffoldState, scope = scope,navController = navController)
+}

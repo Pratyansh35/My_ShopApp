@@ -79,7 +79,6 @@ fun MyApp() {
 
                 composable(Home.route) {
                     HomeScreen()
-
                 }
                 composable(Menu.route) {
                     MenuListScreen()

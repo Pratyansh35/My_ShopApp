@@ -171,7 +171,7 @@ fun IncrementCount (price: String): Int {
     return countItems + 1
 }
 
-@Preview(showBackground = true)
+/*@Preview(showBackground = true)
 @Composable
 fun Prev() {
     Column {
@@ -184,7 +184,7 @@ fun Prev() {
             )
         )
     }
-}
+}*/
 
 
 var countItems by  mutableStateOf(0)

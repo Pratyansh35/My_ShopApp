@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -20,15 +21,25 @@ import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.Card
 import androidx.compose.material.Divider
 import androidx.compose.material.Text
+import androidx.compose.material.TextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.AlignmentLine
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -39,11 +50,89 @@ import org.intellij.lang.annotations.JdkConstants.HorizontalAlignment
 @Composable
 fun MenuListScreen() {
     Column {
-        UpperPanelmenu()
-        LowerPanel()
+        Search()
     }
 
 }
+
+@Preview(showBackground = true)
+@Composable
+fun Search() {
+    var searches by remember { mutableStateOf(TextFieldValue("")) }
+    var visible by remember { mutableStateOf(true) }
+
+    val filteredDishes = remember { mutableStateOf(emptyList<Dish>()) }
+
+    // Update the filteredDishes whenever the search query changes
+    DisposableEffect(searches.text) {
+        val filterText = searches.text.lowercase()
+        val filtered = Dishes.filter { dish ->
+            dish.name.lowercase().contains(filterText)
+        }
+        filteredDishes.value = filtered
+        onDispose { }
+    }
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(8.dp),
+
+    ) {
+        if (visible) {
+            Row() {
+
+            Button(
+                onClick = { visible = false},
+                colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFFD4D8AB)),
+                shape = RoundedCornerShape(40),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(8.dp)
+            ) {
+                Text(
+                    text = "Search Now",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    fontStyle = FontStyle.Italic,
+                )}}
+                Divider(
+                    modifier = Modifier.padding(8.dp),
+                    color = Color.Gray,
+                    thickness = 1.dp
+                )
+                LazyColumn {
+                    items(Dishes) { Dish ->
+                        MenuDish(Dish)
+                    }
+                }
+
+            }
+        else {
+            Column() {
+
+
+                TextField(
+                    value = searches,
+                    onValueChange = { searches = it },
+                    placeholder = { Text("Search here") },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(8.dp)
+                        .clip(RoundedCornerShape(40))
+                )
+                LazyRow {
+                    items(Categories) { category ->
+                        MenuCategory(category)
+                    }
+                }
+
+                LowerPanel(filteredDishes.value)
+            }
+        }
+    }
+}
+
+
 
 
 @Composable
@@ -60,7 +149,6 @@ private fun UpperPanelmenu() {
             fontWeight = FontWeight.Bold,
             color = Color(0xFFF4CE14)
         )
-
     }
     Text(
         text = "Order for Takeaway",
@@ -73,14 +161,9 @@ private fun UpperPanelmenu() {
     )
 }
 
-@Composable
+/*@Composable
 private fun LowerPanel() {
     Column {
-        LazyRow {
-            items(Categories) { category ->
-                MenuCategory(category)
-            }
-        }
         Divider(
             modifier = Modifier.padding(8.dp),
             color = Color.Gray,
@@ -89,6 +172,23 @@ private fun LowerPanel() {
         LazyColumn {
             items(Dishes) { Dish ->
                 MenuDish(Dish)
+            }
+        }
+    }
+}*/
+
+
+@Composable
+private fun LowerPanel(filteredDishes: List<Dish>) {
+    Column {
+        Divider(
+            modifier = Modifier.padding(8.dp),
+            color = Color.Gray,
+            thickness = 1.dp
+        )
+        LazyColumn {
+            items(filteredDishes) { dish ->
+                MenuDish(dish)
             }
         }
     }
@@ -212,10 +312,12 @@ fun MenuDish(Dish: Dish) {
 
 val Categories = listOf(
     "DryFruits",
+    "Rice",
     "Pulses",
     "Grocery",
     "Main",
-    "Spices"
+    "Spices",
+    "Oil",
 )
 
 data class Slidess(
@@ -256,6 +358,7 @@ data class Dish(
     val name: String,
     val price: String,
     val description: String,
+    val category: String,
     val image: Int
 )
 
@@ -264,54 +367,63 @@ val Dishes = listOf(
         "Fortune Refined Oil(1ltr)",
         "₹110",
         "fulfills the body's needs for Omega 3 fatty acids Soy Oil...",
+        "Oil",
         R.drawable.fortune110
     ),
     Dish(
         "PatanJali Cow Ghee(500ml)",
         "₹355",
         "Patanjali Cow's Ghee is made from the milk of indigenous cows. It is...",
+        "Oil",
         R.drawable.patanjali355
     ),
     Dish(
         "Tata Salt(1kg)",
         "₹18",
         "Tata Salt is one of the most recognizable brands in India. Tata Salt...",
+        "Spices",
         R.drawable.tatasalt18
     ),
     Dish(
         "Daawat Rozana Gold(5kg)",
         "₹350",
         "Daawat Rozana Gold is the finest Basmati Rice in the mid-price...",
+        "Rice",
         R.drawable.daawatrozanasuper399
     ),
     Dish(
         "Tata Sampann Chana Dal(1kg)",
         "₹118.75",
         "Tata Sampann Unpolished Chana Dal is made from 100% unpolished...",
+        "Pulses",
         R.drawable.tatachanadaal118
     ),
     Dish(
         "Mejestic- Cake Rusk | Extra Soft | 350g",
         "₹240",
         "Majestic Cake Rusk is a delicious and crunchy snack that is...",
+        "Grocery",
         R.drawable.mejestirusk240
     ),
     Dish(
         "Happilo Almonds 500g",
         "₹339",
         "100% Natural Premium California Dried Almonds are a great source of protein...",
+        "DryFruits",
         R.drawable.happilo339
     ),
     Dish(
         "Nutraj Walnut Kernels(2 X 250g)",
         "₹499",
         "Nutraj California Walnuts are a great source of protein, fibre...",
+        "DryFruits",
         R.drawable.nutralwallnut498
     ),
     Dish(
         "Nutraj Long Raisin 500g",
         "₹175",
         "| Kishmish |Super Rich in Iron & Vitamin B | Seedless Green Kishmish | Healthy Snacks | Dry Fruits",
+        "DryFruits",
         R.drawable.nutrajkismis175
     )
 )
