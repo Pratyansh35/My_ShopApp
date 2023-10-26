@@ -38,7 +38,7 @@ import kotlinx.coroutines.launch
 
 @Preview(showBackground = true)
 @Composable
-fun pre(){
+fun Pre(){
     var isUserLoggedIn by remember { mutableStateOf(false) }
     LoginScreen(onLoginSuccess = {
         // This block is executed when the login is successful.
@@ -130,8 +130,8 @@ fun LoginScreen(onLoginSuccess: () -> Unit) {
             }
             Button(
                 onClick = {
-                    Log.d("AAA", "${username.text}")
-                    Log.d("AAA", "${password.text}")
+                    Log.d("AAA", username.text)
+                    Log.d("AAA", password.text)
                     if (username.text == "parawale35" || username.text == "p"
                         && password.text == "12345678" || password.text == "p"
                     ) {
@@ -169,55 +169,3 @@ fun LoginScreen(onLoginSuccess: () -> Unit) {
 
 
 
-//@Composable
-//fun mainScreen() {
-//    val context = LocalContext.current
-//    Column(
-//        modifier = Modifier
-//            .background(Color(0xFFC5C1B1))
-//            .padding(start = 12.dp, end = 12.dp, top = 16.dp, bottom = 16.dp)
-//
-//    ) {
-//        Text(
-//            text = "Parawale Kirana Store",
-//            fontSize = 40.sp,
-//            color = Color.Red,
-//            fontFamily = FontFamily.Cursive,
-//            fontWeight = FontWeight.Bold
-//        )
-//        Text(
-//            text = "Pharenda, Maharajganj",
-//            fontSize = 18.sp,
-//            color = Color.Black,
-//        )
-//        Row(
-//            modifier = Modifier
-//                .padding(top = 18.dp)
-//        )
-//        {
-//            Text(
-//                text = stringResource(id = R.string.description),
-//                color = Color.Black,
-//                fontSize = 18.sp,
-//                modifier = Modifier
-//                    .padding(bottom = 28.dp)
-//                    .fillMaxWidth(0.5f)
-//            )
-//            Image(
-//                painter = painterResource(id = R.drawable.parawale1),
-//                contentDescription = "Upper Panel Image",
-//                modifier = Modifier
-//
-//                    .clip(RoundedCornerShape(20.dp)))
-//
-//        }
-//        Button(onClick = {
-//            Toast.makeText(context, "Order Succesful", Toast.LENGTH_SHORT).show() },
-//            shape = RoundedCornerShape(10.dp),
-//            colors = ButtonDefaults.buttonColors(
-//                backgroundColor = Color(0xFFEC976F))
-//        ) {
-//            Text(text = "Order ")
-//        }
-//    }
-//}

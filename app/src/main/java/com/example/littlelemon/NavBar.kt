@@ -54,6 +54,11 @@ fun NavBar(scaffoldState: ScaffoldState? = null, scope: CoroutineScope? = null ,
         Box {
             IconButton(onClick = {
                 navController?.navigate("cart")
+                if (count <=0){
+                    scope?.launch {
+                        scaffoldState?.snackbarHostState?.showSnackbar("Cart is empty")
+                    }
+                }
             }) {
                 Icon(painter = painterResource(R.drawable.ig_cart),
                     contentDescription = "CartIcon",
@@ -61,9 +66,9 @@ fun NavBar(scaffoldState: ScaffoldState? = null, scope: CoroutineScope? = null ,
             }
 
             // Display the cart item count
-            if (countItems > 0) {
+            if (count > 0) {
                 Text(
-                    text = countItems.toString(),
+                    text = count.toString(),
                     fontSize = 16.sp,
                     color = Color.Black,
                     fontFamily = FontFamily.SansSerif,

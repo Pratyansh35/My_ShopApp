@@ -14,6 +14,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.Button
+import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.Card
 import androidx.compose.material.Divider
 import androidx.compose.material.Icon
@@ -26,8 +28,6 @@ import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -41,7 +41,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NavController
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
@@ -116,88 +115,98 @@ fun LeftDrawerPanel(scaffoldState: ScaffoldState, scope: CoroutineScope) {
     }
 }
 
+
+
+
+
 @Composable
 fun CartDrawerPanel() {
-    Column {
-
+    if (cartItems.isNotEmpty()) {
+    Column(modifier = Modifier
+        .fillMaxWidth()
+        .padding(8.dp)) {
         LazyColumn {
             items(cartItems) { Dish ->
                 CartItems(Dish)
             }
         }
 
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(50.dp),
-            horizontalArrangement = Arrangement.End,
-            verticalAlignment = Alignment.CenterVertically,
+
+        Row(Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically
+
 
         ) {
-            if (countItems > 0) {
-                Column(
-                ) {
-                    Row {
-                        Text(
-                            text = "Total:",
+            Text(
+                            text = "Total: ₹${total}",
                             fontFamily = FontFamily.Cursive, fontWeight = FontWeight.W900,
-                            color = Color(0xFFC0B445),
-                            modifier = Modifier.padding(end = 10.dp)
-                        )
-                        Text(
-                            text = "₹${countItems * cartItems[0].price.removePrefix("₹").toInt()}",
-                            fontFamily = FontFamily.Cursive, fontWeight = FontWeight.Medium,
-                            color = Color(0xFF69615A),
-
-                            )
-                    }
-                }
-            }
-            if (countItems > 0 ) {
-                TextButton(onClick = {
-
-                },Modifier.background(Color(0xFFC0B445)).clip(shape = RoundedCornerShape(50.dp)) ) {
-                    Text(text = "Proceed to Checkout", color = Color.Black, fontWeight = FontWeight.Bold)
-                }
-            }
-        }
-
-
-    }
-
-}
-@Composable
-fun IncrementCount (price: String): Int {
-    return countItems + 1
-}
-
-/*@Preview(showBackground = true)
-@Composable
-fun Prev() {
-    Column {
-        CartItems(
-            Dish(
-                "Fortune Refined Oil(1ltr)",
-                "₹110",
-                "fulfills the body's needs for Omega 3 fatty acids Soy Oil...",
-                R.drawable.fortune110
+                            color = Color(0xFF555A47),
+                            modifier = Modifier.padding(end = 10.dp),
+                            fontSize = 20.sp
             )
-        )
+
+
+                Button(onClick = {},colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFFF4CE14)),
+                    shape = RoundedCornerShape(40) ) {
+                    Text(text = "Proceed to Checkout", color = Color.Black, fontWeight = FontWeight.Bold)
+
+            }
+        }}
+    }else{
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .fillMaxHeight(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Image(
+                painter = painterResource(id = R.drawable.ig_cart),
+                contentDescription = "Empty Cart",
+                modifier = Modifier
+                    .size(200.dp)
+                    .padding(bottom = 20.dp)
+            )
+            Text(
+                text = "Your cart is empty",
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFFC0B445)
+            )
+
+        }
     }
-}*/
+
+}
 
 
-var countItems by  mutableStateOf(0)
-val cartItems: MutableList<Dish> = mutableListOf()
+fun increment(Dish: Dish): Int {
+   return Dish.count + 1
+}
+fun decrement(Dish: Dish): Int {
+    return Dish.count - 1
+}
+
+@Preview(showBackground = true)
+@Composable
+fun PreviewCartDrawerPanel(){
+    CartItems(Dish = Dish("Happilo Almonds 500g",
+        "₹339",
+        0,
+        "100% Natural Premium California Dried Almonds are a great source of protein...",
+        "DryFruits",
+        R.drawable.happilo339))
+}
 
 @Composable
 fun CartItems(Dish: Dish) {
-
     Card {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(120.dp)
+                .padding(8.dp)
         ) {
             Image(
                 painter = painterResource(id = Dish.image),
@@ -207,36 +216,34 @@ fun CartItems(Dish: Dish) {
             )
             Column(modifier = Modifier.padding(start = 8.dp, top = 3.dp)) {
                 Text(
-                    text = Dish.name, fontSize = 18.sp, fontWeight = FontWeight.Bold
+                    text = Dish.name, fontSize = 14.sp, fontWeight = FontWeight.Bold
                 )
                 Text(
                     text = Dish.description,
                     color = Color.Gray,
                     modifier = Modifier
                         .padding(top = 5.dp)
-                        .fillMaxWidth(1f)
+                        .fillMaxWidth(1f).fillMaxHeight(0.5f)
                 )
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.width(400.dp)
+                    modifier = Modifier.fillMaxWidth(1f)
                 ) {
 
                     Text(
                         text = Dish.price, color = Color.DarkGray, fontWeight = FontWeight.Bold
                     )
 
-
-
-                    val isCartIconVisible = countItems == 1
+                    val isCartIconVisible = Dish.count == 1
 
                     IconButton(
                         onClick = {
-                            countItems -= 1
-                            if (countItems == 1) {
-                                // Do something when countItems is 1
+                             Dish.count = decrement(Dish)
+                            if(count > 0 ) {
+                                count -= 1
+                                total -= Dish.price.removePrefix("₹").toInt()
                             }
-                            if (countItems <= 0) {
-                                // Remove item from the cart
+                            if (Dish.count <= 0) {
                                 cartItems.remove(Dish)
                             }
                         },
@@ -255,13 +262,17 @@ fun CartItems(Dish: Dish) {
                     }
 
                     androidx.compose.material3.Text(
-                        text = "$countItems",
+                        text =  Dish.count.toString(),
                         fontWeight = FontWeight.W700,
                         textAlign = TextAlign.Center,
 
                         )
-                    TextButton(
-                        onClick = { countItems += 1 },
+                    IconButton(
+                        onClick = { Dish.count = increment(Dish)
+                            total += Dish.price.removePrefix("₹").toInt()
+                            count += 1
+
+                            },
                         Modifier
                             .width(50.dp)
                             .align(Alignment.Top)
@@ -281,21 +292,17 @@ fun CartItems(Dish: Dish) {
                                 color = Color(0xFFC0B445),
                                 modifier = Modifier.padding(end = 10.dp)
                             )
+
                             Text(
-                                text = "₹${countItems * Dish.price.removePrefix("₹").toInt()}",
+                                text = "₹${Dish.count * Dish.price.removePrefix("₹").toInt()}",
                                 fontFamily = FontFamily.Cursive, fontWeight = FontWeight.Medium,
                                 color = Color(0xFF69615A),
-
                                 )
                         }
                     }
 
                 }
-
-
             }
-
-
         }
 
     }
