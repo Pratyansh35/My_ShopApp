@@ -72,7 +72,7 @@ fun MenuSlide(Slidess: Slidess) {
 
     ) {
 
-        Row() {
+        Row {
             Image(
                 painter = painterResource(id = Slidess.image),
                 contentDescription = "",

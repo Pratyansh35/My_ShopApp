@@ -52,7 +52,7 @@ fun Search() {
 
         ) {
         if (visible) {
-            Row() {
+            Row {
 
                 Button(
                     onClick = { visible = false},
@@ -84,7 +84,7 @@ fun Search() {
             }
         }
         else {
-            Column() {
+            Column {
 
 
                 TextField(

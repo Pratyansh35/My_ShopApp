@@ -1,4 +1,4 @@
-
+package com.example.littlelemon
 
 import android.content.res.Configuration.ORIENTATION_LANDSCAPE
 import android.os.Bundle
@@ -25,7 +25,7 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.unit.dp
 
 
-class MainActivity : ComponentActivity() {
+class Oriantation : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {

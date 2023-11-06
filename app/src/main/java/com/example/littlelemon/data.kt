@@ -8,6 +8,19 @@ var count by mutableStateOf(0)
 var total by  mutableStateOf(0)
 val cartItems: MutableList<Dish> = mutableListOf()
 
+/*@Composable
+fun TextPrint(){
+    if (cartItems.isNotEmpty()) {
+        for (i in cartItems) {
+            print(i.name + "    "+ i.count.toString() + "    " +i.price + "    "+"₹" + (i.count * i.price.removePrefix("₹").toInt()).toString() + "    ")
+        }
+        println()
+        println()
+    }else{
+        Toast.makeText(LocalContext.current, "Cart is empty", Toast.LENGTH_SHORT).show()
+    }
+}*/
+
 
 
 val Categories = listOf(

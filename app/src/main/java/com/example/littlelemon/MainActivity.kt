@@ -12,7 +12,6 @@ import androidx.compose.material.Scaffold
 import androidx.compose.material.Text
 import androidx.compose.material.rememberScaffoldState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -61,7 +60,6 @@ fun MyApp() {
     val scaffoldState = rememberScaffoldState()
     val navController = rememberNavController()
     val scope = rememberCoroutineScope()
-    val cartItems: MutableState<List<Dish>> = remember { mutableStateOf(Dishes) }
     Scaffold(
         scaffoldState = scaffoldState,
 
@@ -88,7 +86,7 @@ fun MyApp() {
                     LocationScreen()
                 }
                 composable(Cart.route) {
-                    CartDrawerPanel()
+                    CartDrawerPanel(navController = navController)
                 }
             }
         }

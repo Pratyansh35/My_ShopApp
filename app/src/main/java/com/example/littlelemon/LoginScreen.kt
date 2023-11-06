@@ -47,8 +47,7 @@ fun Pre(){
 }
 
 @Composable
-fun TypewriterText(label: String,
-                   padding: Modifier = Modifier.padding(all = 0.dp),
+fun TypewriterText(label: String, padding: Modifier = Modifier.padding(all = 0.dp),
 fontsize: Int = 24.sp.value.toInt()) {
     var displayedText by remember { mutableStateOf("") }
     val coroutineScope = rememberCoroutineScope()

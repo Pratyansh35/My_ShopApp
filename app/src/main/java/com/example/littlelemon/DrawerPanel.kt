@@ -22,13 +22,9 @@ import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.material.ScaffoldState
 import androidx.compose.material.Text
-import androidx.compose.material.TextButton
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -41,9 +37,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-
 
 
 @Composable
@@ -120,21 +116,25 @@ fun LeftDrawerPanel(scaffoldState: ScaffoldState, scope: CoroutineScope) {
 
 
 @Composable
-fun CartDrawerPanel() {
+fun CartDrawerPanel( navController: NavController? = null) {
     if (cartItems.isNotEmpty()) {
     Column(modifier = Modifier
         .fillMaxWidth()
         .padding(8.dp)) {
-        LazyColumn {
-            items(cartItems) { Dish ->
-                CartItems(Dish)
+        Column(modifier = Modifier
+            .fillMaxWidth()
+            .fillMaxHeight(0.90f)) {
+
+            LazyColumn {
+                items(cartItems) { Dish ->
+                    CartItems(Dish, navController)
+                }
             }
+
         }
-
-
         Row(Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.Center,
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.Bottom
 
 
         ) {
@@ -142,13 +142,16 @@ fun CartDrawerPanel() {
                             text = "Total: ₹${total}",
                             fontFamily = FontFamily.Cursive, fontWeight = FontWeight.W900,
                             color = Color(0xFF555A47),
-                            modifier = Modifier.padding(end = 10.dp),
+                            modifier = Modifier.padding(end = 10.dp).align(Alignment.CenterVertically),
                             fontSize = 20.sp
             )
 
 
                 Button(onClick = {},colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFFF4CE14)),
-                    shape = RoundedCornerShape(40) ) {
+                    shape = RoundedCornerShape(40), modifier = Modifier
+                        .padding(10.dp)
+                        .fillMaxWidth()
+                        .height(50.dp).align(Alignment.CenterVertically) ) {
                     Text(text = "Proceed to Checkout", color = Color.Black, fontWeight = FontWeight.Bold)
 
             }
@@ -183,6 +186,7 @@ fun CartDrawerPanel() {
 
 fun increment(Dish: Dish): Int {
    return Dish.count + 1
+
 }
 fun decrement(Dish: Dish): Int {
     return Dish.count - 1
@@ -200,7 +204,7 @@ fun PreviewCartDrawerPanel(){
 }
 
 @Composable
-fun CartItems(Dish: Dish) {
+fun CartItems(Dish: Dish , navController: NavController? = null) {
     Card {
         Row(
             modifier = Modifier
@@ -223,7 +227,8 @@ fun CartItems(Dish: Dish) {
                     color = Color.Gray,
                     modifier = Modifier
                         .padding(top = 5.dp)
-                        .fillMaxWidth(1f).fillMaxHeight(0.5f)
+                        .fillMaxWidth(1f)
+                        .fillMaxHeight(0.5f)
                 )
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
@@ -242,9 +247,11 @@ fun CartItems(Dish: Dish) {
                             if(count > 0 ) {
                                 count -= 1
                                 total -= Dish.price.removePrefix("₹").toInt()
+                                navController?.navigate("cart")
                             }
                             if (Dish.count <= 0) {
                                 cartItems.remove(Dish)
+                                navController?.navigate("cart")
                             }
                         },
                         Modifier
@@ -271,6 +278,7 @@ fun CartItems(Dish: Dish) {
                         onClick = { Dish.count = increment(Dish)
                             total += Dish.price.removePrefix("₹").toInt()
                             count += 1
+                            navController?.navigate("cart")
 
                             },
                         Modifier
