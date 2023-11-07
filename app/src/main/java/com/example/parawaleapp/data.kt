@@ -1,4 +1,4 @@
-package com.example.littlelemon
+package com.example.parawaleapp
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf

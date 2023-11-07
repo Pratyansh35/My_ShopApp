@@ -1,4 +1,4 @@
-package com.example.littlelemon
+package com.example.parawaleapp
 /*
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -21,7 +21,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.littlelemon.ui.theme.ui.theme.LittleLemonTheme
+import com.example.com.example.parawaleapp.ui.theme.ui.theme.LittleLemonTheme
 
 
 @Composable

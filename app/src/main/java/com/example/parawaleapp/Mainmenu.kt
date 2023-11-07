@@ -1,4 +1,4 @@
-package com.example.littlelemon
+package com.example.parawaleapp
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement

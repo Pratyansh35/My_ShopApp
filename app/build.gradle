@@ -4,11 +4,11 @@ plugins {
 }
 
 android {
-    namespace 'com.example.littlelemon'
+    namespace 'com.example.parawaleapp'
     compileSdk 33
 
     defaultConfig {
-        applicationId "com.example.littlelemon"
+        applicationId "com.example.parawaleapp"
         minSdk 21
         targetSdk 32
         versionCode 1

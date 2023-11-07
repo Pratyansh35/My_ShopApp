@@ -1,4 +1,4 @@
-package com.example.littlelemon
+package com.example.parawaleapp
 
 import android.content.res.Configuration.ORIENTATION_LANDSCAPE
 import android.os.Bundle

@@ -1,4 +1,4 @@
-package com.example.littlelemon
+package com.example.parawaleapp
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity

@@ -1,4 +1,6 @@
-package com.example.littlelemon
+package com.example.parawaleapp
+
+
 
 import android.widget.Toast
 import androidx.compose.foundation.Image
