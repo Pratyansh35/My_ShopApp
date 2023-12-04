@@ -14,17 +14,25 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.Button
 import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.Card
 import androidx.compose.material.Divider
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
+import androidx.compose.material.LocalTextStyle
 import androidx.compose.material.ScaffoldState
 import androidx.compose.material.Text
+import androidx.compose.material.TextField
+import androidx.compose.material.TextFieldDefaults
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -33,6 +41,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -130,7 +141,6 @@ fun CartDrawerPanel( navController: NavController? = null) {
                     CartItems(Dish, navController)
                 }
             }
-
         }
         Row(Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.Center,
@@ -142,16 +152,21 @@ fun CartDrawerPanel( navController: NavController? = null) {
                             text = "Total: ₹${total}",
                             fontFamily = FontFamily.Cursive, fontWeight = FontWeight.W900,
                             color = Color(0xFF555A47),
-                            modifier = Modifier.padding(end = 10.dp).align(Alignment.CenterVertically),
+                            modifier = Modifier
+                                .padding(end = 10.dp)
+                                .align(Alignment.CenterVertically),
                             fontSize = 20.sp
             )
 
 
-                Button(onClick = {},colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFFF4CE14)),
+                Button(onClick = {
+                    navController?.navigate("AfterCart")
+                },colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFFF4CE14)),
                     shape = RoundedCornerShape(40), modifier = Modifier
                         .padding(10.dp)
                         .fillMaxWidth()
-                        .height(50.dp).align(Alignment.CenterVertically) ) {
+                        .height(50.dp)
+                        .align(Alignment.CenterVertically) ) {
                     Text(text = "Proceed to Checkout", color = Color.Black, fontWeight = FontWeight.Bold)
 
             }
@@ -184,18 +199,13 @@ fun CartDrawerPanel( navController: NavController? = null) {
 }
 
 
-fun increment(Dish: Dish): Int {
-   return Dish.count + 1
 
-}
-fun decrement(Dish: Dish): Int {
-    return Dish.count - 1
-}
 
 @Preview(showBackground = true)
 @Composable
 fun PreviewCartDrawerPanel(){
-    CartItems(Dish = Dish("Happilo Almonds 500g",
+    CartItems(
+        Dish = Dish("Happilo Almonds 500g",
         "₹339",
         0,
         "100% Natural Premium California Dried Almonds are a great source of protein...",
@@ -203,20 +213,39 @@ fun PreviewCartDrawerPanel(){
         R.drawable.happilo339))
 }
 
+fun DishIncrement(Dish: Dish, navController: NavController? = null){
+    Dish.count++
+    totalcount()
+    navController?.navigate("cart")
+}
+fun DishDecrement(Dish: Dish, navController: NavController? = null){
+    Dish.count--
+    totalcount()
+    if (Dish.count <= 0) {
+        cartItems.remove(Dish)
+        countItems()
+    }
+    navController?.navigate("cart")
+
+}
+
 @Composable
-fun CartItems(Dish: Dish , navController: NavController? = null) {
+fun CartItems(Dish: Dish, navController: NavController? = null) {
+    var Dishcount by remember {
+        mutableStateOf(TextFieldValue(Dish.count.toString()))
+    }
+
     Card {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(120.dp)
-                .padding(8.dp)
         ) {
             Image(
                 painter = painterResource(id = Dish.image),
                 contentDescription = "",
                 Modifier
-                    .fillMaxHeight(1f)
+                    .fillMaxHeight(0.8f).align(Alignment.CenterVertically)
             )
             Column(modifier = Modifier.padding(start = 8.dp, top = 3.dp)) {
                 Text(
@@ -228,34 +257,25 @@ fun CartItems(Dish: Dish , navController: NavController? = null) {
                     modifier = Modifier
                         .padding(top = 5.dp)
                         .fillMaxWidth(1f)
-                        .fillMaxHeight(0.5f)
+                        .fillMaxHeight(0.45f)
                 )
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.fillMaxWidth(1f)
+                    modifier = Modifier.fillMaxWidth(1f).fillMaxHeight(1f)
                 ) {
 
                     Text(
                         text = Dish.price, color = Color.DarkGray, fontWeight = FontWeight.Bold
                     )
 
-                    val isCartIconVisible = Dish.count == 1
+                    val isCartIconVisible = Dish.count == 1 || Dish.count == 0
 
                     IconButton(
                         onClick = {
-                             Dish.count = decrement(Dish)
-                            if(count > 0 ) {
-                                count -= 1
-                                total -= Dish.price.removePrefix("₹").toInt()
-                                navController?.navigate("cart")
-                            }
-                            if (Dish.count <= 0) {
-                                cartItems.remove(Dish)
-                                navController?.navigate("cart")
-                            }
+                                  DishDecrement(Dish,navController)
                         },
                         Modifier
-                            .width(50.dp)
+                            .width(36.dp)
                             .align(Alignment.Top)
                     ) {
                         if (isCartIconVisible) {
@@ -267,22 +287,54 @@ fun CartItems(Dish: Dish , navController: NavController? = null) {
                             Text(text = "-")
                         }
                     }
+                    TextField(
+                        value = Dishcount,
+                        onValueChange = {
+                            val userInput = it.text.toIntOrNull()
+                            if (it.text.isNotEmpty()) {
+                                userInput?.let { input ->
+                                    if (input > 0) {
+                                        Dishcount = it
+                                        Dish.count = input
+                                        totalcount()
+                                    } else if(input == 0){
+                                        Dishcount = it
+                                        Dish.count = input
+                                        totalcount()
+                                        cartItems.remove(Dish)
+                                        countItems()
+                                    }
+                                    else {
 
-                    androidx.compose.material3.Text(
-                        text =  Dish.count.toString(),
-                        fontWeight = FontWeight.W700,
-                        textAlign = TextAlign.Center,
+                                    }
+                                } ?: run {
 
-                        )
+                                }
+                            } else {
+                                Dishcount = it
+                                Dish.count = 0
+                                totalcount()
+
+                                countItems()
+                            }
+                        },
+                        keyboardOptions = KeyboardOptions.Default.copy(
+                            keyboardType = KeyboardType.Number,
+                            imeAction = ImeAction.Done),
+                        modifier = Modifier.width(70.dp).fillMaxHeight(),
+                        colors = TextFieldDefaults.textFieldColors(backgroundColor = Color.Transparent),
+                        textStyle = LocalTextStyle.current.copy(fontSize = 15.sp),
+                        singleLine = true,
+                        maxLines = 1,
+
+                    )
+
                     IconButton(
-                        onClick = { Dish.count = increment(Dish)
-                            total += Dish.price.removePrefix("₹").toInt()
-                            count += 1
-                            navController?.navigate("cart")
-
-                            },
+                        onClick = {
+                            DishIncrement(Dish,  navController)
+                                  },
                         Modifier
-                            .width(50.dp)
+                            .width(36.dp)
                             .align(Alignment.Top)
                     ) {
                         Text(text = "+")
@@ -291,18 +343,18 @@ fun CartItems(Dish: Dish , navController: NavController? = null) {
                     Column(
                         horizontalAlignment = Alignment.End, modifier = Modifier
                             .fillMaxWidth()
-                            .padding(end = 10.dp)
+
                     ) {
                         Row {
                             Text(
                                 text = "Total:",
                                 fontFamily = FontFamily.Cursive, fontWeight = FontWeight.W900,
                                 color = Color(0xFFC0B445),
-                                modifier = Modifier.padding(end = 10.dp)
+
                             )
 
                             Text(
-                                text = "₹${Dish.count * Dish.price.removePrefix("₹").toInt()}",
+                                text = "₹${Dish.count * Dish.price.removePrefix("₹").toDouble()}",
                                 fontFamily = FontFamily.Cursive, fontWeight = FontWeight.Medium,
                                 color = Color(0xFF69615A),
                                 )

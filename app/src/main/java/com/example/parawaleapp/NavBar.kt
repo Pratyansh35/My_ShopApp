@@ -71,7 +71,6 @@ fun NavBar(scaffoldState: ScaffoldState? = null, scope: CoroutineScope? = null ,
                     modifier = Modifier
                         .padding(4.dp)
                         .clip(CircleShape)
-
                 )
             }
         }

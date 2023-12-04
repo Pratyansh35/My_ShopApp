@@ -4,22 +4,24 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 
-var count by mutableStateOf(0)
-var total by  mutableStateOf(0)
-val cartItems: MutableList<Dish> = mutableListOf()
 
-/*@Composable
-fun TextPrint(){
-    if (cartItems.isNotEmpty()) {
-        for (i in cartItems) {
-            print(i.name + "    "+ i.count.toString() + "    " +i.price + "    "+"₹" + (i.count * i.price.removePrefix("₹").toInt()).toString() + "    ")
+var count by mutableStateOf(0)
+    var total by  mutableStateOf(0)
+    val cartItems: MutableList<Dish> = mutableListOf()
+fun totalcount(){
+    total = 0
+    for (i in cartItems){
+        val priceWithoutCurrency = i.price.removePrefix("₹")
+        val priceAsDouble = priceWithoutCurrency.toDoubleOrNull()
+
+        if (priceAsDouble != null) {
+            total += (i.count * priceAsDouble).toInt()
         }
-        println()
-        println()
-    }else{
-        Toast.makeText(LocalContext.current, "Cart is empty", Toast.LENGTH_SHORT).show()
     }
-}*/
+}
+fun countItems(){
+    count = cartItems.size
+}
 
 
 

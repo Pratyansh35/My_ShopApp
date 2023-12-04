@@ -12,14 +12,14 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.LittleLemon"
         tools:targetApi="31">
-
-
-
+        <activity
+            android:name=".ComfirmCart"
+            android:exported="false" />
         <activity
             android:name=".MainActivity"
             android:exported="true"
-            android:theme="@style/Theme.LittleLemon"
-            android:screenOrientation="portrait">
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.LittleLemon">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

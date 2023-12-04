@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "252813628903",
+    "project_id": "myparawale-app",
+    "storage_bucket": "myparawale-app.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:252813628903:android:c2ce694224054687169942",
+        "android_client_info": {
+          "package_name": "com.example.parawaleapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD3t3RiKgh3l96HJ8XAsLpgSKPXf-p86sM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

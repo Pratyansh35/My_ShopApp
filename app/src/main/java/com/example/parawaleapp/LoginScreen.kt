@@ -46,6 +46,8 @@ fun Pre(){
     })
 }
 
+
+
 @Composable
 fun TypewriterText(label: String, padding: Modifier = Modifier.padding(all = 0.dp),
 fontsize: Int = 24.sp.value.toInt()) {
@@ -73,8 +75,13 @@ fontsize: Int = 24.sp.value.toInt()) {
     )
 }
 
+
+
 @Composable
 fun LoginScreen(onLoginSuccess: () -> Unit) {
+
+
+
     val context = LocalContext.current
     var username by remember {
         mutableStateOf(TextFieldValue(""))
@@ -131,8 +138,7 @@ fun LoginScreen(onLoginSuccess: () -> Unit) {
                 onClick = {
                     Log.d("AAA", username.text)
                     Log.d("AAA", password.text)
-                    if (username.text == "parawale35" || username.text == "p"
-                        && password.text == "12345678" || password.text == "p"
+                    if (username.text.isNotEmpty() && password.text.isNotEmpty()
                     ) {
                         Toast.makeText(
                             context,
@@ -148,7 +154,8 @@ fun LoginScreen(onLoginSuccess: () -> Unit) {
                             Toast.LENGTH_LONG
                         ).show()
                     }
-                },
+
+                          },
                 colors = ButtonDefaults.buttonColors( Color(0xFF4D7467)
                 ),
                 modifier = Modifier.padding(10.dp)

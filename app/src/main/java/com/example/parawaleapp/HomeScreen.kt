@@ -33,7 +33,6 @@ import androidx.compose.ui.unit.sp
 @Composable
 fun HomeScreen() {
     Column {
-
         UpperPanel()
         LowermainScreen()
     }
@@ -126,13 +125,5 @@ fun WeeklySpecial(){
 }
 
 
-@Preview(showBackground = true)
-@Composable
-fun Lowerpanelmain(){
-    LazyColumn {
-        items(Dishes) { Dish ->
-            MenuDish(Dish)
-        }
-    }
-}
+
 

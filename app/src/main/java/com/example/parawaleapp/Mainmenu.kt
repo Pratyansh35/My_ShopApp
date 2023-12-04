@@ -16,6 +16,9 @@ import androidx.compose.material.Card
 import androidx.compose.material.Divider
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -24,17 +27,30 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.ViewModel
 
 @Preview(showBackground = true)
 @Composable
 fun MenuListScreen() {
     Column {
         Search()
+        Lowerpanelmain()
+    }
+}
+@Preview(showSystemUi = true)
+@Composable
+fun Lowerpanelmain() {
+    LazyColumn {
+
+            items(Dishes) { Dish ->
+                MenuDish(Dish)
+        }
     }
 }
 
+
 @Composable
-fun LowerPanel(filteredDishes: List<Dish>) {
+fun SearchFilter(filteredDishes: List<Dish>) {
     Column {
         Divider(
             modifier = Modifier.padding(8.dp),
@@ -101,7 +117,25 @@ fun MenuSlide(Slidess: Slidess) {
 
 
 @Composable
-fun MenuDish(Dish: Dish) {
+fun MenuDish(dish: Dish, addToCart: (Dish) -> Unit) {
+    Row {
+        Button(
+            onClick = { addToCart(dish) },
+            colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFFF4CE14)),
+            shape = RoundedCornerShape(40)
+        ) {
+            Text(text = "Add to Cart")
+        }
+    }
+}
+
+
+
+
+
+@Composable
+fun MenuDish(dish: Dish) {
+
     Card {
         Row(
             modifier = Modifier
@@ -110,10 +144,12 @@ fun MenuDish(Dish: Dish) {
         ) {
             Column {
                 Text(
-                    text = Dish.name, fontSize = 16.sp, fontWeight = FontWeight.Bold
+                    text = dish.name,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold
                 )
                 Text(
-                    text = Dish.description,
+                    text =dish.description,
                     color = Color.Gray,
                     modifier = Modifier
                         .padding(top = 5.dp, bottom = 5.dp)
@@ -121,39 +157,37 @@ fun MenuDish(Dish: Dish) {
                 )
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-
-
                 ) {
                     Row(modifier = Modifier.fillMaxWidth(.3f)) {
                         Text(
-                            text = Dish.price, color = Color.Gray, fontWeight = FontWeight.Bold
+                            text = dish.price,
+                            color = Color.Gray,
+                            fontWeight = FontWeight.Bold
                         )
-
                     }
-                   Row(modifier = Modifier.fillMaxWidth(.6f),
-                      Arrangement.End) {
-                       Button(
-                           onClick = {
-                               if (cartItems.contains(Dish)){Dish.count += 1
-                                   count += 1
-                                   total += Dish.price.removePrefix("₹").toInt()
-                               }
-                               else{Dish.count += 1
-                                   total += Dish.price.removePrefix("₹").toInt()
-                                   count += 1
-                               cartItems.add(Dish)}},
-                           colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFFF4CE14)),
-                           shape = RoundedCornerShape(40)
-                       ) {
-                           Text(text = "Add to Cart")
-                   }
+                    Row(modifier = Modifier.fillMaxWidth(.6f), Arrangement.End) {
+                        Button(
+                            onClick = { if (cartItems.contains(dish)) {
+                                dish.count++
+                                countItems()
+                                totalcount()
+                            } else {
+                                dish.count++
+                                cartItems.add(dish)
+                                totalcount()
+                                countItems()
+
+                            }},
+                            colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFFF4CE14)),
+                            shape = RoundedCornerShape(40)
+                        ) {
+                            Text(text = "Add to Cart")
+                        }
                     }
                 }
-
-
             }
             Image(
-                painter = painterResource(id = Dish.image),
+                painter = painterResource(id = dish.image),
                 contentDescription = "",
             )
         }

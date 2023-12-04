@@ -88,6 +88,9 @@ fun MyApp() {
                 composable(Cart.route) {
                     CartDrawerPanel(navController = navController)
                 }
+                composable(AfterCart.route){
+                    AfterConfirm()
+                }
             }
         }
     }
