@@ -1,6 +1,7 @@
 package com.example.parawaleapp
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -14,6 +15,9 @@ import androidx.compose.material.Button
 import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.Card
 import androidx.compose.material.Divider
+import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.Scaffold
+import androidx.compose.material.ScaffoldState
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateListOf
@@ -28,6 +32,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.ViewModel
+import androidx.navigation.NavController
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 
 @Preview(showBackground = true)
 @Composable
@@ -79,12 +86,24 @@ fun MenuCategory(category: String) {
     }
 }
 
+@OptIn(ExperimentalMaterialApi::class)
 @Composable
-fun MenuSlide(Slidess: Slidess) {
+fun MenuSlide(Slidess: Slidess, navController: NavController? = null, scaffoldState: ScaffoldState, scope: CoroutineScope) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(8.dp)
+            .padding(8.dp, 8.dp, 8.dp, 20.dp),
+
+
+
+        onClick = { if (Slidess.Type == "Cart"){
+            scope.launch { scaffoldState.drawerState.close() }
+            navController?.navigate("cart")
+        }else if (Slidess.Type == "Manage Account"){
+            scope.launch { scaffoldState.drawerState.close() }
+            navController?.navigate("profileset")
+        }
+        }
 
     ) {
 

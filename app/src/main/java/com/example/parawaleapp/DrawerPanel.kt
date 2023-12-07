@@ -2,6 +2,7 @@ package com.example.parawaleapp
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -30,12 +31,14 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
@@ -49,12 +52,14 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import coil.compose.AsyncImage
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
 
 @Composable
-fun LeftDrawerPanel(scaffoldState: ScaffoldState, scope: CoroutineScope) {
+fun LeftDrawerPanel(scaffoldState: ScaffoldState, navController: NavController? = null, scope: CoroutineScope) {
+
     Column(
     )
     {
@@ -63,26 +68,40 @@ fun LeftDrawerPanel(scaffoldState: ScaffoldState, scope: CoroutineScope) {
 
         )
         {
-
             Row(
-                modifier = Modifier.background(Brush.horizontalGradient(
-                    listOf(Color(0xFFC0454F), Color(0xFF3F4B3D))
-                )),
+                modifier = Modifier
+                    .background(
+                        Brush.horizontalGradient(
+                            listOf(Color(0xFF0E0A0B), Color(0xFF707A6D))
+                        )
+                    )
+                    .fillMaxWidth(),
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically
 
 
             ) {
-                Image(
-                    painter = painterResource(id = R.drawable.mypic4),
+
+
+                AsyncImage(model = img, contentDescription = "userImage",
+                    modifier = Modifier
+                        .padding(start = 10.dp)
+                        .size(130.dp)
+                        .clip(RoundedCornerShape(50))
+                        .scale(1.1f)
+                )
+
+                /*Image(
+                    painter = painterResource(img),
                     contentDescription = "UserImage",
                     modifier = Modifier
                         .padding(start = 10.dp)
                         .size(130.dp)
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(80.dp))
-                )
+                        .clip(RoundedCornerShape(50))
+                        .clickable { navController?.navigate("profile") },
 
+                )
+*/
 
                 Column(
                     modifier = Modifier
@@ -91,14 +110,14 @@ fun LeftDrawerPanel(scaffoldState: ScaffoldState, scope: CoroutineScope) {
                     verticalArrangement = Arrangement.Center
                 ) {
                     Text(
-                        text = "Pratyansh Maddheshia",
+                        text = name,
                         fontSize = 25.sp,
                         fontWeight = FontWeight.ExtraBold,
                         color = Color(0xFFC0B445)
 
                     )
                     Text(
-                        text = "+91-7007254934",
+                        text = "+91-$phoneno",
                         fontSize = 12.sp,
                         fontWeight = FontWeight.ExtraBold,
                         fontFamily = FontFamily.Cursive,
@@ -111,7 +130,7 @@ fun LeftDrawerPanel(scaffoldState: ScaffoldState, scope: CoroutineScope) {
         }
         LazyColumn(modifier = Modifier.padding(top = 15.dp)) {
             items(SlidesItems) { Slidess ->
-                MenuSlide(Slidess)
+                MenuSlide(Slidess, scope = scope, scaffoldState = scaffoldState, navController = navController)
             }
         }
         IconButton(onClick = {
@@ -245,7 +264,8 @@ fun CartItems(Dish: Dish, navController: NavController? = null) {
                 painter = painterResource(id = Dish.image),
                 contentDescription = "",
                 Modifier
-                    .fillMaxHeight(0.8f).align(Alignment.CenterVertically)
+                    .fillMaxHeight(0.8f)
+                    .align(Alignment.CenterVertically)
             )
             Column(modifier = Modifier.padding(start = 8.dp, top = 3.dp)) {
                 Text(
@@ -261,7 +281,9 @@ fun CartItems(Dish: Dish, navController: NavController? = null) {
                 )
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.fillMaxWidth(1f).fillMaxHeight(1f)
+                    modifier = Modifier
+                        .fillMaxWidth(1f)
+                        .fillMaxHeight(1f)
                 ) {
 
                     Text(
@@ -321,11 +343,14 @@ fun CartItems(Dish: Dish, navController: NavController? = null) {
                         keyboardOptions = KeyboardOptions.Default.copy(
                             keyboardType = KeyboardType.Number,
                             imeAction = ImeAction.Done),
-                        modifier = Modifier.width(70.dp).fillMaxHeight(),
+                        modifier = Modifier
+                            .width(50.dp)
+                            .fillMaxHeight()
+                            .align(Alignment.CenterVertically),
                         colors = TextFieldDefaults.textFieldColors(backgroundColor = Color.Transparent),
                         textStyle = LocalTextStyle.current.copy(fontSize = 15.sp),
-                        singleLine = true,
-                        maxLines = 1,
+
+
 
                     )
 

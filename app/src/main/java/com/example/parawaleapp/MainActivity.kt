@@ -65,7 +65,7 @@ fun MyApp() {
 
         drawerContent = {
             // Left drawer content
-            LeftDrawerPanel(scaffoldState = scaffoldState, scope = scope)
+            LeftDrawerPanel(scaffoldState = scaffoldState, scope = scope,navController = navController)
 
             }, drawerGesturesEnabled = true,
 
@@ -89,7 +89,10 @@ fun MyApp() {
                     CartDrawerPanel(navController = navController)
                 }
                 composable(AfterCart.route){
-                    AfterConfirm()
+                    ConfirmCart()
+                }
+                composable(ProfileSet.route){
+                    Profileset()
                 }
             }
         }

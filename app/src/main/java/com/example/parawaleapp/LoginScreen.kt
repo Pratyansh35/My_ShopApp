@@ -119,7 +119,8 @@ fun LoginScreen(onLoginSuccess: () -> Unit) {
                     username = it
                 },
                 label = { Text(text = "Username") },
-                modifier = Modifier.padding(10.dp)
+                modifier = Modifier.padding(10.dp),
+                singleLine = true
             )
             TextField(
                 value = password,
@@ -128,6 +129,7 @@ fun LoginScreen(onLoginSuccess: () -> Unit) {
                 },
                 label = { Text(text = "Password") },
                 visualTransformation = PasswordVisualTransformation(),
+                singleLine = true
 
             )
             TextButton(onClick = { /*TODO*/ }, Modifier.align(Alignment.End) ) {

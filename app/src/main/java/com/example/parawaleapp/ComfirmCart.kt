@@ -1,24 +1,22 @@
 package com.example.parawaleapp
 
-
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.staggeredgrid.LazyHorizontalStaggeredGrid
-import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
-import androidx.compose.foundation.lazy.staggeredgrid.items
-import androidx.compose.material.Divider
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.ButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -27,216 +25,101 @@ import androidx.compose.ui.unit.sp
 
 @Preview(showBackground = true)
 @Composable
-fun AfterConfirm(){
-
- Column(
-     Modifier
-         .fillMaxHeight()
-         .fillMaxWidth()
-         .padding(top = 50.dp),
-     horizontalAlignment = Alignment.CenterHorizontally
- ) {
-        Text(text = "Confirm Your Cart",
-            fontSize = 24.sp,
-            fontFamily = FontFamily.Monospace)
-
-    /* Row(modifier = Modifier.fillMaxWidth()) {
-         Text(text = "Dish Name",
-             fontSize = 14.sp,
-             fontFamily = FontFamily.Monospace)
-
-         Text(text = "Price",
-             fontSize = 14.sp,
-             fontFamily = FontFamily.Monospace,
-             modifier = Modifier.padding(start = 10.dp))
-         Text(text = "total-Items",
-             fontSize = 14.sp,
-             fontFamily = FontFamily.Monospace,
-             modifier = Modifier.padding(start = 10.dp))
-         Text(text = "Final-Price",
-             fontSize = 14.sp,
-             fontFamily = FontFamily.Monospace,
-             modifier = Modifier.padding(start = 10.dp))
-     }*/
-    LazyHorizontalStaggeredGrid(
-        rows = StaggeredGridCells.Fixed(4),
-    modifier = Modifier
-        .fillMaxSize(),
-        contentPadding = PaddingValues(10.dp),
-        verticalArrangement = Arrangement.SpaceEvenly,
-        horizontalItemSpacing = 40.dp
-    ){
-        item() {
-            CartHeaderRow()
-        }
-
-        items(cartItems) { Dish ->
-            ListCart(Dish)
-        }
-
-        }
-    }
-
-}
-
-
-
-@Composable
-fun CartScreen(cartItems: List<Dish>,) {
+fun ConfirmCart() {
     Column(
         modifier = Modifier
-            .fillMaxSize()
-            .padding(horizontal = 16.dp)
+            .fillMaxWidth()
+            .fillMaxHeight()
+            .padding(10.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        CartHeaderRow()
-        cartItems.forEach { dish ->
-            ListCart(dish)
+        Text(text ="Parawale", modifier = Modifier
+            .padding(10.dp)
+            .fillMaxWidth(),textAlign = TextAlign.Center,
+            fontSize = 45.sp,
+            color = androidx.compose.ui.graphics.Color.Red,
+            fontStyle = androidx.compose.ui.text.font.FontStyle.Italic
+            , fontFamily = androidx.compose.ui.text.font.FontFamily.Cursive)
+        Text(text = "Cart Summary", modifier = Modifier
+            .padding(10.dp)
+            .fillMaxWidth(),textAlign = TextAlign.Center,
+            fontSize = 20.sp,
+            fontWeight = FontWeight.Bold)
+        CartLayout()
+        LazyColumn(modifier = Modifier.weight(0.8f)){
+            items(cartItems) { Dish ->
+                ConfirmItems(Dish)
+            }
+        }
+        Text(text = "Total Amount: ₹$total", modifier = Modifier
+            .padding(10.dp)
+            .fillMaxWidth(),textAlign = TextAlign.Center,
+            fontSize = 20.sp,
+            fontWeight = FontWeight.Bold)
+        androidx.compose.material.Button(
+            onClick = {
+            }, colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFFF4CE14)),
+            shape = RoundedCornerShape(40), modifier = Modifier
+                .padding(10.dp)
+                .fillMaxWidth()
+                .height(50.dp)
+                .align(Alignment.End)
+        ) {
+            androidx.compose.material.Text(
+                text = "Print Bill",
+                color = Color.Black,
+                fontWeight = FontWeight.Bold
+            )
         }
     }
+    Row {
+
+    }
 }
 
 @Composable
-fun CartHeaderRow() {
+fun CartLayout() {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 8.dp),
-        horizontalArrangement = Arrangement.SpaceBetween
-    ) {
-        CartHeaderText(text = "Dish Name")
-        CartHeaderText(text = "Price")
-        CartHeaderText(text = "Total Items")
-        CartHeaderText(text = "Final Price")
+            .height(50.dp),
+        horizontalArrangement = Arrangement.SpaceEvenly,
+        verticalAlignment = Alignment.CenterVertically,
+
+        ){
+        Text(text = "Item Name", modifier = Modifier
+            .weight(1f)
+            .align(Alignment.CenterVertically),
+            textAlign = TextAlign.Center,fontWeight = FontWeight.Bold )
+        Text(text = "Quantity", modifier = Modifier.weight(1f),textAlign = TextAlign.Center,fontWeight = FontWeight.Bold)
+        Text(text = "MRP", modifier = Modifier.weight(1f),textAlign = TextAlign.Center,fontWeight = FontWeight.Bold)
+        Text(text = "Total", modifier = Modifier.weight(1f),textAlign = TextAlign.Center,fontWeight = FontWeight.Bold)
     }
-    Divider(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 4.dp),
-        color = Color.Gray,
-        thickness = 1.dp
-    )
 }
 
-@Composable
-fun CartHeaderText(text: String) {
-    Text(
-        text = text,
-        fontSize = 14.sp,
-        fontFamily = FontFamily.Monospace,
-        modifier = Modifier
-            .padding(horizontal = 4.dp)
 
-    )
-}
 
 @Composable
-fun ListCart(Dish: Dish) {
+fun ConfirmItems(dish:Dish){
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 8.dp),
-        horizontalArrangement = Arrangement.SpaceBetween
-    ) {
-        CartItemText(text = if (Dish.name.length > 30) "${Dish.name.take(22)}..." else Dish.name)
-        CartItemText(text = Dish.price)
-        CartItemText(text = Dish.count.toString())
-        CartItemText(
-            text = "₹${Dish.count * Dish.price.removePrefix("₹").toDouble()}",
-            modifier = Modifier.weight(0.5f)
-        )
-    }
-    Divider(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 4.dp),
-        color = Color.Gray,
-        thickness = 0.5.dp
-    )
-}
+            .height(50.dp),
+        horizontalArrangement = Arrangement.SpaceEvenly,
+        verticalAlignment = Alignment.CenterVertically,
 
-@Composable
-fun CartItemText(
-    text: String,
-    modifier: Modifier = Modifier
-) {
-    Text(
-        text = text,
-        fontSize = 14.sp,
-        fontFamily = FontFamily.Monospace,
-        modifier = modifier
-            .padding(horizontal = 4.dp)
-          ,
-        textAlign = TextAlign.Center
-    )
-}
-
-
-/*@Composable
-fun CartHeaderRow() {
-    Row(modifier = Modifier.fillMaxWidth(),
-    horizontalArrangement = Arrangement.SpaceEvenly) {
-        Text(
-            text = "Dish Name",
-            fontSize = 14.sp,
-            fontFamily = FontFamily.Monospace,
-            modifier = Modifier.fillMaxWidth()
-        )
-        Text(
-            text = "Price",
-            fontSize = 14.sp,
-            fontFamily = FontFamily.Monospace,
-            modifier = Modifier.fillMaxWidth()
-        )
-        Text(
-            text = "Total Items",
-            fontSize = 14.sp,
-            fontFamily = FontFamily.Monospace,
-            modifier = Modifier.fillMaxWidth()
-        )
-        Text(
-            text = "Final Price",
-            fontSize = 14.sp,
-            fontFamily = FontFamily.Monospace,
-            modifier = Modifier.fillMaxWidth()
-        )
+        ){
+        Text(text = dish.name.take(21), modifier = Modifier
+            .weight(1f)
+            .align(Alignment.CenterVertically),
+            textAlign = TextAlign.Center )
+        Text(text = dish.count.toString(), modifier = Modifier.weight(1f),textAlign = TextAlign.Center)
+        Text(text = dish.price, modifier = Modifier.weight(1f),textAlign = TextAlign.Center)
+        Text(text = (dish.count * dish.price.removePrefix("₹").toDouble()).toString(), modifier = Modifier.weight(1f),textAlign = TextAlign.Center)
     }
 }
-@Composable
-fun listCart(Dish: Dish , navController: NavController? = null){
-    val displayedText = if (Dish.name.length > 30) {
-        Dish.name.take(22) + "..."// Take up to 30 characters
-    } else {
-        Dish.name // Use the original name if it's 30 characters or fewer
-    }
-    Row(modifier = Modifier.fillMaxWidth(),
-    horizontalArrangement = Arrangement.SpaceEvenly) {
-        Text(text = displayedText,
-            fontSize = 14.sp,
-            fontFamily = FontFamily.Monospace)
 
-        Text(text = Dish.price,
-            fontSize = 14.sp,
-            fontFamily = FontFamily.Monospace,
-            modifier = Modifier.padding(start = 10.dp))
 
-        Text(text = Dish.count.toString(),
-            fontSize = 14.sp,
-            fontFamily = FontFamily.Monospace,
-            modifier = Modifier.padding(start = 10.dp))
 
-        Text(text = "₹${Dish.count * Dish.price.removePrefix("₹").toDouble()}",
-            fontSize = 14.sp,
-            fontFamily = FontFamily.Monospace,
-            modifier = Modifier
-                .padding(start = 10.dp)
-                .weight(0.2f),
 
-        )
-
-    }
-    Divider(
-            modifier = Modifier.padding(8.dp),
-    color = Color.Gray,
-    thickness = 0.5.dp
-    )
-}*/

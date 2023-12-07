@@ -1,8 +1,19 @@
 package com.example.parawaleapp
 
+import android.net.Uri
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.graphics.ImageBitmap
+
+import androidx.compose.ui.res.*
+//User Info  ImageBitmap.imageResource(R.drawable.mypic4)
+var name by mutableStateOf("Pratyansh Maddheshia")
+var phoneno by mutableStateOf("7007254934")
+
+
+// Initialize the MutableState with the ImageBitmap
+var img by mutableStateOf(Uri.parse("android.resource://com.example.parawaleapp/drawable/mypic4"))
 
 
 var count by mutableStateOf(0)
