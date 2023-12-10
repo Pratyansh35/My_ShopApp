@@ -1,4 +1,4 @@
-package com.example.parawaleapp
+package com.example.parawaleapp.mainScreen
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -21,6 +21,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.parawaleapp.Dish
+import com.example.parawaleapp.cartItems
+import com.example.parawaleapp.total
 
 
 @Preview(showBackground = true)
@@ -72,9 +75,6 @@ fun ConfirmCart() {
             )
         }
     }
-    Row {
-
-    }
 }
 
 @Composable
@@ -100,7 +100,7 @@ fun CartLayout() {
 
 
 @Composable
-fun ConfirmItems(dish:Dish){
+fun ConfirmItems(dish: Dish){
 
     Row(
         modifier = Modifier

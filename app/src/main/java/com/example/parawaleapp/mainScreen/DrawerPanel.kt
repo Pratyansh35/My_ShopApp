@@ -1,8 +1,9 @@
-package com.example.parawaleapp
+package com.example.parawaleapp.mainScreen
 
+import android.net.Uri
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -14,6 +15,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.Button
@@ -27,20 +29,17 @@ import androidx.compose.material.ScaffoldState
 import androidx.compose.material.Text
 import androidx.compose.material.TextField
 import androidx.compose.material.TextFieldDefaults
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -53,18 +52,31 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
+import com.example.parawaleapp.Dish
+import com.example.parawaleapp.R
+import com.example.parawaleapp.SlidesItems
+import com.example.parawaleapp.cartItems
+import com.example.parawaleapp.countItems
+import com.example.parawaleapp.img
+import com.example.parawaleapp.name
+import com.example.parawaleapp.sign_in.UserData
+import com.example.parawaleapp.total
+import com.example.parawaleapp.totalcount
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.launch
 
 
 @Composable
-fun LeftDrawerPanel(scaffoldState: ScaffoldState, navController: NavController? = null, scope: CoroutineScope) {
+fun LeftDrawerPanel(
+    scaffoldState: ScaffoldState, navController: NavController? = null, scope: CoroutineScope,
+    userData: UserData?,
+    signOut: () -> Unit
+) {
 
-    Column(
+    Column(Modifier.fillMaxWidth()
     )
     {
         Card(
-            modifier = Modifier.height(150.dp)
+            modifier = Modifier.height(150.dp).fillMaxWidth()
 
         )
         {
@@ -82,14 +94,24 @@ fun LeftDrawerPanel(scaffoldState: ScaffoldState, navController: NavController? 
 
             ) {
 
-
-                AsyncImage(model = img, contentDescription = "userImage",
+if (userData?.progilePictureUrl != null) {
+                AsyncImage(model =
+                if (img.isNullOrBlank()){
+                    userData.progilePictureUrl
+                }else{
+                    Uri.parse(img)
+                    Log.d("tagg", "LeftDrawerPanel: $img")
+                     },
+                     contentDescription = "userImage",
                     modifier = Modifier
                         .padding(start = 10.dp)
-                        .size(130.dp)
-                        .clip(RoundedCornerShape(50))
-                        .scale(1.1f)
+                        .size(110.dp)
+                        .clip(CircleShape),
+                    contentScale = ContentScale.Crop
                 )
+
+            }
+                Log.d("tagg", "LeftDrawerPanel: ${userData?.progilePictureUrl} $img")
 
                 /*Image(
                     painter = painterResource(img),
@@ -105,26 +127,35 @@ fun LeftDrawerPanel(scaffoldState: ScaffoldState, navController: NavController? 
 
                 Column(
                     modifier = Modifier
-                        .padding(start = 15.dp)
+                        .padding(start = 8.dp)
                         .height(100.dp),
                     verticalArrangement = Arrangement.Center
                 ) {
-                    Text(
-                        text = name,
-                        fontSize = 25.sp,
-                        fontWeight = FontWeight.ExtraBold,
-                        color = Color(0xFFC0B445)
+                    if (userData?.userName != null) {
+                        Text(
+                            text =
+                            if(name == ""){
+                                userData.userName
+                                }else(
+                                name
+                                ),
+                            fontSize = 25.sp,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = Color(0xFFC0B445)
+                        )
+                    }
+                    if (userData?.userEmail != null) {
+                        Text(
+                            text = userData.userEmail,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold,
+                            fontFamily = FontFamily.SansSerif,
+                            textAlign = TextAlign.Center,
+                            color = Color(0xFFC9B9B9)
 
-                    )
-                    Text(
-                        text = "+91-$phoneno",
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.ExtraBold,
-                        fontFamily = FontFamily.Cursive,
-                        textAlign = TextAlign.Center,
-                        color = Color(0xFFA9ACA8)
-
-                    )
+                        )
+                    }
+                    
                 }
             }
         }
@@ -133,10 +164,24 @@ fun LeftDrawerPanel(scaffoldState: ScaffoldState, navController: NavController? 
                 MenuSlide(Slidess, scope = scope, scaffoldState = scaffoldState, navController = navController)
             }
         }
-        IconButton(onClick = {
-            scope.launch { scaffoldState.drawerState.close() }
-        }) {
-            Icon(imageVector = Icons.Default.ExitToApp, contentDescription = "Close Icon")
+        
+
+        Row(Modifier.fillMaxWidth().fillMaxHeight(),
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.Bottom
+
+
+        ) {
+            Button(onClick = {
+                signOut()
+            },colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFFF4CE14)),
+                shape = RoundedCornerShape(40), modifier = Modifier
+                    .padding(10.dp)
+                    .fillMaxWidth()
+                    .height(50.dp)
+                    .align(Alignment.CenterVertically) ) {
+                Text(text = "LOG_OUT", color = Color.Black, fontWeight = FontWeight.Bold)
+            }
         }
     }
 }
@@ -168,7 +213,7 @@ fun CartDrawerPanel( navController: NavController? = null) {
 
         ) {
             Text(
-                            text = "Total: ₹${total}",
+                            text = "Total: ₹$total",
                             fontFamily = FontFamily.Cursive, fontWeight = FontWeight.W900,
                             color = Color(0xFF555A47),
                             modifier = Modifier
@@ -229,7 +274,9 @@ fun PreviewCartDrawerPanel(){
         0,
         "100% Natural Premium California Dried Almonds are a great source of protein...",
         "DryFruits",
-        R.drawable.happilo339))
+        R.drawable.happilo339
+        )
+    )
 }
 
 fun DishIncrement(Dish: Dish, navController: NavController? = null){

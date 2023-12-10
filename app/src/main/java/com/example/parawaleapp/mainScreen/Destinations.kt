@@ -1,6 +1,6 @@
-package com.example.parawaleapp
+package com.example.parawaleapp.mainScreen
 
-
+import com.example.parawaleapp.R
 
 
 interface Destinations {
@@ -43,7 +43,7 @@ object ProfileSet : Destinations {
     override val title = "ProfileSet"
 }
 
-object AfterCart :Destinations{
+object AfterCart : Destinations {
     override val route = "AfterCart"
     override val icon = R.drawable.ic_location
     override val title = "AfterCart"

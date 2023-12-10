@@ -1,4 +1,4 @@
-package com.example.parawaleapp
+package com.example.parawaleapp.mainScreen
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize

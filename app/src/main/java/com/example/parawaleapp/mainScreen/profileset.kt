@@ -1,13 +1,11 @@
-package com.example.parawaleapp
+package com.example.parawaleapp.mainScreen
 
 import android.net.Uri
-import android.os.Build
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.annotation.RequiresApi
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -19,11 +17,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.Button
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.IconButton
+import androidx.compose.material.TextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -33,29 +28,28 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.imageResource
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
+import com.example.parawaleapp.img
+import com.example.parawaleapp.name
+import com.example.parawaleapp.phoneno
+import com.example.parawaleapp.saveDataToSharedPreferences
+import com.example.parawaleapp.sign_in.UserData
 
-@RequiresApi(Build.VERSION_CODES.Q)
-@OptIn(ExperimentalMaterial3Api::class)
-@Preview(showBackground = true)
+
 @Composable
-fun Profileset() {
+fun Profileset(userData: UserData?) {
 
 //    var img = ImageBitmap.imageResource(R.drawable.mypic4)
    // var img = Uri.parse("android.resource://com.example.parawaleapp/drawable/mypic4")
     val context = LocalContext.current
     var nametemp by remember {
-        mutableStateOf(name)
+        mutableStateOf(userData?.userName)
     }
     var phonenotemp by remember {
         mutableStateOf(phoneno)
@@ -63,17 +57,23 @@ fun Profileset() {
 
 
     var selectImgUri by remember {
-        mutableStateOf<Uri?>(null)
+        mutableStateOf(
+            if (img.isNullOrBlank()){
+                userData?.progilePictureUrl
+            }else{
+                Uri.parse(img)
+            }
+        )
     }
 
     var singlePhotoPickerLauncher =
         rememberLauncherForActivityResult(
             contract = ActivityResultContracts.PickVisualMedia(),
-            onResult ={ uri -> selectImgUri = uri } )
-
-    
-
-
+            onResult ={ uri ->
+                if (uri != null) {
+                    selectImgUri = uri.toString()
+                }
+            } )
 
     Column(
         modifier = Modifier
@@ -83,6 +83,7 @@ fun Profileset() {
         Arrangement.Center,
         horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally
     ) {
+       // AndroidView(modifier = Modifier.fillMaxSize(), factory = { videoView })
         Text(text ="Parawale", modifier = Modifier
             .padding(10.dp)
             .fillMaxWidth(),textAlign = TextAlign.Center,
@@ -97,12 +98,14 @@ fun Profileset() {
             ,fontSize = 20.sp, fontWeight = FontWeight.Bold
         )
 
-        TextField(
-            value = nametemp,
-            onValueChange = {nametemp = it},
-            label = { androidx.compose.material.Text(text = "Full name") },
-            modifier = Modifier.padding(10.dp),
-            singleLine = true)
+        nametemp?.let {
+            TextField(
+                value = it,
+                onValueChange = {nametemp = it},
+                label = { androidx.compose.material.Text(text = "Full name") },
+                modifier = Modifier.padding(10.dp),
+                singleLine = true)
+        }
 
         TextField(
             value = phonenotemp,
@@ -122,11 +125,7 @@ fun Profileset() {
                 fontSize = 16.sp, fontWeight = FontWeight.Bold
             )
             AsyncImage(model =
-            if (selectImgUri == null ){
-                img
-            }else{
-                selectImgUri!!
-                 }, contentDescription = "userImage",
+            selectImgUri, contentDescription = "userImage",
                 modifier = Modifier
                     .padding(start = 10.dp)
                     .size(80.dp)
@@ -142,7 +141,7 @@ fun Profileset() {
         }
         androidx.compose.material.Button(
             onClick = {
-                if (nametemp == "" || phonenotemp == "" || selectImgUri == null){
+                if (nametemp == "" || phonenotemp == ""){
                     Toast.makeText(
                         context,
                         "Please fill all the fields",
@@ -157,9 +156,11 @@ fun Profileset() {
                     ).show()
                     return@Button
                 }else {
-                    name = nametemp
+                    name = nametemp.toString()
                     phoneno = phonenotemp
-                    img = selectImgUri!!
+                    Log.d("AAA", "Profileset: $selectImgUri")
+                    img = selectImgUri.toString()
+                    saveDataToSharedPreferences(context)
                     Toast.makeText(
                         context,
                         "Profile Updated",

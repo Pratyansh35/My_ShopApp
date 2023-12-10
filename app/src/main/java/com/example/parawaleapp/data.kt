@@ -1,21 +1,41 @@
 package com.example.parawaleapp
 
+import android.content.Context
 import android.net.Uri
+import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.graphics.ImageBitmap
 
-import androidx.compose.ui.res.*
+import com.example.parawaleapp.R
+
 //User Info  ImageBitmap.imageResource(R.drawable.mypic4)
-var name by mutableStateOf("Pratyansh Maddheshia")
-var phoneno by mutableStateOf("7007254934")
+var name by mutableStateOf("")
+var phoneno by mutableStateOf("")
 
 
 // Initialize the MutableState with the ImageBitmap
-var img by mutableStateOf(Uri.parse("android.resource://com.example.parawaleapp/drawable/mypic4"))
+var img by mutableStateOf("")
 
+fun saveDataToSharedPreferences(context: Context) {
+    val sharedPreferences = context.getSharedPreferences("MyPrefs", Context.MODE_PRIVATE)
+    with(sharedPreferences.edit()) {
+        putString("name", name)
+        putString("phoneno", phoneno)
+        putString("img", img)
 
+        apply()
+    }
+}
+fun restoreDataFromSharedPreferences(context: Context) {
+    val sharedPreferences = context.getSharedPreferences("MyPrefs", Context.MODE_PRIVATE)
+    name = sharedPreferences.getString("name", "") ?: ""
+    phoneno = sharedPreferences.getString("phoneno", "") ?: ""
+    val imgUriString = sharedPreferences.getString("img", "")
+
+    img = imgUriString ?: ""
+
+}
 var count by mutableStateOf(0)
     var total by  mutableStateOf(0)
     val cartItems: MutableList<Dish> = mutableListOf()
@@ -30,6 +50,9 @@ fun totalcount(){
         }
     }
 }
+
+
+
 fun countItems(){
     count = cartItems.size
 }
@@ -166,4 +189,9 @@ val SlidesItems = listOf(
         "Notification, Language",
         R.drawable.setting
     )
+
+
 )
+
+
+

@@ -12,7 +12,20 @@
           "package_name": "com.example.parawaleapp"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "252813628903-v6df1b8129s766c4o85bktm8fhbrtlgg.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.parawaleapp",
+            "certificate_hash": "21e3d3ff9400b6fe286abd513ccadb2230f6a7ba"
+          }
+        },
+        {
+          "client_id": "252813628903-1sa87q67q9fqc6iji9gkeqf1o13nfn59.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyD3t3RiKgh3l96HJ8XAsLpgSKPXf-p86sM"
@@ -20,7 +33,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "252813628903-1sa87q67q9fqc6iji9gkeqf1o13nfn59.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }

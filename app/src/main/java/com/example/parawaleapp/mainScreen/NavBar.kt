@@ -1,4 +1,4 @@
-package com.example.parawaleapp
+package com.example.parawaleapp.mainScreen
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
@@ -22,6 +22,9 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.example.parawaleapp.R
+import com.example.parawaleapp.TypewriterText
+import com.example.parawaleapp.count
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
