@@ -24,7 +24,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.parawaleapp.R
 import com.example.parawaleapp.TypewriterText
-import com.example.parawaleapp.count
+import com.example.parawaleapp.database.count
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 

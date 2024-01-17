@@ -1,7 +1,6 @@
 package com.example.parawaleapp
 
 import android.os.Bundle
-import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -32,10 +31,12 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.parawaleapp.database.restoreDataFromSharedPreferences
+import com.example.parawaleapp.mainScreen.AddItemScreen
+import com.example.parawaleapp.mainScreen.AddItems
 import com.example.parawaleapp.mainScreen.AfterCart
 import com.example.parawaleapp.mainScreen.Cart
 import com.example.parawaleapp.mainScreen.CartDrawerPanel
@@ -54,6 +55,7 @@ import com.example.parawaleapp.mainScreen.Profileset
 import com.example.parawaleapp.sign_in.GoogleAuthUiclient
 import com.example.parawaleapp.sign_in.SignInViewModel
 import com.google.android.gms.auth.api.identity.Identity
+import com.google.firebase.FirebaseApp
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
@@ -73,6 +75,8 @@ class MainActivity : ComponentActivity() {
                 modifier = Modifier.fillMaxSize(),
                 color = MaterialTheme.colors.background
             ) {
+
+                FirebaseApp.initializeApp(this)
                 restoreDataFromSharedPreferences(this)
                 val navController = rememberNavController()
                 val scope = rememberCoroutineScope()
@@ -87,7 +91,7 @@ class MainActivity : ComponentActivity() {
                                 navController.navigate("MainScreen")
                             }
                         }
-                        
+
                         val launcher = rememberLauncherForActivityResult(
                             contract = ActivityResultContracts.StartIntentSenderForResult(),
                             onResult = { result ->
@@ -126,13 +130,10 @@ class MainActivity : ComponentActivity() {
                                 }
                             }
                         )
-
                     }
                     composable("MainScreen") {
                         MainScreen(navController,googleAuthUiClient = googleAuthUiClient, scope = scope)
                     }
-
-
                 }
             }
         }
@@ -146,7 +147,6 @@ fun MainScreen(navController2: NavController,googleAuthUiClient: GoogleAuthUicli
     val context = LocalContext.current
     Scaffold(
         scaffoldState = scaffoldState,
-
         drawerContent = {
             // Left drawer content
             LeftDrawerPanel(scaffoldState = scaffoldState,
@@ -198,6 +198,9 @@ fun MainScreen(navController2: NavController,googleAuthUiClient: GoogleAuthUicli
                 }
                 composable(ProfileSet.route) {
                     Profileset(userData = googleAuthUiClient.getSinedInUser())
+                }
+                composable(AddItems.route){
+                    AddItemScreen()
                 }
             }
         }

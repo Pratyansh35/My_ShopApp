@@ -28,9 +28,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.parawaleapp.Categories
-import com.example.parawaleapp.Dish
-import com.example.parawaleapp.Dishes
+import com.example.parawaleapp.database.Categories
+import com.example.parawaleapp.database.Dish
+import com.example.parawaleapp.database.Dishes
 
 
 @Composable
@@ -107,6 +107,22 @@ fun Search() {
                 }
 
                 SearchFilter(filteredDishes.value)
+            }
+        }
+    }
+}
+
+@Composable
+fun SearchFilter(filteredDishes: List<Dish>) {
+    Column {
+        Divider(
+            modifier = Modifier.padding(8.dp),
+            color = Color.Gray,
+            thickness = 1.dp
+        )
+        LazyColumn {
+            items(filteredDishes) { dish ->
+                MenuDish(dish)
             }
         }
     }

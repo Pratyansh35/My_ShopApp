@@ -7,8 +7,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Button
 import androidx.compose.material.ButtonDefaults
@@ -21,18 +19,19 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.example.parawaleapp.Dish
-import com.example.parawaleapp.Dishes
-import com.example.parawaleapp.Slidess
-import com.example.parawaleapp.cartItems
-import com.example.parawaleapp.countItems
-import com.example.parawaleapp.totalcount
+import coil.compose.rememberAsyncImagePainter
+import com.example.parawaleapp.database.Dish
+import com.example.parawaleapp.database.Slidess
+import com.example.parawaleapp.database.cartItems
+import com.example.parawaleapp.database.countItems
+import com.example.parawaleapp.database.totalcount
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
@@ -41,36 +40,9 @@ import kotlinx.coroutines.launch
 fun MenuListScreen() {
     Column {
         Search()
-        Lowerpanelmain()
-    }
-}
-@Preview(showSystemUi = true)
-@Composable
-fun Lowerpanelmain() {
-    LazyColumn {
-
-            items(Dishes) { Dish ->
-                MenuDish(Dish)
-        }
     }
 }
 
-
-@Composable
-fun SearchFilter(filteredDishes: List<Dish>) {
-    Column {
-        Divider(
-            modifier = Modifier.padding(8.dp),
-            color = Color.Gray,
-            thickness = 1.dp
-        )
-        LazyColumn {
-            items(filteredDishes) { dish ->
-                MenuDish(dish)
-            }
-        }
-    }
-}
 
 @Composable
 fun MenuCategory(category: String) {
@@ -101,8 +73,12 @@ fun MenuSlide(Slidess: Slidess, navController: NavController? = null, scaffoldSt
             navController?.navigate("cart")
         }else if (Slidess.Type == "Manage Account"){
             scope.launch { scaffoldState.drawerState.close() }
-            navController?.navigate("profileset")
+            navController?.navigate("ProfileSet")
+        }else if (Slidess.Type == "Add Items") {
+            scope.launch { scaffoldState.drawerState.close() }
+            navController?.navigate("AddItems")
         }
+
         }
 
     ) {
@@ -135,26 +111,10 @@ fun MenuSlide(Slidess: Slidess, navController: NavController? = null, scaffoldSt
 }
 
 
-@Composable
-fun MenuDish(dish: Dish, addToCart: (Dish) -> Unit) {
-    Row {
-        Button(
-            onClick = { addToCart(dish) },
-            colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFFF4CE14)),
-            shape = RoundedCornerShape(40)
-        ) {
-            Text(text = "Add to Cart")
-        }
-    }
-}
-
-
-
 
 
 @Composable
 fun MenuDish(dish: Dish) {
-
     Card {
         Row(
             modifier = Modifier
@@ -208,6 +168,7 @@ fun MenuDish(dish: Dish) {
             Image(
                 painter = painterResource(id = dish.image),
                 contentDescription = "",
+
             )
         }
     }

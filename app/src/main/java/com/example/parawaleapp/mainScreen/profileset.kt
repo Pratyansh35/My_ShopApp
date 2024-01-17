@@ -17,8 +17,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.Text
 import androidx.compose.material.TextField
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -35,11 +35,14 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
-import com.example.parawaleapp.img
-import com.example.parawaleapp.name
-import com.example.parawaleapp.phoneno
-import com.example.parawaleapp.saveDataToSharedPreferences
+import com.example.parawaleapp.database.img
+import com.example.parawaleapp.database.name
+import com.example.parawaleapp.database.phoneno
+import com.example.parawaleapp.database.saveDataToSharedPreferences
 import com.example.parawaleapp.sign_in.UserData
+
+
+
 
 
 @Composable
@@ -48,25 +51,20 @@ fun Profileset(userData: UserData?) {
 //    var img = ImageBitmap.imageResource(R.drawable.mypic4)
    // var img = Uri.parse("android.resource://com.example.parawaleapp/drawable/mypic4")
     val context = LocalContext.current
+
     var nametemp by remember {
         mutableStateOf(userData?.userName)
     }
     var phonenotemp by remember {
         mutableStateOf(phoneno)
     }
-
-
     var selectImgUri by remember {
         mutableStateOf(
-            if (img.isNullOrBlank()){
                 userData?.progilePictureUrl
-            }else{
-                Uri.parse(img)
-            }
         )
     }
 
-    var singlePhotoPickerLauncher =
+    val singlePhotoPickerLauncher =
         rememberLauncherForActivityResult(
             contract = ActivityResultContracts.PickVisualMedia(),
             onResult ={ uri ->
@@ -159,7 +157,9 @@ fun Profileset(userData: UserData?) {
                     name = nametemp.toString()
                     phoneno = phonenotemp
                     Log.d("AAA", "Profileset: $selectImgUri")
-                    img = selectImgUri.toString()
+                    img = Uri.parse(selectImgUri.toString())
+                    userData?.progilePictureUrl = selectImgUri
+
                     saveDataToSharedPreferences(context)
                     Toast.makeText(
                         context,

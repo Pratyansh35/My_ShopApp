@@ -9,5 +9,5 @@ data class  UserData(
     val userId:String,
     val userName:String?,
     val userEmail:String?,
-    val progilePictureUrl:String?
+    var progilePictureUrl:String?
 )

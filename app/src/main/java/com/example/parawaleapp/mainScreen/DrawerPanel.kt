@@ -1,6 +1,5 @@
 package com.example.parawaleapp.mainScreen
 
-import android.net.Uri
 import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -40,6 +39,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -47,21 +47,22 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
-import com.example.parawaleapp.Dish
+import coil.compose.rememberAsyncImagePainter
 import com.example.parawaleapp.R
-import com.example.parawaleapp.SlidesItems
-import com.example.parawaleapp.cartItems
-import com.example.parawaleapp.countItems
-import com.example.parawaleapp.img
-import com.example.parawaleapp.name
+import com.example.parawaleapp.database.Dish
+import com.example.parawaleapp.database.SlidesItems
+import com.example.parawaleapp.database.cartItems
+import com.example.parawaleapp.database.clearDataFromSharedPreferences
+import com.example.parawaleapp.database.countItems
+import com.example.parawaleapp.database.img
+import com.example.parawaleapp.database.name
+import com.example.parawaleapp.database.total
+import com.example.parawaleapp.database.totalcount
 import com.example.parawaleapp.sign_in.UserData
-import com.example.parawaleapp.total
-import com.example.parawaleapp.totalcount
 import kotlinx.coroutines.CoroutineScope
 
 
@@ -71,13 +72,12 @@ fun LeftDrawerPanel(
     userData: UserData?,
     signOut: () -> Unit
 ) {
-
+    val context = LocalContext.current
     Column(Modifier.fillMaxWidth()
     )
     {
         Card(
             modifier = Modifier.height(150.dp).fillMaxWidth()
-
         )
         {
             Row(
@@ -94,36 +94,17 @@ fun LeftDrawerPanel(
 
             ) {
 
-if (userData?.progilePictureUrl != null) {
-                AsyncImage(model =
-                if (img.isNullOrBlank()){
-                    userData.progilePictureUrl
-                }else{
-                    Uri.parse(img)
-                    Log.d("tagg", "LeftDrawerPanel: $img")
-                     },
-                     contentDescription = "userImage",
-                    modifier = Modifier
-                        .padding(start = 10.dp)
-                        .size(110.dp)
-                        .clip(CircleShape),
-                    contentScale = ContentScale.Crop
-                )
 
-            }
-                Log.d("tagg", "LeftDrawerPanel: ${userData?.progilePictureUrl} $img")
 
-                /*Image(
-                    painter = painterResource(img),
-                    contentDescription = "UserImage",
-                    modifier = Modifier
-                        .padding(start = 10.dp)
-                        .size(130.dp)
-                        .clip(RoundedCornerShape(50))
-                        .clickable { navController?.navigate("profile") },
-
-                )
-*/
+                    AsyncImage(model = userData?.progilePictureUrl
+                    ,
+                        contentDescription = "userImage",
+                        modifier = Modifier
+                            .padding(start = 10.dp)
+                            .size(110.dp)
+                            .clip(CircleShape),
+                        contentScale = ContentScale.Crop
+                    )
 
                 Column(
                     modifier = Modifier
@@ -174,6 +155,7 @@ if (userData?.progilePictureUrl != null) {
         ) {
             Button(onClick = {
                 signOut()
+                clearDataFromSharedPreferences(context);
             },colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFFF4CE14)),
                 shape = RoundedCornerShape(40), modifier = Modifier
                     .padding(10.dp)
@@ -265,19 +247,7 @@ fun CartDrawerPanel( navController: NavController? = null) {
 
 
 
-@Preview(showBackground = true)
-@Composable
-fun PreviewCartDrawerPanel(){
-    CartItems(
-        Dish = Dish("Happilo Almonds 500g",
-        "₹339",
-        0,
-        "100% Natural Premium California Dried Almonds are a great source of protein...",
-        "DryFruits",
-        R.drawable.happilo339
-        )
-    )
-}
+
 
 fun DishIncrement(Dish: Dish, navController: NavController? = null){
     Dish.count++
@@ -308,7 +278,7 @@ fun CartItems(Dish: Dish, navController: NavController? = null) {
                 .height(120.dp)
         ) {
             Image(
-                painter = painterResource(id = Dish.image),
+                painter = rememberAsyncImagePainter(model = Dish.image),
                 contentDescription = "",
                 Modifier
                     .fillMaxHeight(0.8f)

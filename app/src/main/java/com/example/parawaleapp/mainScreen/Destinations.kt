@@ -48,7 +48,11 @@ object AfterCart : Destinations {
     override val icon = R.drawable.ic_location
     override val title = "AfterCart"
 }
-
+object AddItems : Destinations {
+    override val route = "AddItems"
+    override val icon = R.drawable.additemcloud
+    override val title = "AddItems"
+}
 
 
 

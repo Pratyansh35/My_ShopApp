@@ -1,44 +1,55 @@
-package com.example.parawaleapp
+package com.example.parawaleapp.database
 
 import android.content.Context
 import android.net.Uri
-import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-
 import com.example.parawaleapp.R
+
+import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.storage.FirebaseStorage
 
 //User Info  ImageBitmap.imageResource(R.drawable.mypic4)
 var name by mutableStateOf("")
 var phoneno by mutableStateOf("")
 
 
-// Initialize the MutableState with the ImageBitmap
-var img by mutableStateOf("")
 
+
+var img by  mutableStateOf<Uri?>(null)
 fun saveDataToSharedPreferences(context: Context) {
     val sharedPreferences = context.getSharedPreferences("MyPrefs", Context.MODE_PRIVATE)
     with(sharedPreferences.edit()) {
         putString("name", name)
         putString("phoneno", phoneno)
-        putString("img", img)
-
+        putString("img", img.toString())
         apply()
     }
 }
+fun clearDataFromSharedPreferences(context: Context) {
+    val sharedPreferences = context.getSharedPreferences("MyPrefs", Context.MODE_PRIVATE)
+    with(sharedPreferences.edit()) {
+        clear()
+        apply()
+    }
+}
+
 fun restoreDataFromSharedPreferences(context: Context) {
     val sharedPreferences = context.getSharedPreferences("MyPrefs", Context.MODE_PRIVATE)
     name = sharedPreferences.getString("name", "") ?: ""
     phoneno = sharedPreferences.getString("phoneno", "") ?: ""
     val imgUriString = sharedPreferences.getString("img", "")
 
-    img = imgUriString ?: ""
+    img = Uri.parse(imgUriString)
 
 }
 var count by mutableStateOf(0)
-    var total by  mutableStateOf(0)
-    val cartItems: MutableList<Dish> = mutableListOf()
+var total by  mutableStateOf(0)
+val cartItems: MutableList<Dish> = mutableListOf()
+
+
 fun totalcount(){
     total = 0
     for (i in cartItems){
@@ -70,6 +81,21 @@ val Categories = listOf(
 )
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 data class Dish(
     val name: String,
     val price: String,
@@ -78,6 +104,9 @@ data class Dish(
     val category: String,
     val image: Int
 )
+
+
+
 
 val Dishes = listOf(
     Dish(
@@ -188,6 +217,11 @@ val SlidesItems = listOf(
         "Settings",
         "Notification, Language",
         R.drawable.setting
+    ),
+    Slidess(
+        "Add Items",
+        "Add items to database",
+        R.drawable.additemcloud
     )
 
 

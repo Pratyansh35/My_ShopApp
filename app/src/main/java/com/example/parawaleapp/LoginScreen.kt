@@ -101,7 +101,6 @@ fun TypewriterText(
 @Composable
 fun SignInScreen(
     state: SignInState,
-
     onSignInClick: () -> Unit
 ) {
     var username by remember {
