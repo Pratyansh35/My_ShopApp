@@ -227,5 +227,3 @@ val SlidesItems = listOf(
 
 )
 
-
-

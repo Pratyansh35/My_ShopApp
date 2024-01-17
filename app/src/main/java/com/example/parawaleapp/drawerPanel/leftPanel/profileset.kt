@@ -1,4 +1,4 @@
-package com.example.parawaleapp.mainScreen
+package com.example.parawaleapp.drawerPanel.leftPanel
 
 import android.net.Uri
 import android.util.Log

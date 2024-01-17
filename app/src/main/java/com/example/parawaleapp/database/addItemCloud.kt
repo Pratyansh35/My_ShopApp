@@ -1,4 +1,4 @@
-package com.example.parawaleapp.mainScreen
+package com.example.parawaleapp.database
 
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest

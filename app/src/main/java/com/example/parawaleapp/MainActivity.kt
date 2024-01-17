@@ -35,15 +35,15 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.parawaleapp.database.restoreDataFromSharedPreferences
-import com.example.parawaleapp.mainScreen.AddItemScreen
+import com.example.parawaleapp.database.AddItemScreen
 import com.example.parawaleapp.mainScreen.AddItems
 import com.example.parawaleapp.mainScreen.AfterCart
 import com.example.parawaleapp.mainScreen.Cart
-import com.example.parawaleapp.mainScreen.CartDrawerPanel
+import com.example.parawaleapp.drawerPanel.CartDrawerPanel
 import com.example.parawaleapp.mainScreen.ConfirmCart
 import com.example.parawaleapp.mainScreen.Home
 import com.example.parawaleapp.mainScreen.HomeScreen
-import com.example.parawaleapp.mainScreen.LeftDrawerPanel
+import com.example.parawaleapp.drawerPanel.leftPanel.LeftDrawerPanel
 import com.example.parawaleapp.mainScreen.Location
 import com.example.parawaleapp.mainScreen.LocationScreen
 import com.example.parawaleapp.mainScreen.Login
@@ -51,7 +51,7 @@ import com.example.parawaleapp.mainScreen.Menu
 import com.example.parawaleapp.mainScreen.MenuListScreen
 import com.example.parawaleapp.mainScreen.NavBar
 import com.example.parawaleapp.mainScreen.ProfileSet
-import com.example.parawaleapp.mainScreen.Profileset
+import com.example.parawaleapp.drawerPanel.leftPanel.Profileset
 import com.example.parawaleapp.sign_in.GoogleAuthUiclient
 import com.example.parawaleapp.sign_in.SignInViewModel
 import com.google.android.gms.auth.api.identity.Identity
@@ -136,12 +136,14 @@ class MainActivity : ComponentActivity() {
                     }
                 }
             }
+
         }
     }
 }
 
 @Composable
 fun MainScreen(navController2: NavController,googleAuthUiClient: GoogleAuthUiclient, scope: CoroutineScope) {
+
     val scaffoldState = rememberScaffoldState()
     val navController = rememberNavController()
     val context = LocalContext.current
@@ -188,7 +190,7 @@ fun MainScreen(navController2: NavController,googleAuthUiClient: GoogleAuthUicli
                 }
 
                 composable(Location.route) {
-                    LocationScreen()
+                    LocationScreen(/*YourViewModel()*/)
                 }
                 composable(Cart.route) {
                     CartDrawerPanel(navController = navController)
@@ -206,74 +208,6 @@ fun MainScreen(navController2: NavController,googleAuthUiClient: GoogleAuthUicli
         }
     }
 }
-
-
-/*@Composable
-fun Login(){
-    var isUserLoggedIn by remember { mutableStateOf(false) }
-
-    if (isUserLoggedIn) {
-        // Navigate to another Composable (MyApp).
-        MyApp()
-    } else {
-        LoginScreen(onLoginSuccess = {
-            isUserLoggedIn = true
-        })
-    }
-}*/
-
-
-/*@Composable
-fun MyApp(googleAuthUiClient: GoogleAuthUiclient) {
-    val scaffoldState = rememberScaffoldState()
-    val navController = rememberNavController()
-    val scope = rememberCoroutineScope()
-    Scaffold(
-        scaffoldState = scaffoldState,
-
-        drawerContent = {
-            // Left drawer content
-            LeftDrawerPanel(scaffoldState = scaffoldState, scope = scope,navController = navController,
-                userData = googleAuthUiClient.getSinedInUser(),
-                signOut = {
-                    lifecycleScope
-
-            })
-
-            }, drawerGesturesEnabled = true,
-
-        topBar = { NavBar(scaffoldState = scaffoldState, scope = scope,navController = navController) },
-        bottomBar = { MyBottomNavigation(navController = navController) }) {
-
-        Box(Modifier.padding(it)) {
-            NavHost(navController = navController, startDestination = Home.route) {
-
-                composable(Home.route) {
-                    HomeScreen()
-                }
-                composable(Menu.route) {
-                    MenuListScreen()
-                }
-
-                composable(Location.route) {
-                    LocationScreen()
-                }
-                composable(Cart.route) {
-                    CartDrawerPanel(navController = navController)
-                }
-                composable(AfterCart.route){
-                    ConfirmCart()
-                }
-                composable(ProfileSet.route){
-                    Profileset()
-                }
-            }
-        }
-    }
-}*/
-
-
-
 
 @Composable
 fun MyBottomNavigation(navController: NavController) {
