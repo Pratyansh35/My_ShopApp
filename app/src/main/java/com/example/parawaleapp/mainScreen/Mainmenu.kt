@@ -20,15 +20,18 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
+import com.example.parawaleapp.database.Dishfordb
 import com.example.parawaleapp.database.Slidess
 import com.example.parawaleapp.database.cartItems
 import com.example.parawaleapp.database.countItems
+import com.example.parawaleapp.database.saveCartItemsToSharedPreferences
 import com.example.parawaleapp.database.totalcount
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
@@ -63,9 +66,6 @@ fun MenuSlide(Slidess: Slidess, navController: NavController? = null, scaffoldSt
         modifier = Modifier
             .fillMaxWidth()
             .padding(8.dp, 8.dp, 8.dp, 20.dp),
-
-
-
         onClick = { if (Slidess.Type == "Cart"){
             scope.launch { scaffoldState.drawerState.close() }
             navController?.navigate("cart")
@@ -113,6 +113,7 @@ fun MenuSlide(Slidess: Slidess, navController: NavController? = null, scaffoldSt
 
 @Composable
 fun MenuDish(dish: Dishfordb) {
+    var context = LocalContext.current
     Card {
         Row(
             modifier = Modifier
@@ -144,17 +145,14 @@ fun MenuDish(dish: Dishfordb) {
                     }
                     Row(modifier = Modifier.fillMaxWidth(.6f), Arrangement.End) {
                         Button(
-                            onClick = { if (cartItems.contains(dish)) {
-                                dish.count++
-                                countItems()
-                                totalcount()
-                            } else {
-                                dish.count++
+                            onClick = { if (!cartItems.contains(dish)) {
                                 cartItems.add(dish)
-                                totalcount()
+                            }
+                                dish.count++
                                 countItems()
-
-                            }},
+                                totalcount()
+                                saveCartItemsToSharedPreferences(context)
+                                },
                             colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFFF4CE14)),
                             shape = RoundedCornerShape(40)
                         ) {

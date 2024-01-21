@@ -34,7 +34,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.parawaleapp.R
 import com.example.parawaleapp.database.getdata
-
+import com.example.parawaleapp.database.Dishfordb
 
 @Composable
 fun HomeScreen(DishData: List<Dishfordb>) {

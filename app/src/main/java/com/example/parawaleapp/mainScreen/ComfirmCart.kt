@@ -23,7 +23,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.parawaleapp.database.cartItems
 import com.example.parawaleapp.database.total
-
+import com.example.parawaleapp.database.Dishfordb
 
 @Preview(showBackground = true)
 @Composable

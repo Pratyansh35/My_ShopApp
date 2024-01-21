@@ -33,6 +33,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -45,12 +46,14 @@ import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import coil.compose.rememberAsyncImagePainter
 import com.example.parawaleapp.R
+import com.example.parawaleapp.database.Dishfordb
 
 import com.example.parawaleapp.database.cartItems
 import com.example.parawaleapp.database.countItems
+import com.example.parawaleapp.database.saveCartItemsToSharedPreferences
 import com.example.parawaleapp.database.total
 import com.example.parawaleapp.database.totalcount
-import com.example.parawaleapp.mainScreen.Dishfordb
+
 
 
 @Composable
@@ -143,6 +146,7 @@ fun DishIncrement(Dish: Dishfordb, navController: NavController? = null) {
     Dish.count++
     totalcount()
     navController?.navigate("cart")
+
 }
 
 fun DishDecrement(Dish: Dishfordb, navController: NavController? = null) {
@@ -158,6 +162,7 @@ fun DishDecrement(Dish: Dishfordb, navController: NavController? = null) {
 
 @Composable
 fun CartItems(Dish: Dishfordb, navController: NavController? = null) {
+    val context = LocalContext.current
     var Dishcount by remember {
         mutableStateOf(TextFieldValue(Dish.count.toString()))
     }
@@ -203,6 +208,8 @@ fun CartItems(Dish: Dishfordb, navController: NavController? = null) {
                     IconButton(
                         onClick = {
                             DishDecrement(Dish, navController)
+                            saveCartItemsToSharedPreferences(context)
+
                         },
                         Modifier
                             .width(36.dp)
@@ -220,6 +227,7 @@ fun CartItems(Dish: Dishfordb, navController: NavController? = null) {
                     TextField(
                         value = Dishcount,
                         onValueChange = {
+
                             val userInput = it.text.toIntOrNull()
                             if (it.text.isNotEmpty()) {
                                 userInput?.let { input ->
@@ -227,12 +235,14 @@ fun CartItems(Dish: Dishfordb, navController: NavController? = null) {
                                         Dishcount = it
                                         Dish.count = input
                                         totalcount()
+                                        saveCartItemsToSharedPreferences(context)
                                     } else if (input == 0) {
                                         Dishcount = it
                                         Dish.count = input
                                         totalcount()
                                         cartItems.remove(Dish)
                                         countItems()
+                                        saveCartItemsToSharedPreferences(context)
                                     } else {
 
                                     }
@@ -263,6 +273,7 @@ fun CartItems(Dish: Dishfordb, navController: NavController? = null) {
                     IconButton(
                         onClick = {
                             DishIncrement(Dish, navController)
+                            saveCartItemsToSharedPreferences(context)
                         },
                         Modifier
                             .width(36.dp)

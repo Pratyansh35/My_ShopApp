@@ -4,19 +4,21 @@ import android.content.Context
 import android.net.Uri
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import com.example.parawaleapp.R
-import com.example.parawaleapp.mainScreen.Dishfordb
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 
-import com.google.firebase.database.FirebaseDatabase
-import com.google.firebase.storage.FirebaseStorage
 
 //User Info  ImageBitmap.imageResource(R.drawable.mypic4)
 var name by mutableStateOf("")
 var phoneno by mutableStateOf("")
 var img by  mutableStateOf<Uri?>(null)
 
+// FOR CART
+var count by mutableStateOf(0)
+var total by  mutableStateOf(0)
+var cartItems: MutableList<Dishfordb> = mutableListOf()
 
 fun saveDataToSharedPreferences(context: Context) {
     val sharedPreferences = context.getSharedPreferences("MyPrefs", Context.MODE_PRIVATE)
@@ -27,14 +29,6 @@ fun saveDataToSharedPreferences(context: Context) {
         apply()
     }
 }
-fun clearDataFromSharedPreferences(context: Context) {
-    val sharedPreferences = context.getSharedPreferences("MyPrefs", Context.MODE_PRIVATE)
-    with(sharedPreferences.edit()) {
-        clear()
-        apply()
-    }
-}
-
 fun restoreDataFromSharedPreferences(context: Context) {
     val sharedPreferences = context.getSharedPreferences("MyPrefs", Context.MODE_PRIVATE)
     name = sharedPreferences.getString("name", "") ?: ""
@@ -43,9 +37,44 @@ fun restoreDataFromSharedPreferences(context: Context) {
     img = Uri.parse(imgUriString)
 
 }
-var count by mutableStateOf(0)
-var total by  mutableStateOf(0)
-val cartItems: MutableList<Dishfordb> = mutableListOf()
+fun saveCartItemsToSharedPreferences(context: Context) {
+    val sharedPreferences = context.getSharedPreferences("MyPrefs", Context.MODE_PRIVATE)
+    val editor = sharedPreferences.edit()
+
+    // Convert the cartItems list to a JSON string
+    val gson = Gson()
+    val cartItemsJson = gson.toJson(cartItems)
+
+    // Save the JSON string in SharedPreferences
+    editor.putString("cartItems", cartItemsJson)
+    editor.putString("count", count.toString())
+    editor.putString("total", total.toString())
+    editor.apply()
+}
+
+fun getCartItemsFromSharedPreferences(context: Context){
+    val sharedPreferences = context.getSharedPreferences("MyPrefs", Context.MODE_PRIVATE)
+
+    // Retrieve the JSON string from SharedPreferences
+    val cartItemsJson = sharedPreferences.getString("cartItems", "")
+
+    count = sharedPreferences.getString("count", "")?.toInt() ?: 0
+    total = sharedPreferences.getString("total", "")?.toInt() ?: 0
+    // Convert the JSON string back to a MutableList<Dishfordb>
+    val gson = Gson()
+    val type = object : TypeToken<MutableList<Dishfordb>>() {}.type
+    cartItems = gson.fromJson(cartItemsJson, type) ?: mutableListOf()
+}
+fun clearDataFromSharedPreferences(context: Context) {
+    val sharedPreferences = context.getSharedPreferences("MyPrefs", Context.MODE_PRIVATE)
+    with(sharedPreferences.edit()) {
+        clear()
+        apply()
+    }
+}
+
+
+
 
 
 fun totalcount(){

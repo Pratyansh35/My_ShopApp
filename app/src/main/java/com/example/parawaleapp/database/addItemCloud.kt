@@ -2,6 +2,7 @@ package com.example.parawaleapp.database
 
 import android.content.Context
 import android.net.Uri
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
@@ -39,7 +40,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.example.parawaleapp.R
-import com.example.parawaleapp.mainScreen.Dishfordb
 
 
 @Preview(showBackground = true)
@@ -97,7 +97,7 @@ fun AddItemScreen() {
         Spacer(modifier = Modifier.height(8.dp))
 
         Text(
-            text = "Add Product no.${imgSize + 1}",
+            text = "Add ${imgSize + 1}th Item",
             style = TextStyle(
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Normal,
@@ -209,40 +209,13 @@ fun AddItemScreen() {
     }
 }
 
-
-
-fun getImgUrl(image: Uri?, context: Context, callback: (String?) -> Unit) {
-    image?.let { uri ->
-        val imageRef = storageReference.child("${name}")
-        imageRef.putFile(uri)
-            .addOnSuccessListener { _ ->
-                // Image upload successful
-                Toast.makeText(context, "Item Added Successfully", Toast.LENGTH_SHORT).show()
-
-                // Retrieve the download URL
-                imageRef.downloadUrl.addOnSuccessListener { imageUrl ->
-                    callback(imageUrl.toString())
-                }
-                    .addOnFailureListener { exception ->
-                        // Handle the error while obtaining the download URL
-                        Toast.makeText(context, exception.message, Toast.LENGTH_SHORT).show()
-                        callback(null)
-                    }
-            }
-            .addOnFailureListener { exception ->
-                // Handle the error during image upload
-                Toast.makeText(context, exception.message, Toast.LENGTH_SHORT).show()
-                callback(null)
-            }
-    }
-}
 fun addItemToDatabase(name: String, price: String, description: String, category: String, image: Uri?, context: Context, imgSize: Int) {
     getImgUrl(image, context, name) { imgUrl ->
         // Use the obtained imgUrl to create the Dishfordb object
         val dish = imgUrl?.let { Dishfordb(name, price, 0, description, category, it) }
 
         // Push the dish to the "dishes" node in the database
-        val pushedReference = datareference.child(imgSize.toString())
+        val pushedReference = datareference.child((imgSize+1).toString())
         pushedReference.setValue(dish)
     }
 }
@@ -268,33 +241,8 @@ fun getImgUrl(image: Uri?, context: Context, name: String, callback: (String?) -
             .addOnFailureListener { exception ->
                 // Handle the error during image upload
                 Toast.makeText(context, exception.message, Toast.LENGTH_SHORT).show()
+                Log.d("uploadData", "addItemToDatabase: ${exception.message}")
                 callback(null)
             }
     } ?: callback(null) // Handle the case where image is null
 }
-
-
-
-/*fun addItemToDatabase(name: String, price: String, description: String, category: String, image: Uri?,context: Context,imgSize: Int) {
-    val imgUrl = getImgUrl(image,context,name)
-    val dish = Dishfordb(name, price, 0, description, category, image.toString())
-
-    // Push the dish to the "dishes" node in the database
-    val pushedReference = datareference.child(imgSize.toString())
-    pushedReference.setValue(dish)
-}*/
-
-/*
-image?.let { uri ->
-    val imageRef = storageReference.child("${name}")
-    imageRef.putFile(uri)
-        .addOnSuccessListener {
-            // Image upload successful
-            Toast.makeText(context, "Item Added Successfully", Toast.LENGTH_SHORT).show()
-
-        }
-        .addOnFailureListener { exception ->
-            // Handle the error
-            Toast.makeText(context, exception.message, Toast.LENGTH_SHORT).show()
-        }
-}*/

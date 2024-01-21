@@ -37,6 +37,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.parawaleapp.database.AddItemScreen
+import com.example.parawaleapp.database.Dishfordb
+import com.example.parawaleapp.database.getCartItemsFromSharedPreferences
 import com.example.parawaleapp.database.getdata
 import com.example.parawaleapp.database.restoreDataFromSharedPreferences
 import com.example.parawaleapp.drawerPanel.CartDrawerPanel
@@ -46,11 +48,10 @@ import com.example.parawaleapp.mainScreen.AddItems
 import com.example.parawaleapp.mainScreen.AfterCart
 import com.example.parawaleapp.mainScreen.Cart
 import com.example.parawaleapp.mainScreen.ConfirmCart
-import com.example.parawaleapp.mainScreen.Dishfordb
 import com.example.parawaleapp.mainScreen.Home
 import com.example.parawaleapp.mainScreen.HomeScreen
 import com.example.parawaleapp.mainScreen.Location
-//import com.example.parawaleapp.mainScreen.LocationScreen
+import com.example.parawaleapp.mainScreen.LocationScreen
 import com.example.parawaleapp.mainScreen.Login
 import com.example.parawaleapp.mainScreen.Menu
 import com.example.parawaleapp.mainScreen.MenuListScreen
@@ -76,15 +77,22 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             Surface(
-                modifier = Modifier.fillMaxSize(),
-                color = MaterialTheme.colors.background
+                modifier = Modifier.fillMaxSize(), color = MaterialTheme.colors.background
             ) {
 
                 FirebaseApp.initializeApp(this)
                 restoreDataFromSharedPreferences(this)
+                getCartItemsFromSharedPreferences(this)
                 val navController = rememberNavController()
                 val scope = rememberCoroutineScope()
+                var datauser by remember { mutableStateOf<List<Dishfordb>>(emptyList()) }
 
+                LaunchedEffect(Unit) {
+                    // Fetch dish data
+                    getdata()?.let { newData ->
+                        datauser = newData
+                    }
+                }
                 NavHost(navController = navController, startDestination = "sign_in") {
                     composable("sign_in") {
                         val viewModel = viewModel<SignInViewModel>()
@@ -96,55 +104,50 @@ class MainActivity : ComponentActivity() {
                             }
                         }
 
-                        val launcher = rememberLauncherForActivityResult(
-                            contract = ActivityResultContracts.StartIntentSenderForResult(),
-                            onResult = { result ->
-                                if (result.resultCode == RESULT_OK) {
-                                    lifecycleScope.launch {
-                                        val signInResult = googleAuthUiClient.signInWithIntent(
-                                            intent = result.data ?: return@launch
-                                        )
-                                        viewModel.onSignInResult(signInResult)
+                        val launcher =
+                            rememberLauncherForActivityResult(contract = ActivityResultContracts.StartIntentSenderForResult(),
+                                onResult = { result ->
+                                    if (result.resultCode == RESULT_OK) {
+                                        lifecycleScope.launch {
+                                            val signInResult = googleAuthUiClient.signInWithIntent(
+                                                intent = result.data ?: return@launch
+                                            )
+                                            viewModel.onSignInResult(signInResult)
+                                        }
                                     }
-                                }
 
-                            })
+                                })
                         LaunchedEffect(key1 = state.isSignInSuccessful) {
                             if (state.isSignInSuccessful) {
                                 Toast.makeText(
-                                    applicationContext,
-                                    "Sign in successful",
-                                    Toast.LENGTH_SHORT
+                                    applicationContext, "Sign in successful", Toast.LENGTH_SHORT
                                 ).show()
                                 navController.navigate("MainScreen")
                                 viewModel.resetState()
                             }
                         }
 
-                        SignInScreen(
-                            state = state,
-                            onSignInClick = {
-                                lifecycleScope.launch {
-                                    val signInIntentSender = googleAuthUiClient.signIn()
-                                    launcher.launch(
-                                        IntentSenderRequest.Builder(
-                                            signInIntentSender ?: return@launch
-                                        ).build()
-                                    )
-                                }
+                        SignInScreen(state = state, onSignInClick = {
+                            lifecycleScope.launch {
+                                val signInIntentSender = googleAuthUiClient.signIn()
+                                launcher.launch(
+                                    IntentSenderRequest.Builder(
+                                        signInIntentSender ?: return@launch
+                                    ).build()
+                                )
                             }
-                        )
+                        })
                     }
                     composable("MainScreen") {
                         MainScreen(
                             navController,
                             googleAuthUiClient = googleAuthUiClient,
-                            scope = scope
+                            scope = scope,
+                            datauser
                         )
                     }
                 }
             }
-
         }
     }
 }
@@ -153,51 +156,37 @@ class MainActivity : ComponentActivity() {
 fun MainScreen(
     navController2: NavController,
     googleAuthUiClient: GoogleAuthUiclient,
-    scope: CoroutineScope
+    scope: CoroutineScope,
+    datauser: List<Dishfordb>
 ) {
-    var datauser by remember { mutableStateOf<List<Dishfordb>>(emptyList()) }
 
-    LaunchedEffect(Unit) {
-        // Fetch dish data
-        getdata()?.let { newData ->
-            datauser = newData
-        }
-    }
-    //var datauser = listOf<Dishfordb>( Dishfordb("Adfassf","ss",5,"basjfbassjfj","","https://firebasestorage.googleapis.com/v0/b/myparawale-app.appspot.com/o/Images%2FNutraj%20Long%20Raisin%20500g?alt=media&token=3b4371a3-f6e8-48f6-b280-0326645462ef"))
     val scaffoldState = rememberScaffoldState()
     val navController = rememberNavController()
     val context = LocalContext.current
-    Scaffold(
-        scaffoldState = scaffoldState,
-        drawerContent = {
-            // Left drawer content
-            LeftDrawerPanel(scaffoldState = scaffoldState,
-                scope = scope,
-                navController = navController,
-                userData = googleAuthUiClient.getSinedInUser(),
-                signOut = {
-                    scope.launch {
-                        googleAuthUiClient.signOut()
-                        Toast.makeText(
-                            context,
-                            "Sign out successful",
-                            Toast.LENGTH_LONG
-                        ).show()
-                    }
-                    navController2.navigate("sign_in")
+    Scaffold(scaffoldState = scaffoldState, drawerContent = {
+        // Left drawer content
+        LeftDrawerPanel(scaffoldState = scaffoldState,
+            scope = scope,
+            navController = navController,
+            userData = googleAuthUiClient.getSinedInUser(),
+            signOut = {
+                scope.launch {
+                    googleAuthUiClient.signOut()
+                    Toast.makeText(
+                        context, "Sign out successful", Toast.LENGTH_LONG
+                    ).show()
+                }
+                navController2.navigate("sign_in")
 
-                })
+            })
 
-        }, drawerGesturesEnabled = true,
+    }, drawerGesturesEnabled = true,
 
         topBar = {
             NavBar(
-                scaffoldState = scaffoldState,
-                scope = scope,
-                navController = navController
+                scaffoldState = scaffoldState, scope = scope, navController = navController
             )
-        },
-        bottomBar = { MyBottomNavigation(navController = navController) }) {
+        }, bottomBar = { MyBottomNavigation(navController = navController) }) {
 
         Box(Modifier.padding(it)) {
             NavHost(navController = navController, startDestination = Home.route) {
@@ -209,9 +198,9 @@ fun MainScreen(
                     MenuListScreen(datauser)
                 }
 
-                /*composable(Location.route) {
+                composable(Location.route) {
                     LocationScreen()
-                }*/
+                }
                 composable(Cart.route) {
                     CartDrawerPanel(navController = navController)
                 }
@@ -232,31 +221,25 @@ fun MainScreen(
 @Composable
 fun MyBottomNavigation(navController: NavController) {
     val destinationList = listOf(
-        Home,
-        Menu,
-        Location
+        Home, Menu, Location
     )
     val selectedIndex = rememberSaveable {
         mutableStateOf(0)
     }
     BottomNavigation {
         destinationList.forEachIndexed { index, destination ->
-            BottomNavigationItem(
-                label = { Text(text = destination.title) },
-                icon = {
-                    Icon(
-                        painter = painterResource(id = destination.icon),
-                        contentDescription = destination.title
-                    )
-                },
-                selected = index == selectedIndex.value,
-                onClick = {
-                    selectedIndex.value = index
-                    navController.navigate(destinationList[index].route) {
-                        popUpTo(Login.route)
-                        launchSingleTop = true
-                    }
-                })
+            BottomNavigationItem(label = { Text(text = destination.title) }, icon = {
+                Icon(
+                    painter = painterResource(id = destination.icon),
+                    contentDescription = destination.title
+                )
+            }, selected = index == selectedIndex.value, onClick = {
+                selectedIndex.value = index
+                navController.navigate(destinationList[index].route) {
+                    popUpTo(Login.route)
+                    launchSingleTop = true
+                }
+            })
         }
     }
 }
