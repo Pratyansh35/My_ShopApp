@@ -1,5 +1,6 @@
 package com.example.parawaleapp.mainScreen
 
+import android.net.Uri
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -19,15 +20,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import coil.compose.rememberAsyncImagePainter
-import com.example.parawaleapp.database.Dish
+import coil.compose.AsyncImage
 import com.example.parawaleapp.database.Slidess
 import com.example.parawaleapp.database.cartItems
 import com.example.parawaleapp.database.countItems
@@ -35,11 +33,11 @@ import com.example.parawaleapp.database.totalcount
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
-@Preview(showBackground = true)
+
 @Composable
-fun MenuListScreen() {
+fun MenuListScreen(dataUser: List<Dishfordb>) {
     Column {
-        Search()
+        Search(dataUser)
     }
 }
 
@@ -114,7 +112,7 @@ fun MenuSlide(Slidess: Slidess, navController: NavController? = null, scaffoldSt
 
 
 @Composable
-fun MenuDish(dish: Dish) {
+fun MenuDish(dish: Dishfordb) {
     Card {
         Row(
             modifier = Modifier
@@ -165,10 +163,9 @@ fun MenuDish(dish: Dish) {
                     }
                 }
             }
-            Image(
-                painter = painterResource(id = dish.image),
-                contentDescription = "",
-
+            AsyncImage(
+                model = Uri.parse(dish.imageUrl),
+                contentDescription = "dishImage",
             )
         }
     }

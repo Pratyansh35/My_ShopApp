@@ -42,19 +42,21 @@ import kotlinx.coroutines.CoroutineScope
 
 @Composable
 fun LeftDrawerPanel(
-    scaffoldState: ScaffoldState, navController: NavController? = null, scope: CoroutineScope,
+    scaffoldState: ScaffoldState,
+    navController: NavController? = null,
+    scope: CoroutineScope,
     userData: UserData?,
     signOut: () -> Unit
 ) {
     val context = LocalContext.current
     Column(
         Modifier.fillMaxWidth()
-    )
-    {
+    ) {
         Card(
-            modifier = Modifier.height(150.dp).fillMaxWidth()
-        )
-        {
+            modifier = Modifier
+                .height(150.dp)
+                .fillMaxWidth()
+        ) {
             Row(
                 modifier = Modifier
                     .background(
@@ -68,8 +70,8 @@ fun LeftDrawerPanel(
 
 
             ) {
-                AsyncImage(model = userData?.progilePictureUrl
-                    ,
+                AsyncImage(
+                    model = userData?.progilePictureUrl,
                     contentDescription = "userImage",
                     modifier = Modifier
                         .padding(start = 10.dp)
@@ -86,12 +88,9 @@ fun LeftDrawerPanel(
                 ) {
                     if (userData?.userName != null) {
                         Text(
-                            text =
-                            if(name == ""){
+                            text = if (name == "") {
                                 userData.userName
-                            }else(
-                                    name
-                                    ),
+                            } else (name),
                             fontSize = 25.sp,
                             fontWeight = FontWeight.ExtraBold,
                             color = Color(0xFFC0B445)
@@ -114,25 +113,36 @@ fun LeftDrawerPanel(
         }
         LazyColumn(modifier = Modifier.padding(top = 15.dp)) {
             items(SlidesItems) { Slidess ->
-                MenuSlide(Slidess, scope = scope, scaffoldState = scaffoldState, navController = navController)
+                MenuSlide(
+                    Slidess,
+                    scope = scope,
+                    scaffoldState = scaffoldState,
+                    navController = navController
+                )
             }
         }
 
 
         Row(
-            Modifier.fillMaxWidth().fillMaxHeight(),
+            Modifier
+                .fillMaxWidth()
+                .fillMaxHeight(),
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.Bottom
         ) {
-            Button(onClick = {
-                signOut()
-                clearDataFromSharedPreferences(context);
-            },colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFFF4CE14)),
-                shape = RoundedCornerShape(40), modifier = Modifier
+            Button(
+                onClick = {
+                    signOut()
+                    clearDataFromSharedPreferences(context)
+                },
+                colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFFF4CE14)),
+                shape = RoundedCornerShape(40),
+                modifier = Modifier
                     .padding(10.dp)
                     .fillMaxWidth()
                     .height(50.dp)
-                    .align(Alignment.CenterVertically) ) {
+                    .align(Alignment.CenterVertically)
+            ) {
                 Text(text = "LOG_OUT", color = Color.Black, fontWeight = FontWeight.Bold)
             }
         }

@@ -29,21 +29,19 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.parawaleapp.database.Categories
-import com.example.parawaleapp.database.Dish
-import com.example.parawaleapp.database.Dishes
 
 
 @Composable
-fun Search() {
+fun Search(DishData: List<Dishfordb>) {
     var searches by remember { mutableStateOf(TextFieldValue("")) }
     var visible by remember { mutableStateOf(true) }
 
-    val filteredDishes = remember { mutableStateOf(emptyList<Dish>()) }
+    val filteredDishes = remember { mutableStateOf(emptyList<Dishfordb>()) }
 
     // Update the filteredDishes whenever the search query changes
     DisposableEffect(searches.text) {
         val filterText = searches.text.lowercase()
-        val filtered = Dishes.filter { dish ->
+        val filtered = DishData.filter { dish ->
             dish.name.lowercase().contains(filterText)
         }
         filteredDishes.value = filtered
@@ -82,7 +80,7 @@ fun Search() {
 
 
             LazyColumn {
-                items(Dishes) { Dish ->
+                items(DishData) { Dish ->
                     MenuDish(Dish)
                 }
             }
@@ -113,7 +111,7 @@ fun Search() {
 }
 
 @Composable
-fun SearchFilter(filteredDishes: List<Dish>) {
+fun SearchFilter(filteredDishes: List<Dishfordb>) {
     Column {
         Divider(
             modifier = Modifier.padding(8.dp),

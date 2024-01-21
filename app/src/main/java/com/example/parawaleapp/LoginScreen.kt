@@ -17,6 +17,7 @@ import androidx.compose.material.Button
 import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.Divider
 import androidx.compose.material.IconButton
+import androidx.compose.material.OutlinedTextField
 import androidx.compose.material.Text
 import androidx.compose.material.TextButton
 import androidx.compose.material.TextField
@@ -143,7 +144,7 @@ fun SignInScreen(
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.padding(start = 16.dp, bottom = 20.dp)
             )
-                TextField(
+                OutlinedTextField(
                     value = username,
                     onValueChange = {
                         username = it
@@ -154,7 +155,7 @@ fun SignInScreen(
                         .navigationBarsPadding(),
                     singleLine = true
                 )
-                TextField(
+                OutlinedTextField(
                     value = password,
                     onValueChange = {
                         password = it

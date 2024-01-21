@@ -1,19 +1,16 @@
 package com.example.parawaleapp.database
 
 import android.util.Log
-import androidx.compose.runtime.getValue
 import com.example.parawaleapp.mainScreen.Dishfordb
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.storage.FirebaseStorage
-import com.google.firebase.database.DataSnapshot
 import kotlinx.coroutines.tasks.await
-import java.lang.Exception
-import kotlin.math.log
 
 
 // RealTime Database
-val mfirebaseDatabase = FirebaseDatabase.getInstance("https://myparawale-app-default-rtdb.asia-southeast1.firebasedatabase.app/")
-val datareference = mfirebaseDatabase.reference;
+val mfirebaseDatabase =
+    FirebaseDatabase.getInstance("https://myparawale-app-default-rtdb.asia-southeast1.firebasedatabase.app/")
+val datareference = mfirebaseDatabase.reference
 suspend fun getdata(): List<Dishfordb>? {
     return try {
         val task = datareference.get().await()
@@ -28,7 +25,7 @@ suspend fun getdata(): List<Dishfordb>? {
                     dishesList.add(it)
                 }
             } catch (e: Exception) {
-                Log.e("FirebaseData", "Error converting data: $e")
+                Log.e("FirebaseData", "Error converting data: ${e.message}")
             }
         }
 
@@ -43,7 +40,7 @@ suspend fun getdata(): List<Dishfordb>? {
 // Firebase Storage for Images
 val storage = FirebaseStorage.getInstance().reference
 val storageReference = storage.child("Images")
-
+var imgSize = 0;
 suspend fun getImages(): List<String> {
     return try {
         val result = storageReference.listAll().await()
@@ -55,7 +52,7 @@ suspend fun getImages(): List<String> {
             Log.e("FireBaseImage", "Image URL: $imageUrl")
             imageUrlList.add(imageUrl)
         }
-
+        imgSize = imageUrlList.size
         imageUrlList
     } catch (exception: Exception) {
         // Handle failure to list items

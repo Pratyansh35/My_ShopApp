@@ -17,8 +17,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.OutlinedTextField
 import androidx.compose.material.Text
-import androidx.compose.material.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -40,9 +40,6 @@ import com.example.parawaleapp.database.name
 import com.example.parawaleapp.database.phoneno
 import com.example.parawaleapp.database.saveDataToSharedPreferences
 import com.example.parawaleapp.sign_in.UserData
-
-
-
 
 
 @Composable
@@ -97,7 +94,7 @@ fun Profileset(userData: UserData?) {
         )
 
         nametemp?.let {
-            TextField(
+            OutlinedTextField(
                 value = it,
                 onValueChange = {nametemp = it},
                 label = { androidx.compose.material.Text(text = "Full name") },
@@ -105,10 +102,10 @@ fun Profileset(userData: UserData?) {
                 singleLine = true)
         }
 
-        TextField(
+        OutlinedTextField(
             value = phonenotemp,
             onValueChange = { phonenotemp = it},
-            label = { androidx.compose.material.Text(text = "Phone no.") },
+            label = { Text(text = "Phone no.") },
             modifier = Modifier.padding(10.dp),
             singleLine = true,
             keyboardOptions = KeyboardOptions.Default.copy(

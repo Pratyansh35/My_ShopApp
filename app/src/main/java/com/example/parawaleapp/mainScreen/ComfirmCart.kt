@@ -21,7 +21,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.parawaleapp.database.Dish
 import com.example.parawaleapp.database.cartItems
 import com.example.parawaleapp.database.total
 
@@ -100,7 +99,7 @@ fun CartLayout() {
 
 
 @Composable
-fun ConfirmItems(dish: Dish){
+fun ConfirmItems(dish: Dishfordb){
 
     Row(
         modifier = Modifier

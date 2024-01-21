@@ -1,7 +1,6 @@
 package com.example.parawaleapp.mainScreen
 
 
-
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -17,6 +16,11 @@ import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.Card
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment.Companion.CenterVertically
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -29,14 +33,19 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.parawaleapp.R
-import com.example.parawaleapp.database.Dishes
+import com.example.parawaleapp.database.getdata
 
 
 @Composable
-fun HomeScreen() {
+fun HomeScreen(DishData: List<Dishfordb>) {
     Column {
         UpperPanel()
-        LowermainScreen()
+        WeeklySpecial()
+        LazyColumn {
+            items(DishData) { Dish ->
+                MenuDish(Dish)
+            }
+        }
     }
 }
 
@@ -63,8 +72,7 @@ fun UpperPanel() {
             color = Color(0xFFEDEFEE)
         )
         Row(
-            modifier = Modifier
-                .padding(top = 18.dp),
+            modifier = Modifier.padding(top = 18.dp),
             verticalAlignment = CenterVertically,
         ) {
             Text(
@@ -83,8 +91,9 @@ fun UpperPanel() {
             )
         }
         Button(
-            onClick = { Toast.makeText(context, "Select Interested Menu", Toast.LENGTH_SHORT).show()
-                      },
+            onClick = {
+                Toast.makeText(context, "Select Interested Menu", Toast.LENGTH_SHORT).show()
+            },
             shape = RoundedCornerShape(20.dp),
             colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFFF4CE14))
         ) {
@@ -102,38 +111,17 @@ fun UpperPanel() {
 
 
 @Composable
-fun LowermainScreen() {
-
-    Column {
-        WeeklySpecial()
-        Lowerpanelmain()
-    }
-
-}
-
-@Composable
-fun WeeklySpecial(){
+fun WeeklySpecial() {
     Card(
-        modifier = Modifier
-            .fillMaxWidth()
+        modifier = Modifier.fillMaxWidth()
     ) {
-        Text(text = "Weekly Discounts",
+        Text(
+            text = "Weekly Discounts",
             fontSize = 26.sp,
             color = Color(0xFFF4CE14),
             fontWeight = FontWeight.Bold,
-            modifier = Modifier
-                .padding(8.dp))
-    }
-}
-
-
-@Preview(showBackground = true)
-@Composable
-fun Lowerpanelmain(){
-    LazyColumn {
-        items(Dishes) { Dish ->
-            MenuDish(Dish)
-        }
+            modifier = Modifier.padding(8.dp)
+        )
     }
 }
 

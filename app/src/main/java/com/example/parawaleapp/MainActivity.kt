@@ -22,8 +22,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -34,24 +36,26 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.example.parawaleapp.database.restoreDataFromSharedPreferences
 import com.example.parawaleapp.database.AddItemScreen
+import com.example.parawaleapp.database.getdata
+import com.example.parawaleapp.database.restoreDataFromSharedPreferences
+import com.example.parawaleapp.drawerPanel.CartDrawerPanel
+import com.example.parawaleapp.drawerPanel.leftPanel.LeftDrawerPanel
+import com.example.parawaleapp.drawerPanel.leftPanel.Profileset
 import com.example.parawaleapp.mainScreen.AddItems
 import com.example.parawaleapp.mainScreen.AfterCart
 import com.example.parawaleapp.mainScreen.Cart
-import com.example.parawaleapp.drawerPanel.CartDrawerPanel
 import com.example.parawaleapp.mainScreen.ConfirmCart
+import com.example.parawaleapp.mainScreen.Dishfordb
 import com.example.parawaleapp.mainScreen.Home
 import com.example.parawaleapp.mainScreen.HomeScreen
-import com.example.parawaleapp.drawerPanel.leftPanel.LeftDrawerPanel
 import com.example.parawaleapp.mainScreen.Location
-import com.example.parawaleapp.mainScreen.LocationScreen
+//import com.example.parawaleapp.mainScreen.LocationScreen
 import com.example.parawaleapp.mainScreen.Login
 import com.example.parawaleapp.mainScreen.Menu
 import com.example.parawaleapp.mainScreen.MenuListScreen
 import com.example.parawaleapp.mainScreen.NavBar
 import com.example.parawaleapp.mainScreen.ProfileSet
-import com.example.parawaleapp.drawerPanel.leftPanel.Profileset
 import com.example.parawaleapp.sign_in.GoogleAuthUiclient
 import com.example.parawaleapp.sign_in.SignInViewModel
 import com.google.android.gms.auth.api.identity.Identity
@@ -86,7 +90,7 @@ class MainActivity : ComponentActivity() {
                         val viewModel = viewModel<SignInViewModel>()
                         val state by viewModel.state.collectAsStateWithLifecycle()
 
-                        LaunchedEffect(key1 = Unit ){
+                        LaunchedEffect(key1 = Unit) {
                             if (googleAuthUiClient.getSinedInUser() != null) {
                                 navController.navigate("MainScreen")
                             }
@@ -132,7 +136,11 @@ class MainActivity : ComponentActivity() {
                         )
                     }
                     composable("MainScreen") {
-                        MainScreen(navController,googleAuthUiClient = googleAuthUiClient, scope = scope)
+                        MainScreen(
+                            navController,
+                            googleAuthUiClient = googleAuthUiClient,
+                            scope = scope
+                        )
                     }
                 }
             }
@@ -142,8 +150,20 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun MainScreen(navController2: NavController,googleAuthUiClient: GoogleAuthUiclient, scope: CoroutineScope) {
+fun MainScreen(
+    navController2: NavController,
+    googleAuthUiClient: GoogleAuthUiclient,
+    scope: CoroutineScope
+) {
+    var datauser by remember { mutableStateOf<List<Dishfordb>>(emptyList()) }
 
+    LaunchedEffect(Unit) {
+        // Fetch dish data
+        getdata()?.let { newData ->
+            datauser = newData
+        }
+    }
+    //var datauser = listOf<Dishfordb>( Dishfordb("Adfassf","ss",5,"basjfbassjfj","","https://firebasestorage.googleapis.com/v0/b/myparawale-app.appspot.com/o/Images%2FNutraj%20Long%20Raisin%20500g?alt=media&token=3b4371a3-f6e8-48f6-b280-0326645462ef"))
     val scaffoldState = rememberScaffoldState()
     val navController = rememberNavController()
     val context = LocalContext.current
@@ -159,11 +179,11 @@ fun MainScreen(navController2: NavController,googleAuthUiClient: GoogleAuthUicli
                     scope.launch {
                         googleAuthUiClient.signOut()
                         Toast.makeText(
-                            context ,
+                            context,
                             "Sign out successful",
                             Toast.LENGTH_LONG
                         ).show()
-                        }
+                    }
                     navController2.navigate("sign_in")
 
                 })
@@ -183,15 +203,15 @@ fun MainScreen(navController2: NavController,googleAuthUiClient: GoogleAuthUicli
             NavHost(navController = navController, startDestination = Home.route) {
 
                 composable(Home.route) {
-                    HomeScreen()
+                    HomeScreen(datauser)
                 }
                 composable(Menu.route) {
-                    MenuListScreen()
+                    MenuListScreen(datauser)
                 }
 
-                composable(Location.route) {
-                    LocationScreen(/*YourViewModel()*/)
-                }
+                /*composable(Location.route) {
+                    LocationScreen()
+                }*/
                 composable(Cart.route) {
                     CartDrawerPanel(navController = navController)
                 }
@@ -201,7 +221,7 @@ fun MainScreen(navController2: NavController,googleAuthUiClient: GoogleAuthUicli
                 composable(ProfileSet.route) {
                     Profileset(userData = googleAuthUiClient.getSinedInUser())
                 }
-                composable(AddItems.route){
+                composable(AddItems.route) {
                     AddItemScreen()
                 }
             }
