@@ -15,27 +15,27 @@ import kotlinx.coroutines.tasks.await
 import java.util.concurrent.CancellationException
 
 
-class GoogleAuthUiclient (
-    private val context: Context,
-    private val oneTapClient: SignInClient
-){
+class GoogleAuthUiclient(
+    private val context: Context, private val oneTapClient: SignInClient
+) {
     private val auth = Firebase.auth
-    suspend fun signIn() : IntentSender? {
-        val result = try{
+    suspend fun signIn(): IntentSender? {
+        val result = try {
             oneTapClient.beginSignIn(
                 buildSignInrequest()
             ).await()
-        } catch (e: Exception){
+        } catch (e: Exception) {
             e.printStackTrace()
             if (e is CancellationException) throw e
             null
         }
         return result?.pendingIntent?.intentSender
     }
+
     suspend fun signInWithIntent(intent: Intent): SignInResult {
         val credential = oneTapClient.getSignInCredentialFromIntent(intent)
         val googleIdToken = credential.googleIdToken
-        val googleCredentials = GoogleAuthProvider.getCredential(googleIdToken,null)
+        val googleCredentials = GoogleAuthProvider.getCredential(googleIdToken, null)
         return try {
             val user = auth.signInWithCredential(googleCredentials).await().user
             SignInResult(
@@ -48,15 +48,13 @@ class GoogleAuthUiclient (
                             userEmail = email
                         )
                     }
-                },
-                errorMessage = null
+                }, errorMessage = null
             )
-        }catch (e: Exception) {
+        } catch (e: Exception) {
             e.printStackTrace()
             if (e is CancellationException) throw e
             SignInResult(
-                data = null,
-                errorMessage = e.message
+                data = null, errorMessage = e.message
             )
         }
     }
@@ -65,14 +63,14 @@ class GoogleAuthUiclient (
         try {
             oneTapClient.signOut().await()
             auth.signOut()
-        }catch (e: Exception){
+        } catch (e: Exception) {
             e.printStackTrace()
             if (e is CancellationException) throw e
         }
 
     }
 
-    fun getSinedInUser(): UserData? = auth.currentUser?.run{
+    fun getSinedInUser(): UserData? = auth.currentUser?.run {
         displayName?.let {
             UserData(
                 userId = uid,
@@ -81,19 +79,14 @@ class GoogleAuthUiclient (
                 userEmail = email
             )
         }
-        }
+    }
 
     private fun buildSignInrequest(): BeginSignInRequest {
-        return BeginSignInRequest.Builder()
-            .setGoogleIdTokenRequestOptions(
-                GoogleIdTokenRequestOptions.Builder()
-                    .setSupported(true)
+        return BeginSignInRequest.Builder().setGoogleIdTokenRequestOptions(
+                GoogleIdTokenRequestOptions.Builder().setSupported(true)
                     .setFilterByAuthorizedAccounts(false)
-                    .setServerClientId(context.getString(R.string.Web_clientId))
-                    .build()
-            )
-            .setAutoSelectEnabled(true)
-            .build()
-        }
-
+                    .setServerClientId(context.getString(R.string.Web_clientId)).build()
+            ).setAutoSelectEnabled(true).build()
     }
+
+}

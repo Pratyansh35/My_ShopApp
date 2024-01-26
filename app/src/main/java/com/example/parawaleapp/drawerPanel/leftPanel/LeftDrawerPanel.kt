@@ -79,7 +79,6 @@ fun LeftDrawerPanel(
                         .clip(CircleShape),
                     contentScale = ContentScale.Crop
                 )
-
                 Column(
                     modifier = Modifier
                         .padding(start = 8.dp)

@@ -40,6 +40,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -261,11 +262,12 @@ fun CartItems(Dish: Dishfordb, navController: NavController? = null) {
                             keyboardType = KeyboardType.Number, imeAction = ImeAction.Done
                         ),
                         modifier = Modifier
-                            .width(50.dp)
+                            .width(80.dp)
                             .fillMaxHeight()
                             .align(Alignment.CenterVertically),
                         colors = TextFieldDefaults.textFieldColors(backgroundColor = Color.Transparent),
                         textStyle = LocalTextStyle.current.copy(fontSize = 15.sp),
+                        singleLine = true,
 
 
                         )
@@ -305,18 +307,10 @@ fun CartItems(Dish: Dishfordb, navController: NavController? = null) {
                 }
             }
         }
-
     }
-
     Divider(
         modifier = Modifier.padding(start = 8.dp, end = 8.dp),
         color = Color.LightGray,
         thickness = 1.dp
     )
 }
-
-
-
-
-
-

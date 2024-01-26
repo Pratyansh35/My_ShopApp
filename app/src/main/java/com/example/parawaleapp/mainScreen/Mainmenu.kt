@@ -61,23 +61,27 @@ fun MenuCategory(category: String) {
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
-fun MenuSlide(Slidess: Slidess, navController: NavController? = null, scaffoldState: ScaffoldState, scope: CoroutineScope) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(8.dp, 8.dp, 8.dp, 20.dp),
-        onClick = { if (Slidess.Type == "Cart"){
+fun MenuSlide(
+    Slidess: Slidess,
+    navController: NavController? = null,
+    scaffoldState: ScaffoldState,
+    scope: CoroutineScope
+) {
+    Card(modifier = Modifier
+        .fillMaxWidth()
+        .padding(8.dp, 8.dp, 8.dp, 20.dp), onClick = {
+        if (Slidess.Type == "Cart") {
             scope.launch { scaffoldState.drawerState.close() }
             navController?.navigate("cart")
-        }else if (Slidess.Type == "Manage Account"){
+        } else if (Slidess.Type == "Manage Account") {
             scope.launch { scaffoldState.drawerState.close() }
             navController?.navigate("ProfileSet")
-        }else if (Slidess.Type == "Add Items") {
+        } else if (Slidess.Type == "Add Items") {
             scope.launch { scaffoldState.drawerState.close() }
             navController?.navigate("AddItems")
         }
 
-        }
+    }
 
     ) {
 
@@ -109,8 +113,6 @@ fun MenuSlide(Slidess: Slidess, navController: NavController? = null, scaffoldSt
 }
 
 
-
-
 @Composable
 fun MenuDish(dish: Dishfordb) {
     var context = LocalContext.current
@@ -122,12 +124,10 @@ fun MenuDish(dish: Dishfordb) {
         ) {
             Column {
                 Text(
-                    text = dish.name,
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold
+                    text = dish.name, fontSize = 16.sp, fontWeight = FontWeight.Bold
                 )
                 Text(
-                    text =dish.description,
+                    text = dish.description,
                     color = Color.Gray,
                     modifier = Modifier
                         .padding(top = 5.dp, bottom = 5.dp)
@@ -138,21 +138,20 @@ fun MenuDish(dish: Dishfordb) {
                 ) {
                     Row(modifier = Modifier.fillMaxWidth(.3f)) {
                         Text(
-                            text = dish.price,
-                            color = Color.Gray,
-                            fontWeight = FontWeight.Bold
+                            text = dish.price, color = Color.Gray, fontWeight = FontWeight.Bold
                         )
                     }
                     Row(modifier = Modifier.fillMaxWidth(.6f), Arrangement.End) {
                         Button(
-                            onClick = { if (!cartItems.contains(dish)) {
-                                cartItems.add(dish)
-                            }
+                            onClick = {
+                                if (!cartItems.contains(dish)) {
+                                    cartItems.add(dish)
+                                }
                                 dish.count++
                                 countItems()
                                 totalcount()
                                 saveCartItemsToSharedPreferences(context)
-                                },
+                            },
                             colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFFF4CE14)),
                             shape = RoundedCornerShape(40)
                         ) {

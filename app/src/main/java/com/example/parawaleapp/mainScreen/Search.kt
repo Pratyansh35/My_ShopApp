@@ -57,7 +57,7 @@ fun Search(DishData: List<Dishfordb>) {
             Row {
 
                 Button(
-                    onClick = { visible = false},
+                    onClick = { visible = false },
                     colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFFD4D8AB)),
                     shape = RoundedCornerShape(40),
                     modifier = Modifier
@@ -73,9 +73,7 @@ fun Search(DishData: List<Dishfordb>) {
                 }
             }
             Divider(
-                modifier = Modifier.padding(8.dp),
-                color = Color.Gray,
-                thickness = 1.dp
+                modifier = Modifier.padding(8.dp), color = Color.Gray, thickness = 1.dp
             )
 
 
@@ -84,8 +82,7 @@ fun Search(DishData: List<Dishfordb>) {
                     MenuDish(Dish)
                 }
             }
-        }
-        else {
+        } else {
             Column(modifier = Modifier.fillMaxHeight()) {
 
 
@@ -114,9 +111,7 @@ fun Search(DishData: List<Dishfordb>) {
 fun SearchFilter(filteredDishes: List<Dishfordb>) {
     Column {
         Divider(
-            modifier = Modifier.padding(8.dp),
-            color = Color.Gray,
-            thickness = 1.dp
+            modifier = Modifier.padding(8.dp), color = Color.Gray, thickness = 1.dp
         )
         LazyColumn {
             items(filteredDishes) { dish ->

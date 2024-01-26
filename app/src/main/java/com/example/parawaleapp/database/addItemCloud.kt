@@ -25,6 +25,7 @@ import androidx.compose.material.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -35,16 +36,17 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.example.parawaleapp.R
+import com.example.parawaleapp.sign_in.UserData
 
-
-@Preview(showBackground = true)
 @Composable
-fun AddItemScreen() {
+fun AddItemScreen(userData: UserData?) {
     val context = LocalContext.current
     var name by remember {
         mutableStateOf("")
@@ -62,7 +64,7 @@ fun AddItemScreen() {
         mutableStateOf<Uri?>(null)
     }
     var imgSize by remember {
-        mutableStateOf(0)
+        mutableIntStateOf(0)
     }
 
     storageReference.listAll().addOnSuccessListener { result ->
@@ -70,7 +72,7 @@ fun AddItemScreen() {
         imgSize = imageCount;
     }.addOnFailureListener { exception ->
         // Handle failure
-        Toast.makeText(context, exception.message, Toast.LENGTH_SHORT).show()
+        Toast.makeText(context, " error ${exception.message}", Toast.LENGTH_SHORT).show()
         println("Failed to list items in the folder: $exception")
     }
     val singlePhotoPickerLauncher =
@@ -87,6 +89,13 @@ fun AddItemScreen() {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
+        if (userData?.userEmail != "pratyansh35@gmail.com"){
+               Text(text ="You are not authorized to access this page",
+                   style = TextStyle(
+                       fontSize = 20.sp,
+                       fontWeight = FontWeight.Bold
+                   ), textAlign = TextAlign.Center)
+        }else{
         Text(
             text = "Add Item Screen",
             style = TextStyle(
@@ -166,7 +175,9 @@ fun AddItemScreen() {
         )
         Spacer(modifier = Modifier.height(16.dp))
 
-    Row(modifier = Modifier.padding(top = 16.dp).height(100.dp),
+    Row(modifier = Modifier
+        .padding(top = 16.dp)
+        .height(100.dp),
         verticalAlignment = Alignment.CenterVertically,) {
         Text(
             text = "Product Image",
@@ -195,7 +206,8 @@ fun AddItemScreen() {
             onClick = { if(name.isNullOrBlank() || price.isNullOrBlank() || description.isNullOrBlank() || image == null || imgSize == 0){
                             Toast.makeText(context, "Please fill all the fields", Toast.LENGTH_SHORT).show()
                         }else{
-                            addItemToDatabase( name, price, description, category, image,context,imgSize)
+                            addItemToDatabase( name,
+                                "₹$price", description, category, image,context,imgSize)
             }
                       },
             colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFFF4CE14)),
@@ -207,6 +219,7 @@ fun AddItemScreen() {
             androidx.compose.material.Text(text = "Add to Database")
         }
     }
+    }
 }
 
 fun addItemToDatabase(name: String, price: String, description: String, category: String, image: Uri?, context: Context, imgSize: Int) {
@@ -215,7 +228,7 @@ fun addItemToDatabase(name: String, price: String, description: String, category
         val dish = imgUrl?.let { Dishfordb(name, price, 0, description, category, it) }
 
         // Push the dish to the "dishes" node in the database
-        val pushedReference = datareference.child((imgSize+1).toString())
+        val pushedReference = datareference.push()
         pushedReference.setValue(dish)
     }
 }

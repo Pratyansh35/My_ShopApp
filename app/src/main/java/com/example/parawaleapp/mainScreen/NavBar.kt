@@ -30,22 +30,33 @@ import kotlinx.coroutines.launch
 
 
 @Composable
-fun NavBar(scaffoldState: ScaffoldState? = null, scope: CoroutineScope? = null , navController: NavController?){
-    Row(horizontalArrangement = Arrangement.SpaceBetween,
-    modifier = Modifier.fillMaxWidth(),
-    verticalAlignment = Alignment.CenterVertically) {
+fun NavBar(
+    scaffoldState: ScaffoldState? = null,
+    scope: CoroutineScope? = null,
+    navController: NavController?
+) {
+    Row(
+        horizontalArrangement = Arrangement.SpaceBetween,
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
         IconButton(onClick = {
             scope?.launch { scaffoldState?.drawerState?.open() }
         }) {
-            Image(painter = painterResource(id = R.drawable.menuicon),
+            Image(
+                painter = painterResource(id = R.drawable.menuicon),
                 contentDescription = "menuicon",
-                modifier = Modifier.size(24.dp))
+                modifier = Modifier.size(24.dp)
+            )
         }
         IconButton(onClick = {}) {
-            Image(painter = painterResource(R.drawable.appicon), contentDescription = "Icon",
+            Image(
+                painter = painterResource(R.drawable.appicon),
+                contentDescription = "Icon",
                 modifier = Modifier
                     .padding(start = 40.dp)
-                    .size(38.dp))
+                    .size(38.dp)
+            )
         }
         TypewriterText("Kirana Store!", Modifier.padding(end = 30.dp), 24.sp.value.toInt())
 
@@ -53,15 +64,19 @@ fun NavBar(scaffoldState: ScaffoldState? = null, scope: CoroutineScope? = null ,
         Box {
             IconButton(onClick = {
                 navController?.navigate("cart")
-                if (count <=0){
+                if (count <= 0) {
                     scope?.launch {
                         scaffoldState?.snackbarHostState?.showSnackbar("Cart is empty")
                     }
                 }
             }) {
-                Icon(painter = painterResource(R.drawable.ig_cart),
+                Icon(
+                    painter = painterResource(R.drawable.ig_cart),
                     contentDescription = "CartIcon",
-                    modifier = Modifier.size(35.dp).padding(start = 10.dp))
+                    modifier = Modifier
+                        .size(35.dp)
+                        .padding(start = 10.dp)
+                )
             }
 
             // Display the cart item count
@@ -79,4 +94,3 @@ fun NavBar(scaffoldState: ScaffoldState? = null, scope: CoroutineScope? = null ,
         }
     }
 }
-

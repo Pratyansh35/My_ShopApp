@@ -38,7 +38,6 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.parawaleapp.database.AddItemScreen
 import com.example.parawaleapp.database.Dishfordb
-import com.example.parawaleapp.database.getCartItemsFromSharedPreferences
 import com.example.parawaleapp.database.getdata
 import com.example.parawaleapp.database.restoreDataFromSharedPreferences
 import com.example.parawaleapp.drawerPanel.CartDrawerPanel
@@ -82,7 +81,7 @@ class MainActivity : ComponentActivity() {
 
                 FirebaseApp.initializeApp(this)
                 restoreDataFromSharedPreferences(this)
-                getCartItemsFromSharedPreferences(this)
+                //getCartItemsFromSharedPreferences(this)
                 val navController = rememberNavController()
                 val scope = rememberCoroutineScope()
                 var datauser by remember { mutableStateOf<List<Dishfordb>>(emptyList()) }
@@ -211,8 +210,10 @@ fun MainScreen(
                     Profileset(userData = googleAuthUiClient.getSinedInUser())
                 }
                 composable(AddItems.route) {
-                    AddItemScreen()
+                    AddItemScreen(userData = googleAuthUiClient.getSinedInUser())
                 }
+ 
+
             }
         }
     }

@@ -46,7 +46,7 @@ import com.example.parawaleapp.sign_in.UserData
 fun Profileset(userData: UserData?) {
 
 //    var img = ImageBitmap.imageResource(R.drawable.mypic4)
-   // var img = Uri.parse("android.resource://com.example.parawaleapp/drawable/mypic4")
+    // var img = Uri.parse("android.resource://com.example.parawaleapp/drawable/mypic4")
     val context = LocalContext.current
 
     var nametemp by remember {
@@ -57,18 +57,17 @@ fun Profileset(userData: UserData?) {
     }
     var selectImgUri by remember {
         mutableStateOf(
-                userData?.progilePictureUrl
+            userData?.progilePictureUrl
         )
     }
 
     val singlePhotoPickerLauncher =
-        rememberLauncherForActivityResult(
-            contract = ActivityResultContracts.PickVisualMedia(),
-            onResult ={ uri ->
+        rememberLauncherForActivityResult(contract = ActivityResultContracts.PickVisualMedia(),
+            onResult = { uri ->
                 if (uri != null) {
                     selectImgUri = uri.toString()
                 }
-            } )
+            })
 
     Column(
         modifier = Modifier
@@ -76,51 +75,63 @@ fun Profileset(userData: UserData?) {
             .fillMaxHeight()
             .padding(10.dp),
         Arrangement.Center,
-        horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-       // AndroidView(modifier = Modifier.fillMaxSize(), factory = { videoView })
-        Text(text ="Parawale", modifier = Modifier
-            .padding(10.dp)
-            .fillMaxWidth(),textAlign = TextAlign.Center,
+        // AndroidView(modifier = Modifier.fillMaxSize(), factory = { videoView })
+        Text(
+            text = "Parawale",
+            modifier = Modifier
+                .padding(10.dp)
+                .fillMaxWidth(),
+            textAlign = TextAlign.Center,
             fontSize = 45.sp,
-            color = androidx.compose.ui.graphics.Color.Red,
-            fontStyle = androidx.compose.ui.text.font.FontStyle.Italic
-            , fontFamily = androidx.compose.ui.text.font.FontFamily.Cursive)
+            color = Color.Red,
+            fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
+            fontFamily = androidx.compose.ui.text.font.FontFamily.Cursive
+        )
 
-        Text(text = "Settings", modifier = Modifier
-            .padding(10.dp)
-            .fillMaxWidth(),textAlign = TextAlign.Center
-            ,fontSize = 20.sp, fontWeight = FontWeight.Bold
+        Text(
+            text = "Settings",
+            modifier = Modifier
+                .padding(10.dp)
+                .fillMaxWidth(),
+            textAlign = TextAlign.Center,
+            fontSize = 20.sp,
+            fontWeight = FontWeight.Bold
         )
 
         nametemp?.let {
-            OutlinedTextField(
-                value = it,
-                onValueChange = {nametemp = it},
-                label = { androidx.compose.material.Text(text = "Full name") },
+            OutlinedTextField(value = it,
+                onValueChange = { nametemp = it },
+                label = { Text(text = "Full name") },
                 modifier = Modifier.padding(10.dp),
-                singleLine = true)
+                singleLine = true
+            )
         }
 
-        OutlinedTextField(
-            value = phonenotemp,
-            onValueChange = { phonenotemp = it},
+        OutlinedTextField(value = phonenotemp,
+            onValueChange = { phonenotemp = it },
             label = { Text(text = "Phone no.") },
             modifier = Modifier.padding(10.dp),
             singleLine = true,
             keyboardOptions = KeyboardOptions.Default.copy(
-                keyboardType = KeyboardType.Number))
+                keyboardType = KeyboardType.Number
+            )
+        )
 
         Row(modifier = Modifier.padding(top = 16.dp)) {
-            Text(text = "Profile Picture", modifier = Modifier
-                .padding(10.dp)
-                .align(Alignment.CenterVertically),
+            Text(
+                text = "Profile Picture",
+                modifier = Modifier
+                    .padding(10.dp)
+                    .align(Alignment.CenterVertically),
                 textAlign = TextAlign.Center,
 
-                fontSize = 16.sp, fontWeight = FontWeight.Bold
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold
             )
-            AsyncImage(model =
-            selectImgUri, contentDescription = "userImage",
+            AsyncImage(model = selectImgUri,
+                contentDescription = "userImage",
                 modifier = Modifier
                     .padding(start = 10.dp)
                     .size(80.dp)
@@ -131,26 +142,21 @@ fun Profileset(userData: UserData?) {
                                 ActivityResultContracts.PickVisualMedia.ImageOnly
                             )
                         )
-                    }
-            )
+                    })
         }
         androidx.compose.material.Button(
             onClick = {
-                if (nametemp == "" || phonenotemp == ""){
+                if (nametemp == "" || phonenotemp == "") {
                     Toast.makeText(
-                        context,
-                        "Please fill all the fields",
-                        Toast.LENGTH_LONG
+                        context, "Please fill all the fields", Toast.LENGTH_LONG
                     ).show()
                     return@Button
-                }else if(phonenotemp.length != 10){
+                } else if (phonenotemp.length != 10) {
                     Toast.makeText(
-                        context,
-                        "Please enter a valid phone no.",
-                        Toast.LENGTH_LONG
+                        context, "Please enter a valid phone no.", Toast.LENGTH_LONG
                     ).show()
                     return@Button
-                }else {
+                } else {
                     name = nametemp.toString()
                     phoneno = phonenotemp
                     Log.d("AAA", "Profileset: $selectImgUri")
@@ -159,28 +165,23 @@ fun Profileset(userData: UserData?) {
 
                     saveDataToSharedPreferences(context)
                     Toast.makeText(
-                        context,
-                        "Profile Updated",
-                        Toast.LENGTH_LONG
+                        context, "Profile Updated", Toast.LENGTH_LONG
                     ).show()
                 }
-            }, colors = androidx.compose.material.ButtonDefaults.buttonColors(backgroundColor = Color(0xFFF4CE14)),
-            shape = RoundedCornerShape(40), modifier = Modifier
+            },
+            colors = androidx.compose.material.ButtonDefaults.buttonColors(
+                backgroundColor = Color(0xFFF4CE14)
+            ),
+            shape = RoundedCornerShape(40),
+            modifier = Modifier
                 .padding(32.dp)
                 .fillMaxWidth()
                 .height(50.dp)
                 .align(Alignment.End)
         ) {
             Text(
-                text =  "Save",
-                color = Color.Black,
-                fontWeight = FontWeight.Bold
+                text = "Save", color = Color.Black, fontWeight = FontWeight.Bold
             )
         }
-
     }
-
 }
-
-
-

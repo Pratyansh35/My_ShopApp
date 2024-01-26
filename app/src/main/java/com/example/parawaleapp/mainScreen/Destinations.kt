@@ -53,7 +53,3 @@ object AddItems : Destinations {
     override val icon = R.drawable.additemcloud
     override val title = "AddItems"
 }
-
-
-
-
