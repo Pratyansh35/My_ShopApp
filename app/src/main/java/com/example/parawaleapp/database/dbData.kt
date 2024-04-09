@@ -1,11 +1,10 @@
 package com.example.parawaleapp.database
 
 import android.util.Log
-
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.tasks.await
-import com.example.parawaleapp.database.Dishfordb
+
 data class Dishfordb(
     val name: String = "",
     val price: String = "",
@@ -13,9 +12,10 @@ data class Dishfordb(
     val description: String = "",
     val category: String = "",
     val imageUrl: String
-){
+) {
     constructor() : this("", "", 0, "", "", "")
 }
+
 // RealTime Database
 val mfirebaseDatabase =
     FirebaseDatabase.getInstance("https://myparawale-app-default-rtdb.asia-southeast1.firebasedatabase.app/")
@@ -51,9 +51,7 @@ val storage = FirebaseStorage.getInstance().reference
 val storageReference = storage.child("Images")
 
 
-
 var ItemCount = 0;
-
 
 
 suspend fun getImages(): List<String> {

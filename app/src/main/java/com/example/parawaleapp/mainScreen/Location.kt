@@ -8,7 +8,7 @@ import java.net.URLDecoder
 
 @Composable
 fun LocationScreen() {
-    Text(text ="Location Will be added soon", textAlign = TextAlign.Center)
+    Text(text = "Location Will be added soon", textAlign = TextAlign.Center)
 }
 
 private fun getImageUrlForDish(dish: Dishfordb, imageUrls: List<String>): String {

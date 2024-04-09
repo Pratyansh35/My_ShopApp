@@ -36,8 +36,8 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.example.parawaleapp.database.AddItemScreen
 import com.example.parawaleapp.database.Dishfordb
+import com.example.parawaleapp.database.ManageItem
 import com.example.parawaleapp.database.getdata
 import com.example.parawaleapp.database.restoreDataFromSharedPreferences
 import com.example.parawaleapp.drawerPanel.CartDrawerPanel
@@ -210,9 +210,9 @@ fun MainScreen(
                     Profileset(userData = googleAuthUiClient.getSinedInUser())
                 }
                 composable(AddItems.route) {
-                    AddItemScreen(userData = googleAuthUiClient.getSinedInUser())
+                    ManageItem(userData = googleAuthUiClient.getSinedInUser(), datauser)
                 }
- 
+
 
             }
         }

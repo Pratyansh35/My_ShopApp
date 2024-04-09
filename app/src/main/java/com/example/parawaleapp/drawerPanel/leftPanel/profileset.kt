@@ -61,13 +61,13 @@ fun Profileset(userData: UserData?) {
         )
     }
 
-    val singlePhotoPickerLauncher =
-        rememberLauncherForActivityResult(contract = ActivityResultContracts.PickVisualMedia(),
-            onResult = { uri ->
-                if (uri != null) {
-                    selectImgUri = uri.toString()
-                }
-            })
+    val singlePhotoPickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickVisualMedia(),
+        onResult = { uri ->
+            if (uri != null) {
+                selectImgUri = uri.toString()
+            }
+        })
 
     Column(
         modifier = Modifier
@@ -101,7 +101,8 @@ fun Profileset(userData: UserData?) {
         )
 
         nametemp?.let {
-            OutlinedTextField(value = it,
+            OutlinedTextField(
+                value = it,
                 onValueChange = { nametemp = it },
                 label = { Text(text = "Full name") },
                 modifier = Modifier.padding(10.dp),
@@ -109,7 +110,8 @@ fun Profileset(userData: UserData?) {
             )
         }
 
-        OutlinedTextField(value = phonenotemp,
+        OutlinedTextField(
+            value = phonenotemp,
             onValueChange = { phonenotemp = it },
             label = { Text(text = "Phone no.") },
             modifier = Modifier.padding(10.dp),
@@ -130,7 +132,11 @@ fun Profileset(userData: UserData?) {
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Bold
             )
-            AsyncImage(model = selectImgUri,
+            AsyncImage(model = if (img == null) {
+                selectImgUri
+            } else {
+                img!!
+            },
                 contentDescription = "userImage",
                 modifier = Modifier
                     .padding(start = 10.dp)
@@ -161,8 +167,6 @@ fun Profileset(userData: UserData?) {
                     phoneno = phonenotemp
                     Log.d("AAA", "Profileset: $selectImgUri")
                     img = Uri.parse(selectImgUri.toString())
-                    userData?.progilePictureUrl = selectImgUri
-
                     saveDataToSharedPreferences(context)
                     Toast.makeText(
                         context, "Profile Updated", Toast.LENGTH_LONG

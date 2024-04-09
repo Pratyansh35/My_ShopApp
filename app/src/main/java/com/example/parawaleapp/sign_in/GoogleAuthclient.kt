@@ -83,10 +83,10 @@ class GoogleAuthUiclient(
 
     private fun buildSignInrequest(): BeginSignInRequest {
         return BeginSignInRequest.Builder().setGoogleIdTokenRequestOptions(
-                GoogleIdTokenRequestOptions.Builder().setSupported(true)
-                    .setFilterByAuthorizedAccounts(false)
-                    .setServerClientId(context.getString(R.string.Web_clientId)).build()
-            ).setAutoSelectEnabled(true).build()
+            GoogleIdTokenRequestOptions.Builder().setSupported(true)
+                .setFilterByAuthorizedAccounts(false)
+                .setServerClientId(context.getString(R.string.Web_clientId)).build()
+        ).setAutoSelectEnabled(true).build()
     }
 
 }

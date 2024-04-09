@@ -13,12 +13,12 @@ import com.google.gson.reflect.TypeToken
 //User Info  ImageBitmap.imageResource(R.drawable.mypic4)
 var name by mutableStateOf("")
 var phoneno by mutableStateOf("")
-var img by  mutableStateOf<Uri?>(null)
+var img by mutableStateOf<Uri?>(null)
 
 // FOR CART
 var count by mutableStateOf(0)
-var total by  mutableStateOf(0)
-var cartItems: MutableList<Dishfordb> = mutableListOf()
+var total by mutableStateOf(0)
+var cartItems by mutableStateOf(mutableListOf<Dishfordb>())
 
 fun saveDataToSharedPreferences(context: Context) {
     val sharedPreferences = context.getSharedPreferences("MyPrefs", Context.MODE_PRIVATE)
@@ -29,14 +29,15 @@ fun saveDataToSharedPreferences(context: Context) {
         apply()
     }
 }
+
 fun restoreDataFromSharedPreferences(context: Context) {
     val sharedPreferences = context.getSharedPreferences("MyPrefs", Context.MODE_PRIVATE)
     name = sharedPreferences.getString("name", "") ?: ""
     phoneno = sharedPreferences.getString("phoneno", "") ?: ""
     val imgUriString = sharedPreferences.getString("img", "")
     img = Uri.parse(imgUriString)
-
 }
+
 fun saveCartItemsToSharedPreferences(context: Context) {
     val sharedPreferences = context.getSharedPreferences("MyPrefs", Context.MODE_PRIVATE)
     val editor = sharedPreferences.edit()
@@ -52,7 +53,7 @@ fun saveCartItemsToSharedPreferences(context: Context) {
     editor.apply()
 }
 
-fun getCartItemsFromSharedPreferences(context: Context){
+fun getCartItemsFromSharedPreferences(context: Context) {
     val sharedPreferences = context.getSharedPreferences("MyPrefs", Context.MODE_PRIVATE)
 
     // Retrieve the JSON string from SharedPreferences
@@ -65,21 +66,21 @@ fun getCartItemsFromSharedPreferences(context: Context){
     val type = object : TypeToken<MutableList<Dishfordb>>() {}.type
     cartItems = gson.fromJson(cartItemsJson, type) ?: mutableListOf()
 }
+
 fun clearDataFromSharedPreferences(context: Context) {
     val sharedPreferences = context.getSharedPreferences("MyPrefs", Context.MODE_PRIVATE)
     with(sharedPreferences.edit()) {
+        img = null
         clear()
         apply()
+
     }
 }
 
 
-
-
-
-fun totalcount(){
+fun totalcount() {
     total = 0
-    for (i in cartItems){
+    for (i in cartItems) {
         val priceWithoutCurrency = i.price.removePrefix("₹")
         val priceAsDouble = priceWithoutCurrency.toDoubleOrNull()
 
@@ -90,11 +91,9 @@ fun totalcount(){
 }
 
 
-
-fun countItems(){
+fun countItems() {
     count = cartItems.size
 }
-
 
 
 val Categories = listOf(
@@ -106,21 +105,6 @@ val Categories = listOf(
     "Spices",
     "Oil",
 )
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 /*data class Dish(
@@ -221,34 +205,17 @@ data class Slidess(
 
 val SlidesItems = listOf(
     Slidess(
-        "Cart",
-        "see items added to cart",
-        R.drawable.ig_cart
-    ),
-    Slidess(
-        "Wishlist",
-        "see items added to wishlist",
-        R.drawable.wishheart
-    ),
-    Slidess(
-        "Orders",
-        "see your previous orders",
-        R.drawable.order_cardboard
-    ),
-    Slidess(
-        "Manage Account",
-        "edit your account details",
-        R.drawable.edit_account_logo
-    ),
-    Slidess(
-        "Settings",
-        "Notification, Language",
-        R.drawable.setting
-    ),
-    Slidess(
-        "Add Items",
-        "Add items to database",
-        R.drawable.additemcloud
+        "Cart", "see items added to cart", R.drawable.ig_cart
+    ), Slidess(
+        "Wishlist", "see items added to wishlist", R.drawable.wishheart
+    ), Slidess(
+        "Orders", "see your previous orders", R.drawable.order_cardboard
+    ), Slidess(
+        "Manage Account", "edit your account details", R.drawable.edit_account_logo
+    ), Slidess(
+        "Settings", "Notification, Language", R.drawable.setting
+    ), Slidess(
+        "Add Items", "Add items to database", R.drawable.additemcloud
     )
 
 

@@ -47,9 +47,11 @@ fun ConfirmCart() {
             fontFamily = androidx.compose.ui.text.font.FontFamily.Cursive
         )
         Text(
-            text = "Cart Summary", modifier = Modifier
+            text = "Cart Summary",
+            modifier = Modifier
                 .padding(10.dp)
-                .fillMaxWidth(), textAlign = TextAlign.Center,
+                .fillMaxWidth(),
+            textAlign = TextAlign.Center,
             fontSize = 20.sp,
             fontWeight = FontWeight.Bold
         )
@@ -60,25 +62,26 @@ fun ConfirmCart() {
             }
         }
         Text(
-            text = "Total Amount: ₹$total", modifier = Modifier
+            text = "Total Amount: ₹$total",
+            modifier = Modifier
                 .padding(10.dp)
-                .fillMaxWidth(), textAlign = TextAlign.Center,
+                .fillMaxWidth(),
+            textAlign = TextAlign.Center,
             fontSize = 20.sp,
             fontWeight = FontWeight.Bold
         )
         androidx.compose.material.Button(
-            onClick = {
-            }, colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFFF4CE14)),
-            shape = RoundedCornerShape(40), modifier = Modifier
+            onClick = {},
+            colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFFF4CE14)),
+            shape = RoundedCornerShape(40),
+            modifier = Modifier
                 .padding(10.dp)
                 .fillMaxWidth()
                 .height(50.dp)
                 .align(Alignment.End)
         ) {
             Text(
-                text = "Print Bill",
-                color = Color.Black,
-                fontWeight = FontWeight.Bold
+                text = "Print Bill", color = Color.Black, fontWeight = FontWeight.Bold
             )
         }
     }
@@ -95,10 +98,12 @@ fun CartLayout() {
 
         ) {
         Text(
-            text = "Item Name", modifier = Modifier
+            text = "Item Name",
+            modifier = Modifier
                 .weight(1f)
                 .align(Alignment.CenterVertically),
-            textAlign = TextAlign.Center, fontWeight = FontWeight.Bold
+            textAlign = TextAlign.Center,
+            fontWeight = FontWeight.Bold
         )
         Text(
             text = "Quantity",
@@ -134,7 +139,8 @@ fun ConfirmItems(dish: Dishfordb) {
 
         ) {
         Text(
-            text = dish.name.take(21), modifier = Modifier
+            text = dish.name.take(21),
+            modifier = Modifier
                 .weight(1f)
                 .align(Alignment.CenterVertically),
             textAlign = TextAlign.Center

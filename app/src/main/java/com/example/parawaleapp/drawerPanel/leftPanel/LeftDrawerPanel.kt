@@ -35,6 +35,7 @@ import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.example.parawaleapp.database.SlidesItems
 import com.example.parawaleapp.database.clearDataFromSharedPreferences
+import com.example.parawaleapp.database.img
 import com.example.parawaleapp.database.name
 import com.example.parawaleapp.mainScreen.MenuSlide
 import com.example.parawaleapp.sign_in.UserData
@@ -71,7 +72,9 @@ fun LeftDrawerPanel(
 
             ) {
                 AsyncImage(
-                    model = userData?.progilePictureUrl,
+                    model = if (img == null) {
+                        userData?.progilePictureUrl
+                    } else img!!,
                     contentDescription = "userImage",
                     modifier = Modifier
                         .padding(start = 10.dp)
@@ -142,7 +145,7 @@ fun LeftDrawerPanel(
                     .height(50.dp)
                     .align(Alignment.CenterVertically)
             ) {
-                Text(text = "LOG_OUT", color = Color.Black, fontWeight = FontWeight.Bold)
+                Text(text = "LOG OUT", color = Color.Black, fontWeight = FontWeight.Bold)
             }
         }
     }

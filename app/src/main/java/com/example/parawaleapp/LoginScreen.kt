@@ -20,7 +20,6 @@ import androidx.compose.material.IconButton
 import androidx.compose.material.OutlinedTextField
 import androidx.compose.material.Text
 import androidx.compose.material.TextButton
-import androidx.compose.material.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -49,24 +48,21 @@ import kotlinx.coroutines.launch
 
 @Preview(showBackground = true)
 @Composable
-fun Pre() {
-    /*var isUserLoggedIn by remember { mutableStateOf(false) }
+fun Pre() {/*var isUserLoggedIn by remember { mutableStateOf(false) }
     LoginScreen(onLoginSuccess = {
         // This block is executed when the login is successful.
         isUserLoggedIn = true
     })*/
-    SignInScreen(
-        state = SignInState(),
-        onSignInClick = {
-            Log.d("AAA", "Clicked")
-        }
-    )
+    SignInScreen(state = SignInState(), onSignInClick = {
+        Log.d("AAA", "Clicked")
+    })
 }
 
 
 @Composable
 fun TypewriterText(
-    label: String, padding: Modifier = Modifier.padding(all = 0.dp),
+    label: String,
+    padding: Modifier = Modifier.padding(all = 0.dp),
     fontsize: Int = 24.sp.value.toInt()
 ) {
     var displayedText by remember { mutableStateOf("") }
@@ -101,8 +97,7 @@ fun TypewriterText(
 
 @Composable
 fun SignInScreen(
-    state: SignInState,
-    onSignInClick: () -> Unit
+    state: SignInState, onSignInClick: () -> Unit
 ) {
     var username by remember {
         mutableStateOf(TextFieldValue(""))
@@ -132,18 +127,23 @@ fun SignInScreen(
                 .fillMaxWidth()
                 .fillMaxHeight()
         ) {
-            Column(Modifier.fillMaxHeight(0.8f).padding(bottom = 16.dp), verticalArrangement = Arrangement.Bottom,horizontalAlignment = Alignment.CenterHorizontally)
-            {
+            Column(
+                Modifier
+                    .fillMaxHeight(0.8f)
+                    .padding(bottom = 16.dp),
+                verticalArrangement = Arrangement.Bottom,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
 
-            TypewriterText("Parawale!", Modifier.padding(start = 16.dp), 40.sp.value.toInt())
+                TypewriterText("Parawale!", Modifier.padding(start = 16.dp), 40.sp.value.toInt())
 
-            Text(
-                text = "Pharenda",
-                fontSize = 30.sp,
-                color = Color.Black,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(start = 16.dp, bottom = 20.dp)
-            )
+                Text(
+                    text = "Pharenda",
+                    fontSize = 30.sp,
+                    color = Color.Black,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(start = 16.dp, bottom = 20.dp)
+                )
                 OutlinedTextField(
                     value = username,
                     onValueChange = {
@@ -179,75 +179,71 @@ fun SignInScreen(
                 }
                 Button(
                     onClick = {
-                        if (username.text.isNotEmpty() && password.text.isNotEmpty()
-                        ) {
+                        if (username.text.isNotEmpty() && password.text.isNotEmpty()) {
                             Toast.makeText(
-                                context,
-                                "Welcome to Parawale Kirana Store!",
-                                Toast.LENGTH_LONG
+                                context, "Welcome to Parawale Kirana Store!", Toast.LENGTH_LONG
                             ).show()
                         } else {
                             Toast.makeText(
                                 context,
-                                "Invalid credentials."
-                                        + "Please try again.",
+                                "Invalid credentials." + "Please try again.",
                                 Toast.LENGTH_LONG
                             ).show()
                         }
 
-                    },
-                    colors = ButtonDefaults.buttonColors(
+                    }, colors = ButtonDefaults.buttonColors(
                         Color(0xFF4D7467)
-                    ),
-                    modifier = Modifier.padding(10.dp)
-                )
-                {
+                    ), modifier = Modifier.padding(10.dp)
+                ) {
                     Text(
-                        text = "Login",
-                        color = Color(0xFFEDEFEE)
+                        text = "Login", color = Color(0xFFEDEFEE)
                     )
                 }
-            Row {
-                Divider( modifier = Modifier
-                    .fillMaxWidth(0.20f)
-                    .align(Alignment.CenterVertically))
-                Text(
-                    text = "OR",
-                    fontSize = 14.sp,
-                    color = Color(0xFF4D7467),
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier
-                        .padding(start = 16.dp, end = 16.dp)
-                        .align(Alignment.CenterVertically)
-                )
-                Divider( modifier = Modifier
-                    .fillMaxWidth(0.30f)
-                    .align(Alignment.CenterVertically))
+                Row {
+                    Divider(
+                        modifier = Modifier
+                            .fillMaxWidth(0.20f)
+                            .align(Alignment.CenterVertically)
+                    )
+                    Text(
+                        text = "OR",
+                        fontSize = 14.sp,
+                        color = Color(0xFF4D7467),
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier
+                            .padding(start = 16.dp, end = 16.dp)
+                            .align(Alignment.CenterVertically)
+                    )
+                    Divider(
+                        modifier = Modifier
+                            .fillMaxWidth(0.30f)
+                            .align(Alignment.CenterVertically)
+                    )
+                }
+
+                Row {
+                    Text(
+                        text = "Sign in with",
+                        fontSize = 14.sp,
+                        color = Color(0xFF4D7467),
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier
+                            .padding(start = 16.dp, end = 16.dp)
+                            .align(Alignment.CenterVertically)
+                    )
+
+                    IconButton(onClick = { onSignInClick() }) {
+                        Image(
+                            painter = painterResource(id = R.drawable.googleicon),
+                            contentDescription = "menuicon",
+                            modifier = Modifier.size(44.dp)
+                        )
+                    }
+
+
+                }
             }
-
-            Row {
-                Text(
-                    text = "Sign in with",
-                    fontSize = 14.sp,
-                    color = Color(0xFF4D7467),
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier
-                        .padding(start = 16.dp, end = 16.dp)
-                        .align(Alignment.CenterVertically)
-                )
-
-                IconButton(onClick = { onSignInClick() }) {
-                    Image(
-                        painter = painterResource(id = R.drawable.googleicon),
-                        contentDescription = "menuicon",
-                        modifier = Modifier.size(44.dp)
-                    )
-                }
-
-
-            }}
-            Column(Modifier.fillMaxHeight(), verticalArrangement = Arrangement.Bottom)
-            {
+            Column(Modifier.fillMaxHeight(), verticalArrangement = Arrangement.Bottom) {
                 Text(
                     text = "Don't have an account?",
                     fontSize = 14.sp,

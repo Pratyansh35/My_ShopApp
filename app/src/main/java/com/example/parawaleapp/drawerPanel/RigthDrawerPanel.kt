@@ -40,21 +40,17 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
-import coil.compose.rememberAsyncImagePainter
 import com.example.parawaleapp.R
 import com.example.parawaleapp.database.Dishfordb
-
 import com.example.parawaleapp.database.cartItems
 import com.example.parawaleapp.database.countItems
 import com.example.parawaleapp.database.saveCartItemsToSharedPreferences
 import com.example.parawaleapp.database.total
 import com.example.parawaleapp.database.totalcount
-
 
 
 @Composable
