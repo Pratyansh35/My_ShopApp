@@ -43,7 +43,7 @@ import com.example.parawaleapp.R
 import com.example.parawaleapp.sign_in.UserData
 
 @Composable
-fun AddItemScreen(userData: UserData?) {
+fun AddItemScreen() {
     val context = LocalContext.current
     var name by remember {
         mutableStateOf("")
@@ -86,13 +86,6 @@ fun AddItemScreen(userData: UserData?) {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        if (userData?.userEmail != "pratyansh35@gmail.com") {
-            Text(
-                text = "You are not authorized to access this page", style = TextStyle(
-                    fontSize = 12.sp, fontWeight = FontWeight.Bold
-                ), textAlign = TextAlign.Center
-            )
-        } else {
             Text(
                 text = "Add Item Screen", style = TextStyle(
                     fontSize = 18.sp, fontWeight = FontWeight.Bold
@@ -208,7 +201,6 @@ fun AddItemScreen(userData: UserData?) {
                 androidx.compose.material.Text(text = "Add to Database")
             }
         }
-    }
 }
 
 fun addItemToDatabase(

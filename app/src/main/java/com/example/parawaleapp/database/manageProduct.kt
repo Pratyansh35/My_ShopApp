@@ -1,9 +1,12 @@
 package com.example.parawaleapp.database
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -20,6 +23,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.VerticalAlignmentLine
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -169,33 +175,49 @@ fun ManageItem(
 
     Column(modifier = Modifier.fillMaxSize()) {
         topBar()
-        if (!add) {
-            if (showModifyScreen) {
-                selectedDish?.let { dish ->
-                    // Make sure that the ModifyScreen composable is defined correctly
-                    ModifyScreen(dish = dish, showModifyScreen = {
-                        showModifyScreen = false
-                    })
+        if (userData?.userEmail != "pratyansh35@gmail.com") {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()  // This will make the Box fill the entire screen
+            ) {
+                Text(
+                    text = "You are not authorized to access this page",
+                    modifier = Modifier.align(Alignment.Center),  // Center the text inside the Box
+                    color = Color(0xFFFF5100),
+                    fontSize = 22.sp,
+                    textAlign = TextAlign.Center
+                )
+            }
+        }
+        else {
+            if (!add) {
+                if (showModifyScreen) {
+                    selectedDish?.let { dish ->
+                        // Make sure that the ModifyScreen composable is defined correctly
+                        ModifyScreen(dish = dish, showModifyScreen = {
+                            showModifyScreen = false
+                        })
 
-                }
-            } else if (!delete) {
-                Column {
-                    Divider(
-                        modifier = Modifier.padding(8.dp), color = Color.Gray, thickness = 1.dp
-                    )
-                    LazyColumn {
-                        items(dishData) { dish ->
-                            // Ensure that the ModifyItemScreen composable is defined correctly
-                            ModifyItemScreen(dish = dish, onEditClicked = {
-                                selectedDish = dish
-                                showModifyScreen = true
-                            })
+                    }
+                } else if (!delete) {
+                    Column {
+                        Divider(
+                            modifier = Modifier.padding(8.dp), color = Color.Gray, thickness = 1.dp
+                        )
+                        LazyColumn {
+                            items(dishData) { dish ->
+                                // Ensure that the ModifyItemScreen composable is defined correctly
+                                ModifyItemScreen(dish = dish, onEditClicked = {
+                                    selectedDish = dish
+                                    showModifyScreen = true
+                                })
+                            }
                         }
                     }
                 }
+            } else {
+                AddItemScreen()
             }
-        } else {
-            AddItemScreen(userData = userData)
         }
     }
 }

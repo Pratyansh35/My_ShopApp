@@ -51,6 +51,7 @@ import com.example.parawaleapp.database.countItems
 import com.example.parawaleapp.database.saveCartItemsToSharedPreferences
 import com.example.parawaleapp.database.total
 import com.example.parawaleapp.database.totalcount
+import com.example.parawaleapp.mainScreen.truncateString
 
 
 @Composable
@@ -179,10 +180,10 @@ fun CartItems(Dish: Dishfordb, navController: NavController? = null) {
             )
             Column(modifier = Modifier.padding(start = 8.dp, top = 3.dp)) {
                 Text(
-                    text = Dish.name, fontSize = 14.sp, fontWeight = FontWeight.Bold
+                    text = truncateString(Dish.name, 30), fontSize = 14.sp, fontWeight = FontWeight.Bold
                 )
                 Text(
-                    text = Dish.description,
+                    text = truncateString(Dish.description, 65),
                     color = Color.Gray,
                     modifier = Modifier
                         .padding(top = 5.dp)

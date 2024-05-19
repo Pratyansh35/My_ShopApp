@@ -33,9 +33,9 @@ import com.example.parawaleapp.database.Dishfordb
 @Composable
 fun HomeScreen(DishData: List<Dishfordb>) {
     Column {
-        UpperPanel()
-        WeeklySpecial()
         LazyColumn {
+            item { UpperPanel() }
+            item { WeeklySpecial() }
             items(DishData) { Dish ->
                 MenuDish(Dish)
             }

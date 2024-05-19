@@ -115,7 +115,7 @@ fun MenuSlide(
 
 @Composable
 fun MenuDish(dish: Dishfordb) {
-    var context = LocalContext.current
+    val context = LocalContext.current
     Card {
         Row(
             modifier = Modifier
@@ -124,10 +124,12 @@ fun MenuDish(dish: Dishfordb) {
         ) {
             Column {
                 Text(
-                    text = dish.name, fontSize = 16.sp, fontWeight = FontWeight.Bold
+                    text = truncateString(dish.name, 25),
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold
                 )
                 Text(
-                    text = dish.description,
+                    text = truncateString(dish.description, 65),
                     color = Color.Gray,
                     modifier = Modifier
                         .padding(top = 5.dp, bottom = 5.dp)
@@ -171,4 +173,13 @@ fun MenuDish(dish: Dishfordb) {
         color = Color.LightGray,
         thickness = 1.dp
     )
+}
+
+
+fun truncateString(text: String, maxLength: Int): String {
+    return if (text.length > maxLength) {
+        text.substring(0, maxLength) + "..."
+    } else {
+        text
+    }
 }
