@@ -70,7 +70,6 @@ fun getCartItemsFromSharedPreferences(context: Context) {
 fun clearDataFromSharedPreferences(context: Context) {
     val sharedPreferences = context.getSharedPreferences("MyPrefs", Context.MODE_PRIVATE)
     with(sharedPreferences.edit()) {
-        img = null
         clear()
         apply()
 

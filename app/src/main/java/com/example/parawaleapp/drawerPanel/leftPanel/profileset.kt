@@ -132,11 +132,10 @@ fun Profileset(userData: UserData?) {
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Bold
             )
-            AsyncImage(model = if (img == null) {
-                selectImgUri
-            } else {
-                img!!
-            },
+            AsyncImage(model = if (img.toString().equals("")) {
+                userData?.progilePictureUrl
+            } else img!!
+            ,
                 contentDescription = "userImage",
                 modifier = Modifier
                     .padding(start = 10.dp)
@@ -165,7 +164,6 @@ fun Profileset(userData: UserData?) {
                 } else {
                     name = nametemp.toString()
                     phoneno = phonenotemp
-                    Log.d("AAA", "Profileset: $selectImgUri")
                     img = Uri.parse(selectImgUri.toString())
                     saveDataToSharedPreferences(context)
                     Toast.makeText(

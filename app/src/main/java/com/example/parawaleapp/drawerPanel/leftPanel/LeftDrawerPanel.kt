@@ -1,5 +1,6 @@
 package com.example.parawaleapp.drawerPanel.leftPanel
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -71,10 +72,13 @@ fun LeftDrawerPanel(
 
 
             ) {
+                Log.d("leftPic", "got img = $img    /n got googlepicc = ${userData?.progilePictureUrl}")
                 AsyncImage(
-                    model = if (img == null) {
+
+                    model = if (img.toString().equals("")) {
                         userData?.progilePictureUrl
-                    } else img!!,
+                    } else img,
+
                     contentDescription = "userImage",
                     modifier = Modifier
                         .padding(start = 10.dp)
@@ -135,7 +139,6 @@ fun LeftDrawerPanel(
             Button(
                 onClick = {
                     signOut()
-                    clearDataFromSharedPreferences(context)
                 },
                 colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFFF4CE14)),
                 shape = RoundedCornerShape(40),

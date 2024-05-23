@@ -38,24 +38,25 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.parawaleapp.database.Dishfordb
 import com.example.parawaleapp.database.ManageItem
-import com.example.parawaleapp.database.getdata
+import com.example.parawaleapp.database.clearDataFromSharedPreferences
+import com.example.parawaleapp.database.getdishes
 import com.example.parawaleapp.database.restoreDataFromSharedPreferences
 import com.example.parawaleapp.drawerPanel.CartDrawerPanel
 import com.example.parawaleapp.drawerPanel.leftPanel.LeftDrawerPanel
 import com.example.parawaleapp.drawerPanel.leftPanel.Profileset
 import com.example.parawaleapp.mainScreen.AddItems
 import com.example.parawaleapp.mainScreen.AfterCart
+import com.example.parawaleapp.barcodeScreen.BarCodeScreen
 import com.example.parawaleapp.mainScreen.Cart
 import com.example.parawaleapp.mainScreen.ConfirmCart
 import com.example.parawaleapp.mainScreen.Home
 import com.example.parawaleapp.mainScreen.HomeScreen
-import com.example.parawaleapp.mainScreen.Location
-import com.example.parawaleapp.mainScreen.LocationScreen
 import com.example.parawaleapp.mainScreen.Login
 import com.example.parawaleapp.mainScreen.Menu
 import com.example.parawaleapp.mainScreen.MenuListScreen
 import com.example.parawaleapp.mainScreen.NavBar
 import com.example.parawaleapp.mainScreen.ProfileSet
+import com.example.parawaleapp.mainScreen.Scan_Barcode
 import com.example.parawaleapp.sign_in.GoogleAuthUiclient
 import com.example.parawaleapp.sign_in.SignInViewModel
 import com.google.android.gms.auth.api.identity.Identity
@@ -84,14 +85,8 @@ class MainActivity : ComponentActivity() {
                 //getCartItemsFromSharedPreferences(this)
                 val navController = rememberNavController()
                 val scope = rememberCoroutineScope()
-                var datauser by remember { mutableStateOf<List<Dishfordb>>(emptyList()) }
+                var dishData by remember { mutableStateOf<List<Dishfordb>>(emptyList()) }
 
-                LaunchedEffect(Unit) {
-                    // Fetch dish data
-                    getdata()?.let { newData ->
-                        datauser = newData
-                    }
-                }
                 NavHost(navController = navController, startDestination = "sign_in") {
                     composable("sign_in") {
                         val viewModel = viewModel<SignInViewModel>()
@@ -99,6 +94,10 @@ class MainActivity : ComponentActivity() {
 
                         LaunchedEffect(key1 = Unit) {
                             if (googleAuthUiClient.getSinedInUser() != null) {
+                                // Fetch dish data // edited for item reload after restart
+                                getdishes()?.let { newData ->
+                                    dishData = newData
+                                }
                                 navController.navigate("MainScreen")
                             }
                         }
@@ -121,6 +120,10 @@ class MainActivity : ComponentActivity() {
                                 Toast.makeText(
                                     applicationContext, "Sign in successful", Toast.LENGTH_SHORT
                                 ).show()
+                                // Fetch dish data // edited for item reload after sign in
+                                getdishes()?.let { newData ->
+                                    dishData = newData
+                                }
                                 navController.navigate("MainScreen")
                                 viewModel.resetState()
                             }
@@ -142,7 +145,7 @@ class MainActivity : ComponentActivity() {
                             navController,
                             googleAuthUiClient = googleAuthUiClient,
                             scope = scope,
-                            datauser
+                            dishData
                         )
                     }
                 }
@@ -156,7 +159,7 @@ fun MainScreen(
     navController2: NavController,
     googleAuthUiClient: GoogleAuthUiclient,
     scope: CoroutineScope,
-    datauser: List<Dishfordb>
+    dishData: List<Dishfordb>
 ) {
 
     val scaffoldState = rememberScaffoldState()
@@ -169,6 +172,7 @@ fun MainScreen(
             navController = navController,
             userData = googleAuthUiClient.getSinedInUser(),
             signOut = {
+                clearDataFromSharedPreferences(context)
                 scope.launch {
                     googleAuthUiClient.signOut()
                     Toast.makeText(
@@ -191,14 +195,14 @@ fun MainScreen(
             NavHost(navController = navController, startDestination = Home.route) {
 
                 composable(Home.route) {
-                    HomeScreen(datauser)
+                    HomeScreen(dishData)
                 }
                 composable(Menu.route) {
-                    MenuListScreen(datauser)
+                    MenuListScreen(dishData)
                 }
 
-                composable(Location.route) {
-                    LocationScreen()
+                composable(Scan_Barcode.route) {
+                    BarCodeScreen()
                 }
                 composable(Cart.route) {
                     CartDrawerPanel(navController = navController)
@@ -210,7 +214,7 @@ fun MainScreen(
                     Profileset(userData = googleAuthUiClient.getSinedInUser())
                 }
                 composable(AddItems.route) {
-                    ManageItem(userData = googleAuthUiClient.getSinedInUser(), datauser)
+                    ManageItem(userData = googleAuthUiClient.getSinedInUser(), dishData)
                 }
 
 
@@ -222,7 +226,7 @@ fun MainScreen(
 @Composable
 fun MyBottomNavigation(navController: NavController) {
     val destinationList = listOf(
-        Home, Menu, Location
+        Home, Menu, Scan_Barcode
     )
     val selectedIndex = rememberSaveable {
         mutableStateOf(0)

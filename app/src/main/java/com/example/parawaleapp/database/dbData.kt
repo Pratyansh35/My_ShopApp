@@ -11,16 +11,17 @@ data class Dishfordb(
     var count: Int = 0,
     val description: String = "",
     val category: String = "",
-    val imageUrl: String
+    val imageUrl: String,
+    val barcode: String,
 ) {
-    constructor() : this("", "", 0, "", "", "")
+    constructor() : this("", "", 0, "", "", "", "")
 }
 
 // RealTime Database
 val mfirebaseDatabase =
     FirebaseDatabase.getInstance("https://myparawale-app-default-rtdb.asia-southeast1.firebasedatabase.app/")
 val datareference = mfirebaseDatabase.reference
-suspend fun getdata(): List<Dishfordb>? {
+suspend fun getdishes(): List<Dishfordb>? {
     return try {
         val task = datareference.get().await()
 

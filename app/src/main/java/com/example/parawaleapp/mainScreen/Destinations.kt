@@ -34,11 +34,12 @@ object Menu : Destinations {
     override val title = "Menu"
 }
 
-object Location : Destinations {
-    override val route = "Location"
-    override val icon = R.drawable.ic_location
-    override val title = "Location"
+object Scan_Barcode : Destinations {
+    override val route = "Scan_Barcode"
+    override val icon = R.drawable.ic_barcode
+    override val title = "Scan_Barcode"
 }
+
 
 object ProfileSet : Destinations {
     override val route = "ProfileSet"

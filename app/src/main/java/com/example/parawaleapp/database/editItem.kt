@@ -13,8 +13,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Button
 import androidx.compose.material.OutlinedTextField
 import androidx.compose.material.Text
@@ -41,6 +43,7 @@ fun ModifyScreen(dish: Dishfordb, showModifyScreen: () -> Unit) {
     var price by remember { mutableStateOf(TextFieldValue(dish.price)) }
     var category by remember { mutableStateOf(TextFieldValue(dish.category)) }
     var selectImgUri by remember { mutableStateOf(dish.imageUrl) } // Use selectImgUri instead of image
+    var itembarcode by remember { mutableStateOf(dish.barcode) }
     val context = LocalContext.current
     val singlePhotoPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent(),
@@ -55,6 +58,7 @@ fun ModifyScreen(dish: Dishfordb, showModifyScreen: () -> Unit) {
             .fillMaxWidth()
             .fillMaxHeight()
             .padding(8.dp)
+            .verticalScroll(rememberScrollState())
     ) {
         AsyncImage(model = selectImgUri,
             contentDescription = "userImage",
@@ -121,6 +125,21 @@ fun ModifyScreen(dish: Dishfordb, showModifyScreen: () -> Unit) {
             )
         )
 
+        Spacer(modifier = Modifier.height(8.dp))
+
+        OutlinedTextField(value = itembarcode,
+            onValueChange = { itembarcode = it },
+            label = { androidx.compose.material3.Text(text = "Product barcode") },
+            modifier = Modifier
+                .align(Alignment.CenterHorizontally)
+                .padding(start = 10.dp, end = 10.dp, top = 4.dp, bottom = 4.dp),
+            maxLines = 1,
+            textStyle = TextStyle(fontSize = 16.sp),
+            keyboardOptions = KeyboardOptions.Default.copy(
+                keyboardType = KeyboardType.Number
+            )
+        )
+        Spacer(modifier = Modifier.height(8.dp))
 
         Button(
             onClick = {
@@ -133,7 +152,8 @@ fun ModifyScreen(dish: Dishfordb, showModifyScreen: () -> Unit) {
                             description = description.text,
                             price = price.text,
                             category = category.text,
-                            imageUrl = selectImgUri!!
+                            imageUrl = selectImgUri!!,
+                            barcode = itembarcode
                         )
                         // Update the database with the updated Dishfordb object
                         datareference.child(name.text).setValue(updatedDish).addOnSuccessListener {
@@ -155,7 +175,8 @@ fun ModifyScreen(dish: Dishfordb, showModifyScreen: () -> Unit) {
                                         description = description.text,
                                         price = price.text,
                                         category = category.text,
-                                        imageUrl = imageUrl
+                                        imageUrl = imageUrl,
+                                        barcode = itembarcode
                                     )
                                 }
                                 updatedDish?.let { dish ->
