@@ -11,9 +11,16 @@ import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.*
-import androidx.compose.material3.Text
-import androidx.compose.runtime.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.size
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -22,6 +29,7 @@ import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
+import com.example.parawaleapp.database.Dishfordb
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
@@ -31,15 +39,32 @@ import com.google.mlkit.vision.barcode.BarcodeScanning
 import com.google.mlkit.vision.common.InputImage
 import java.util.concurrent.Executors
 
-@androidx.annotation.OptIn(ExperimentalGetImage::class)
+
 @Composable
-fun BarCodeScreen() {
+fun BarCodeScreen(DishData: List<Dishfordb>) {
+    var showItemScreen by remember { mutableStateOf(false) }
+    var gotDish by remember { mutableStateOf<Dishfordb?>(null) }
+    if (showItemScreen && gotDish != null) {
+        ItemScreen(dish = gotDish!!, showItemScreen = { showItemScreen = false })
+    } else {
+        barCodeScreen(showItemScreen = {
+            showItemScreen = true
+            gotDish = it
+        }, DishData = DishData)
+    }
+}
+
+
+@Composable
+@androidx.annotation.OptIn(ExperimentalGetImage::class)
+fun barCodeScreen(showItemScreen: (Dishfordb) -> Unit, DishData: List<Dishfordb>) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
     val cameraProviderFuture = remember { ProcessCameraProvider.getInstance(context) }
     val previewView = remember { PreviewView(context) }
     val cameraExecutor = remember { Executors.newSingleThreadExecutor() }
-
+    val scannedBarcode = remember { mutableStateOf<String?>(null) }
+    RequestCameraPermission()
     DisposableEffect(lifecycleOwner) {
         onDispose {
             cameraExecutor.shutdown()
@@ -48,8 +73,7 @@ fun BarCodeScreen() {
 
     Box(modifier = Modifier.fillMaxSize()) {
         AndroidView(
-            factory = { previewView },
-            modifier = Modifier.fillMaxSize()
+            factory = { previewView }, modifier = Modifier.fillMaxSize()
         ) {
             cameraProviderFuture.addListener({
                 try {
@@ -61,32 +85,28 @@ fun BarCodeScreen() {
                     val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
 
                     val imageAnalysis = ImageAnalysis.Builder()
-                        .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
-                        .build()
+                        .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST).build()
                         .also { analysis ->
                             analysis.setAnalyzer(cameraExecutor) { imageProxy ->
                                 val mediaImage = imageProxy.image
                                 if (mediaImage != null) {
                                     val image = InputImage.fromMediaImage(
-                                        mediaImage,
-                                        imageProxy.imageInfo.rotationDegrees
+                                        mediaImage, imageProxy.imageInfo.rotationDegrees
                                     )
-                                    // Use ML Kit here to analyze the barcode
                                     val scanner: BarcodeScanner = BarcodeScanning.getClient()
-                                    scanner.process(image)
-                                        .addOnSuccessListener { barcodes ->
-                                            // Handle the barcodes
+                                    scanner.process(image).addOnSuccessListener { barcodes ->
                                             for (barcode in barcodes) {
                                                 val rawValue = barcode.rawValue
-                                                // Use the barcode data
-                                                Log.d("BarcodeScanner", "Barcode detected: $rawValue")
-                                                Toast.makeText(context, "Barcode detected: $rawValue", Toast.LENGTH_SHORT).show()
+                                                if (rawValue != null) {
+                                                    scannedBarcode.value = rawValue
+                                                }
+                                                Log.e("BarcodeScanner", "Barcode detected: $rawValue")
                                             }
-                                        }
-                                        .addOnFailureListener { e ->
-                                            Log.e("BarcodeScanner", "Barcode scanning failed", e)
-                                        }
-                                        .addOnCompleteListener {
+                                        }.addOnFailureListener { e ->
+                                            Log.e(
+                                                "BarcodeScanner", "Barcode scanning failed", e
+                                            )
+                                        }.addOnCompleteListener {
                                             imageProxy.close()
                                         }
                                 } else {
@@ -96,7 +116,9 @@ fun BarCodeScreen() {
                         }
 
                     cameraProvider.unbindAll()
-                    cameraProvider.bindToLifecycle(lifecycleOwner, cameraSelector, preview, imageAnalysis)
+                    cameraProvider.bindToLifecycle(
+                        lifecycleOwner, cameraSelector, preview, imageAnalysis
+                    )
                 } catch (e: Exception) {
                     Log.e("BarCodeScreen", "Failed to bind camera use cases", e)
                 }
@@ -118,26 +140,52 @@ fun BarCodeScreen() {
             )
         }
     }
+
+    scannedBarcode.value?.let { barcode ->
+        val gotDish = DishData.find { it.barcode == barcode }
+        if (gotDish != null) {
+            Toast.makeText(context, "Barcode detected: $barcode", Toast.LENGTH_SHORT).show()
+            showItemScreen(gotDish)
+        } else {
+            Toast.makeText(
+                context, "No item found $barcode", Toast.LENGTH_SHORT
+
+            ).show()
+        }
+        // Reset scannedBarcode to prevent repeated actions for the same barcode
+        scannedBarcode.value = null
+    }
 }
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun RequestCameraPermission() {
     val permissionState = rememberPermissionState(Manifest.permission.CAMERA)
-
+    val context = LocalContext.current
     LaunchedEffect(key1 = true) {
         permissionState.launchPermissionRequest()
     }
 
     when {
         permissionState.status.isGranted -> {
-            BarCodeScreen()
+            Toast.makeText(context, "Camera permission granted", Toast.LENGTH_SHORT).show()
         }
+
         permissionState.status.shouldShowRationale -> {
-            Text("Camera permission is needed to scan barcodes")
+            Toast.makeText(
+                context,
+                "Camera permission is needed to scan barcodes",
+                Toast.LENGTH_SHORT
+            ).show()
+
         }
+
         !permissionState.status.isGranted -> {
-            Text("Camera permission denied. Cannot proceed further.")
+            Toast.makeText(
+                context,
+                "Camera permission denied. Cannot proceed further.",
+                Toast.LENGTH_SHORT
+            ).show()
         }
     }
 }

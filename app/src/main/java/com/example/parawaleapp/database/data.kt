@@ -18,6 +18,7 @@ var img by mutableStateOf<Uri?>(null)
 // FOR CART
 var count by mutableStateOf(0)
 var total by mutableStateOf(0)
+var totalmrp by mutableStateOf(0)
 var cartItems by mutableStateOf(mutableListOf<Dishfordb>())
 
 fun saveDataToSharedPreferences(context: Context) {
@@ -79,12 +80,15 @@ fun clearDataFromSharedPreferences(context: Context) {
 
 fun totalcount() {
     total = 0
+    totalmrp = 0
     for (i in cartItems) {
         val priceWithoutCurrency = i.price.removePrefix("₹")
+        val mrpWithoutCurrency = i.mrp.removePrefix("₹")
         val priceAsDouble = priceWithoutCurrency.toDoubleOrNull()
-
-        if (priceAsDouble != null) {
+        val mrpAsDouble = mrpWithoutCurrency.toDoubleOrNull()
+        if (priceAsDouble != null && mrpAsDouble != null) {
             total += (i.count * priceAsDouble).toInt()
+            totalmrp += (i.count * mrpAsDouble).toInt()
         }
     }
 }
@@ -205,9 +209,10 @@ data class Slidess(
 val SlidesItems = listOf(
     Slidess(
         "Cart", "see items added to cart", R.drawable.ig_cart
-    ), Slidess(
-        "Wishlist", "see items added to wishlist", R.drawable.wishheart
-    ), Slidess(
+    ),
+//    Slidess(
+//        "Wishlist", "see items added to wishlist", R.drawable.wishheart)
+    Slidess(
         "Orders", "see your previous orders", R.drawable.order_cardboard
     ), Slidess(
         "Manage Account", "edit your account details", R.drawable.edit_account_logo
@@ -215,6 +220,9 @@ val SlidesItems = listOf(
         "Settings", "Notification, Language", R.drawable.setting
     ), Slidess(
         "Add Items", "Add items to database", R.drawable.additemcloud
+    ),
+    Slidess(
+        "Connect Printer", "Select your bluetooth printing", R.drawable.ic_location
     )
 
 

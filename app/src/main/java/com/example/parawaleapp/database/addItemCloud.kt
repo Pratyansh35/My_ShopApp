@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -66,22 +67,25 @@ fun AddItemScreen() {
     var itembarcode by remember {
         mutableStateOf("")
     }
+    var Itemmrp by remember {
+        mutableStateOf("")
+    }
 
     storageReference.listAll().addOnSuccessListener { result ->
         val imageCount = result.items.size
-        imgSize = imageCount;
+        imgSize = imageCount
     }.addOnFailureListener { exception ->
         // Handle failure
         Toast.makeText(context, " error ${exception.message}", Toast.LENGTH_SHORT).show()
         println("Failed to list items in the folder: $exception")
     }
-    val singlePhotoPickerLauncher =
-        rememberLauncherForActivityResult(contract = ActivityResultContracts.PickVisualMedia(),
-            onResult = { uri ->
-                if (uri != null) {
-                    image = uri
-                }
-            })
+    val singlePhotoPickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickVisualMedia(),
+        onResult = { uri ->
+            if (uri != null) {
+                image = uri
+            }
+        })
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -90,72 +94,112 @@ fun AddItemScreen() {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-            Text(
-                text = "Add Item Screen", style = TextStyle(
-                    fontSize = 18.sp, fontWeight = FontWeight.Bold
-                )
+        Text(
+            text = "Add Item Screen", style = TextStyle(
+                fontSize = 18.sp, fontWeight = FontWeight.Bold
             )
-            Spacer(modifier = Modifier.height(4.dp))
+        )
+        Spacer(modifier = Modifier.height(4.dp))
 
-            Text(
-                text = "Add ${imgSize + 1}th Item", style = TextStyle(
-                    fontSize = 12.sp, fontWeight = FontWeight.Normal, color = Color.Gray
-                )
+        Text(
+            text = "Add ${imgSize + 1}th Item", style = TextStyle(
+                fontSize = 12.sp, fontWeight = FontWeight.Normal, color = Color.Gray
             )
-            Spacer(modifier = Modifier.height(12.dp))
+        )
+        Spacer(modifier = Modifier.height(12.dp))
 
-            OutlinedTextField(value = name,
-                onValueChange = { name = it },
-                label = { Text(text = "Product Name") },
-                modifier = Modifier.padding(start = 10.dp, end = 10.dp, top = 4.dp, bottom = 4.dp),
-                maxLines = 2,
-                textStyle = TextStyle(fontSize = 12.sp),
-                keyboardOptions = KeyboardOptions.Default.copy(
-                    keyboardType = KeyboardType.Text
-                )
+        OutlinedTextField(value = name,
+            onValueChange = { name = it },
+            label = { Text(text = "Product Name") },
+            modifier = Modifier.padding(start = 10.dp, end = 10.dp, top = 4.dp, bottom = 4.dp),
+            maxLines = 2,
+            textStyle = TextStyle(fontSize = 12.sp),
+            keyboardOptions = KeyboardOptions.Default.copy(
+                keyboardType = KeyboardType.Text
             )
-            Spacer(modifier = Modifier.height(4.dp))
+        )
+        Spacer(modifier = Modifier.height(4.dp))
 
-            OutlinedTextField(value = description,
-                onValueChange = { description = it },
-                label = { Text(text = "Product Description") },
+        OutlinedTextField(value = description,
+            onValueChange = { description = it },
+            label = { Text(text = "Product Description") },
+            modifier = Modifier
+
+                .padding(10.dp),
+            maxLines = 4,
+            textStyle = TextStyle(fontSize = 12.sp),
+            keyboardOptions = KeyboardOptions.Default.copy(
+                keyboardType = KeyboardType.Text
+            )
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+
+        OutlinedTextField(value = category,
+            onValueChange = { category = it },
+            label = { Text(text = "Product Category") },
+            modifier = Modifier
+
+                .padding(10.dp),
+            maxLines = 1,
+            textStyle = TextStyle(fontSize = 12.sp),
+            keyboardOptions = KeyboardOptions.Default.copy(
+                keyboardType = KeyboardType.Text
+            )
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        Row(
+            modifier = Modifier
+                .padding(8.dp) // Consistent padding around the Row
+                .height(88.dp) // Slightly increased height for better spacing
+                .fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween // Ensures even spacing between elements
+        ) {
+            OutlinedTextField(
+                value = Itemmrp,
+                onValueChange = { Itemmrp = it },
+                label = { Text(text = "MRP ₹") },
                 modifier = Modifier
-
-                    .padding(10.dp),
-                maxLines = 4,
-                textStyle = TextStyle(fontSize = 12.sp),
-                keyboardOptions = KeyboardOptions.Default.copy(
-                    keyboardType = KeyboardType.Text
-                )
-            )
-            Spacer(modifier = Modifier.height(4.dp))
-
-            OutlinedTextField(value = category,
-                onValueChange = { category = it },
-                label = { Text(text = "Product Category") },
-                modifier = Modifier
-
-                    .padding(10.dp),
+                    .padding(4.dp)
+                    .weight(1f), // Weight ensures equal space for each TextField
                 maxLines = 1,
-                textStyle = TextStyle(fontSize = 12.sp),
-                keyboardOptions = KeyboardOptions.Default.copy(
-                    keyboardType = KeyboardType.Text
-                )
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-
-            OutlinedTextField(value = price,
-                onValueChange = { price = it },
-                label = { Text(text = "Product Price ₹") },
-                modifier = Modifier.padding(start = 10.dp, end = 10.dp, top = 4.dp, bottom = 4.dp),
-                maxLines = 1,
-                textStyle = TextStyle(fontSize = 12.sp),
+                textStyle = TextStyle(fontSize = 14.sp), // Slightly increased font size
                 keyboardOptions = KeyboardOptions.Default.copy(
                     keyboardType = KeyboardType.Number
                 )
             )
 
-            OutlinedTextField(value = itembarcode,
+            OutlinedTextField(
+                value = price,
+                onValueChange = { price = it },
+                label = { Text(text = "Sell Price ₹") },
+                modifier = Modifier
+                    .padding(4.dp)
+                    .weight(1f), // Weight ensures equal space for each TextField
+                maxLines = 1,
+                textStyle = TextStyle(fontSize = 14.sp), // Slightly increased font size
+                keyboardOptions = KeyboardOptions.Default.copy(
+                    keyboardType = KeyboardType.Number
+                )
+            )
+
+            if (price.isNotEmpty() && Itemmrp.isNotEmpty() && price.toFloat() < Itemmrp.toFloat()) {
+                Text(
+                    text = " -${"%.2f".format(((Itemmrp.toFloat() - price.toFloat()) / Itemmrp.toFloat()) * 100)}%",
+                    style = TextStyle(
+                        fontSize = 14.sp, // Slightly increased font size
+                        fontWeight = FontWeight.Medium, // Medium weight for better readability
+                        color = Color.Gray
+                    ),
+                    modifier = Modifier.padding(start =4.dp, end = 1.dp) // Consistent padding
+                )
+            }
+        }
+
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        OutlinedTextField(value = itembarcode,
             onValueChange = { itembarcode = it },
             label = { Text(text = "Product barcode") },
             modifier = Modifier.padding(start = 10.dp, end = 10.dp, top = 4.dp, bottom = 4.dp),
@@ -163,65 +207,64 @@ fun AddItemScreen() {
             textStyle = TextStyle(fontSize = 12.sp),
             keyboardOptions = KeyboardOptions.Default.copy(
                 keyboardType = KeyboardType.Number
+            )
+        )
+
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Row(
+            modifier = Modifier
+                .padding(top = 4.dp)
+                .height(70.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                text = "Product Image", style = TextStyle(
+                    fontSize = 16.sp, fontWeight = FontWeight.Bold
                 )
             )
-
-
-            Spacer(modifier = Modifier.height(10.dp))
-
-            Row(
+            Spacer(modifier = Modifier.height(8.dp))
+            AsyncImage(
+                model = image ?: R.drawable.additemcloud,
+                contentDescription = "productImage",
                 modifier = Modifier
-                    .padding(top = 4.dp)
-                    .height(70.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text(
-                    text = "Product Image", style = TextStyle(
-                        fontSize = 16.sp, fontWeight = FontWeight.Bold
-                    )
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-                AsyncImage(
-                    model = image ?: R.drawable.additemcloud,
-                    contentDescription = "productImage",
-                    modifier = Modifier
-                        .padding(start = 6.dp)
-                        .size(80.dp)
-                        .clickable {
-                            singlePhotoPickerLauncher.launch(
-                                PickVisualMediaRequest(
-                                    ActivityResultContracts.PickVisualMedia.ImageOnly
-                                )
+                    .padding(start = 6.dp)
+                    .size(80.dp)
+                    .clickable {
+                        singlePhotoPickerLauncher.launch(
+                            PickVisualMediaRequest(
+                                ActivityResultContracts.PickVisualMedia.ImageOnly
                             )
-                        },
-                )
-            }
-
-            Button(
-                onClick = {
-                    if (name.isNullOrBlank() || price.isNullOrBlank() || description.isNullOrBlank() || image == null) {
-                        Toast.makeText(context, "Please fill all the fields", Toast.LENGTH_SHORT)
-                            .show()
-                    } else {
-                        if(itembarcode.equals("")){
-                            itembarcode = name
-                        }
-                        addItemToDatabase(
-                            name, "₹$price", description, category, image, context, itembarcode
                         )
-
-                    }
-                },
-                colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFFF4CE14)),
-                shape = RoundedCornerShape(15),
-                modifier = Modifier
-                    .padding(20.dp)
-                    .height(40.dp)
-
-            ) {
-                androidx.compose.material.Text(text = "Add to Database")
-            }
+                    },
+            )
         }
+
+        Button(
+            onClick = {
+                if (name.isNullOrBlank() || price.isNullOrBlank() || description.isNullOrBlank() || image == null) {
+                    Toast.makeText(context, "Please fill all the fields", Toast.LENGTH_SHORT).show()
+                } else {
+                    if (itembarcode.equals("")) {
+                        itembarcode = name
+                    }
+                    addItemToDatabase(
+                        name, "₹$price", description, category, image, context, itembarcode, Itemmrp
+                    )
+
+                }
+            },
+            colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFFF4CE14)),
+            shape = RoundedCornerShape(15),
+            modifier = Modifier
+                .padding(20.dp)
+                .height(40.dp)
+
+        ) {
+            androidx.compose.material.Text(text = "Add to Database")
+        }
+    }
 }
 
 
@@ -232,11 +275,12 @@ fun addItemToDatabase(
     category: String,
     image: Uri?,
     context: Context,
-    barcode: String
+    barcode: String,
+    mrp: String
 ) {
     getImgUrl(image, context, name) { imgUrl ->
         // Use the obtained imgUrl to create the Dishfordb object
-        val dish = imgUrl?.let { Dishfordb(name, price, 0, description, category, it, barcode) }
+        val dish = imgUrl?.let { Dishfordb(name, price, 0, description, category, it, barcode, mrp) }
 
         // Set the dish directly at the specified key (name) in the database
         datareference.child(name).setValue(dish).addOnSuccessListener {

@@ -1,6 +1,9 @@
 package com.example.parawaleapp.database
 
+import android.content.Context
 import android.net.Uri
+import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -19,6 +22,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
+import com.google.firebase.database.FirebaseDatabase
 
 @Composable
 fun deleteItems() {
@@ -65,4 +69,33 @@ fun deleteItemLayout(dish: Dishfordb) {
         color = Color.LightGray,
         thickness = 1.dp
     )
+}
+
+
+fun deleteItem(imageUrl: String, itemName: String, context: Context, callback: (Boolean) -> Unit) {
+    val imageRef = storageReference.child(itemName)
+
+    // Delete the image from Firebase Storage
+    imageRef.delete().addOnSuccessListener {
+        // Image successfully deleted
+        Toast.makeText(context, "Image Deleted Successfully", Toast.LENGTH_SHORT).show()
+
+        // Now, delete the item from the Realtime Database
+        val databaseRef = FirebaseDatabase.getInstance().getReference("items").child(itemName)
+        databaseRef.removeValue().addOnSuccessListener {
+            // Item successfully deleted from Realtime Database
+            Toast.makeText(context, "Item Deleted Successfully", Toast.LENGTH_SHORT).show()
+            callback(true)
+        }.addOnFailureListener { exception ->
+            // Handle the error during item deletion from Realtime Database
+            Toast.makeText(context, exception.message, Toast.LENGTH_SHORT).show()
+            Log.d("deleteItem", "deleteItemFromDatabase: ${exception.message}")
+            callback(false)
+        }
+    }.addOnFailureListener { exception ->
+        // Handle the error during image deletion from Firebase Storage
+        Toast.makeText(context, exception.message, Toast.LENGTH_SHORT).show()
+        Log.d("deleteItem", "deleteImage: ${exception.message}")
+        callback(false)
+    }
 }

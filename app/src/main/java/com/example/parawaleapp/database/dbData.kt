@@ -13,8 +13,9 @@ data class Dishfordb(
     val category: String = "",
     val imageUrl: String,
     val barcode: String,
+    val mrp: String
 ) {
-    constructor() : this("", "", 0, "", "", "", "")
+    constructor() : this("", "", 0, "", "", "", "", "")
 }
 
 // RealTime Database
@@ -25,27 +26,21 @@ suspend fun getdishes(): List<Dishfordb>? {
     return try {
         val task = datareference.get().await()
 
-        val dishesList = mutableListOf<Dishfordb>()
-
-        task.children.forEach { childSnapshot ->
+        task.children.mapNotNull { childSnapshot ->
             try {
-                // Use getValue with a specific type to avoid potential issues
-                val dish = childSnapshot.getValue(Dishfordb::class.java)
-                dish?.let {
-                    dishesList.add(it)
-                }
+                childSnapshot.getValue(Dishfordb::class.java)
             } catch (e: Exception) {
                 Log.e("FirebaseData", "Error converting data: ${e.message}")
+                null
             }
         }
-
-        dishesList
     } catch (e: Exception) {
         // Handle exceptions if any
         Log.e("FirebaseData", "Exception retrieving data: $e")
         null
     }
 }
+
 
 // Firebase Storage for Images
 val storage = FirebaseStorage.getInstance().reference

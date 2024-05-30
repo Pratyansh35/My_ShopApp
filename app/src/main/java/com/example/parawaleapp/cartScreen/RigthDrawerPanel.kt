@@ -1,7 +1,8 @@
-package com.example.parawaleapp.drawerPanel
+package com.example.parawaleapp.cartScreen
 
 import android.net.Uri
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -32,14 +33,18 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -168,39 +173,33 @@ fun CartItems(Dish: Dishfordb, navController: NavController? = null) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(120.dp)
+                .height(148.dp)
+
         ) {
 
             AsyncImage(
                 model = Uri.parse(Dish.imageUrl),
                 contentDescription = "dishImage",
                 modifier = Modifier
-                    .fillMaxHeight(0.8f)
+                    .height(96.dp)
                     .align(Alignment.CenterVertically)
+
             )
-            Column(modifier = Modifier.padding(start = 8.dp, top = 3.dp)) {
+            Column(modifier = Modifier.padding(start = 6.dp, top = 3.dp)) {
                 Text(
                     text = truncateString(Dish.name, 30), fontSize = 14.sp, fontWeight = FontWeight.Bold
                 )
                 Text(
                     text = truncateString(Dish.description, 65),
+                    fontSize = 12.sp,
                     color = Color.Gray,
+
                     modifier = Modifier
                         .padding(top = 5.dp)
                         .fillMaxWidth(1f)
-                        .fillMaxHeight(0.45f)
+                        .height(32.dp)
                 )
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier
-                        .fillMaxWidth(1f)
-                        .fillMaxHeight(1f)
-                ) {
-
-                    Text(
-                        text = Dish.price, color = Color.DarkGray, fontWeight = FontWeight.Bold
-                    )
-
+                Row(modifier = Modifier.fillMaxWidth(1f).height((50.dp)), verticalAlignment = Alignment.CenterVertically) {
                     val isCartIconVisible = Dish.count == 1 || Dish.count == 0
 
                     IconButton(
@@ -210,8 +209,9 @@ fun CartItems(Dish: Dishfordb, navController: NavController? = null) {
 
                         },
                         Modifier
-                            .width(36.dp)
-                            .align(Alignment.Top)
+                            .width(24.dp)
+                            .align(Alignment.CenterVertically)
+                            .padding(end = 5.dp)
                     ) {
                         if (isCartIconVisible) {
                             Icon(
@@ -259,14 +259,12 @@ fun CartItems(Dish: Dishfordb, navController: NavController? = null) {
                             keyboardType = KeyboardType.Number, imeAction = ImeAction.Done
                         ),
                         modifier = Modifier
-                            .width(80.dp)
-                            .fillMaxHeight()
+                            .width(50.dp)
+                            .height(50.dp)
                             .align(Alignment.CenterVertically),
                         colors = TextFieldDefaults.textFieldColors(backgroundColor = Color.Transparent),
                         textStyle = LocalTextStyle.current.copy(fontSize = 15.sp),
                         singleLine = true,
-
-
                         )
 
                     IconButton(
@@ -275,10 +273,38 @@ fun CartItems(Dish: Dishfordb, navController: NavController? = null) {
                             saveCartItemsToSharedPreferences(context)
                         },
                         Modifier
-                            .width(36.dp)
-                            .align(Alignment.Top)
+                            .width(24.dp)
+                            .align(Alignment.CenterVertically)
                     ) {
                         Text(text = "+")
+                    }
+                }
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .fillMaxWidth(1f)
+                        .height(30.dp)
+                ) {
+                    Row(modifier = Modifier.fillMaxWidth(.5f)) {
+                        Text(text = Dish.price, color = Color.Gray, fontWeight = FontWeight.Bold,  style = TextStyle( shadow = Shadow(
+                            color = Color.DarkGray, offset = Offset(1.0f, 1.0f), blurRadius = 0f
+                        )
+                        ),fontStyle = androidx.compose.ui.text.font.FontStyle.Italic, modifier = Modifier.padding(end = 8.dp), fontSize = 16.sp)
+
+                        Text(text = Dish.mrp, color = Color.Gray, textDecoration = TextDecoration.LineThrough, fontSize = 12.sp)
+                        Text(
+                            text = " -${"%.2f".format(((Dish.mrp.trimStart('₹').toFloat() - Dish.price.trimStart('₹').toFloat()) / Dish.mrp.trimStart('₹').toFloat()) * 100)}%",
+                            style = TextStyle(
+                                color = Color.Red,
+                                shadow = Shadow(
+                                    color = Color.DarkGray,
+                                    offset = Offset(1.0f, 1.0f),
+                                    blurRadius = 3f
+                                )
+                            ),
+                            fontSize = 12.sp
+                        )
+
                     }
 
                     Column(
@@ -287,7 +313,7 @@ fun CartItems(Dish: Dishfordb, navController: NavController? = null) {
                     ) {
                         Row {
                             Text(
-                                text = "Total:",
+                                text = "=",
                                 fontFamily = FontFamily.Cursive, fontWeight = FontWeight.W900,
                                 color = Color(0xFFC0B445),
 
@@ -300,7 +326,6 @@ fun CartItems(Dish: Dishfordb, navController: NavController? = null) {
                             )
                         }
                     }
-
                 }
             }
         }

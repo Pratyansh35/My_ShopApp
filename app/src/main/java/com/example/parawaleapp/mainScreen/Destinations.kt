@@ -58,3 +58,9 @@ object AddItems : Destinations {
     override val icon = R.drawable.additemcloud
     override val title = "AddItems"
 }
+
+object BluetoothScreenRoute : Destinations {
+    override val route = "BluetoothScreenRoute"
+    override val icon = R.drawable.setting
+    override val title = "BluetoothScreenRoute"
+}

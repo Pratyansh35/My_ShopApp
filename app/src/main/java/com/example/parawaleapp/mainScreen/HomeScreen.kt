@@ -43,7 +43,7 @@ fun HomeScreen(DishData: List<Dishfordb>) {
     }
 }
 
-@Preview(showBackground = true)
+
 @Composable
 fun UpperPanel() {
     val context = LocalContext.current

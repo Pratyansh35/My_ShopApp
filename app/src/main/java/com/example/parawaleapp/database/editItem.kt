@@ -6,7 +6,9 @@ import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -28,8 +30,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
@@ -40,10 +44,11 @@ import coil.compose.AsyncImage
 fun ModifyScreen(dish: Dishfordb, showModifyScreen: () -> Unit) {
     var name by remember { mutableStateOf(TextFieldValue(dish.name)) }
     var description by remember { mutableStateOf(TextFieldValue(dish.description)) }
-    var price by remember { mutableStateOf(TextFieldValue(dish.price)) }
+    var price by remember { mutableStateOf(TextFieldValue(dish.price.trimStart('₹'))) }
     var category by remember { mutableStateOf(TextFieldValue(dish.category)) }
-    var selectImgUri by remember { mutableStateOf(dish.imageUrl) } // Use selectImgUri instead of image
+    var selectImgUri by remember { mutableStateOf(dish.imageUrl) }
     var itembarcode by remember { mutableStateOf(dish.barcode) }
+    var Itemmrp by remember { mutableStateOf(dish.mrp.trimStart('₹')) }
     val context = LocalContext.current
     val singlePhotoPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent(),
@@ -112,18 +117,54 @@ fun ModifyScreen(dish: Dishfordb, showModifyScreen: () -> Unit) {
         )
         Spacer(modifier = Modifier.height(8.dp))
 
-        OutlinedTextField(value = price,
-            onValueChange = { price = it },
-            label = { Text(text = "Product Price ₹") },
+        Row(
             modifier = Modifier
-                .align(Alignment.CenterHorizontally)
-                .padding(start = 10.dp, end = 10.dp, top = 4.dp, bottom = 4.dp),
-            maxLines = 1,
-            textStyle = TextStyle(fontSize = 16.sp),
-            keyboardOptions = KeyboardOptions.Default.copy(
-                keyboardType = KeyboardType.Number
+                .padding(8.dp) // Consistent padding around the Row
+                .height(88.dp) // Slightly increased height for better spacing
+                .fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween // Ensures even spacing between elements
+        ) {
+            OutlinedTextField(
+                value = Itemmrp,
+                onValueChange = { Itemmrp = it },
+                label = { androidx.compose.material3.Text(text = "Product MRP ₹") },
+                modifier = Modifier
+                    .padding(4.dp)
+                    .weight(1f), // Weight ensures equal space for each TextField
+                maxLines = 1,
+                textStyle = TextStyle(fontSize = 14.sp), // Slightly increased font size
+                keyboardOptions = KeyboardOptions.Default.copy(
+                    keyboardType = KeyboardType.Number
+                )
             )
-        )
+
+            OutlinedTextField(
+                value = price,
+                onValueChange = { price = it },
+                label = { androidx.compose.material3.Text(text = "Product Price ₹") },
+                modifier = Modifier
+                    .padding(4.dp)
+                    .weight(1f), // Weight ensures equal space for each TextField
+                maxLines = 1,
+                textStyle = TextStyle(fontSize = 14.sp), // Slightly increased font size
+                keyboardOptions = KeyboardOptions.Default.copy(
+                    keyboardType = KeyboardType.Number
+                )
+            )
+
+            if (price.text.isNotEmpty() && Itemmrp.isNotEmpty() && price.text.toFloat() < Itemmrp.toFloat()) {
+                androidx.compose.material3.Text(
+                    text = " -${"%.2f".format(((Itemmrp.toFloat() - price.text.toFloat()) / Itemmrp.toFloat()) * 100)}%",
+                    style = TextStyle(
+                        fontSize = 14.sp, // Slightly increased font size
+                        fontWeight = FontWeight.Medium, // Medium weight for better readability
+                        color = Color.Gray
+                    ),
+                    modifier = Modifier.padding(start = 4.dp, end = 1.dp) // Consistent padding
+                )
+            }
+        }
 
         Spacer(modifier = Modifier.height(8.dp))
 
@@ -145,15 +186,16 @@ fun ModifyScreen(dish: Dishfordb, showModifyScreen: () -> Unit) {
             onClick = {
                 if (name.text.isNotEmpty() && description.text.isNotEmpty() && price.text.isNotEmpty() && category.text.isNotEmpty() && selectImgUri != null) {
                     // Check if selectImgUri is a URL or a local URI
-                    if (selectImgUri!!.startsWith("http") || selectImgUri!!.startsWith("https")) {
+                    if (selectImgUri.startsWith("http") || selectImgUri.startsWith("https")) {
                         // If selectImgUri is a URL, create the updated Dishfordb object with the URL directly
                         val updatedDish = Dishfordb(
                             name = name.text,
                             description = description.text,
-                            price = price.text,
+                            price = '₹' + price.text,
                             category = category.text,
-                            imageUrl = selectImgUri!!,
-                            barcode = itembarcode
+                            imageUrl = selectImgUri,
+                            barcode = itembarcode,
+                            mrp = "₹$Itemmrp"
                         )
                         // Update the database with the updated Dishfordb object
                         datareference.child(name.text).setValue(updatedDish).addOnSuccessListener {
@@ -167,16 +209,17 @@ fun ModifyScreen(dish: Dishfordb, showModifyScreen: () -> Unit) {
                         }
                     } else {
                         // If selectImgUri is a local URI, upload it first
-                        selectImgUri?.let { imageUri ->
+                        selectImgUri.let { imageUri ->
                             getImgUrl(Uri.parse(imageUri), context, name.text) { imgUrl ->
                                 val updatedDish = imgUrl?.let { imageUrl ->
                                     Dishfordb(
                                         name = name.text,
                                         description = description.text,
-                                        price = price.text,
+                                        price = '₹' +price.text,
                                         category = category.text,
                                         imageUrl = imageUrl,
-                                        barcode = itembarcode
+                                        barcode = itembarcode,
+                                        mrp = "₹$Itemmrp"
                                     )
                                 }
                                 updatedDish?.let { dish ->
@@ -204,9 +247,6 @@ fun ModifyScreen(dish: Dishfordb, showModifyScreen: () -> Unit) {
                                     ).show()
                                 }
                             }
-                        } ?: run {
-                            Toast.makeText(context, "Please select an image", Toast.LENGTH_SHORT)
-                                .show()
                         }
                     }
                 } else {

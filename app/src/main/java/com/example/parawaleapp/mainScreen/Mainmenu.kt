@@ -19,10 +19,14 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -79,6 +83,9 @@ fun MenuSlide(
         } else if (Slidess.Type == "Add Items") {
             scope.launch { scaffoldState.drawerState.close() }
             navController?.navigate("AddItems")
+        } else if (Slidess.Type == "Connect Printer") {
+            scope.launch { scaffoldState.drawerState.close() }
+            navController?.navigate("BluetoothScreenRoute")
         }
 
     }
@@ -139,9 +146,12 @@ fun MenuDish(dish: Dishfordb) {
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Row(modifier = Modifier.fillMaxWidth(.3f)) {
-                        Text(
-                            text = dish.price, color = Color.Gray, fontWeight = FontWeight.Bold
+                        Text(text = dish.mrp, color = Color.Gray, textDecoration = TextDecoration.LineThrough)
+
+                        Text(text = dish.price, color = Color.Gray, fontWeight = FontWeight.Bold,  style = TextStyle( shadow = Shadow(
+                            color = Color.DarkGray, offset = Offset(1.0f, 1.0f), blurRadius = 3f
                         )
+                        ),fontStyle = androidx.compose.ui.text.font.FontStyle.Italic, modifier = Modifier.padding(start = 5.dp))
                     }
                     Row(modifier = Modifier.fillMaxWidth(.6f), Arrangement.End) {
                         Button(

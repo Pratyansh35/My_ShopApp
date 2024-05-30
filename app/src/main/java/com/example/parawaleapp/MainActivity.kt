@@ -36,19 +36,20 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.parawaleapp.barcodeScreen.BarCodeScreen
+import com.example.parawaleapp.cartScreen.CartDrawerPanel
+import com.example.parawaleapp.cartScreen.ConfirmCart
 import com.example.parawaleapp.database.Dishfordb
 import com.example.parawaleapp.database.ManageItem
 import com.example.parawaleapp.database.clearDataFromSharedPreferences
 import com.example.parawaleapp.database.getdishes
 import com.example.parawaleapp.database.restoreDataFromSharedPreferences
-import com.example.parawaleapp.drawerPanel.CartDrawerPanel
 import com.example.parawaleapp.drawerPanel.leftPanel.LeftDrawerPanel
 import com.example.parawaleapp.drawerPanel.leftPanel.Profileset
 import com.example.parawaleapp.mainScreen.AddItems
 import com.example.parawaleapp.mainScreen.AfterCart
-import com.example.parawaleapp.barcodeScreen.BarCodeScreen
+import com.example.parawaleapp.mainScreen.BluetoothScreenRoute
 import com.example.parawaleapp.mainScreen.Cart
-import com.example.parawaleapp.mainScreen.ConfirmCart
 import com.example.parawaleapp.mainScreen.Home
 import com.example.parawaleapp.mainScreen.HomeScreen
 import com.example.parawaleapp.mainScreen.Login
@@ -57,6 +58,7 @@ import com.example.parawaleapp.mainScreen.MenuListScreen
 import com.example.parawaleapp.mainScreen.NavBar
 import com.example.parawaleapp.mainScreen.ProfileSet
 import com.example.parawaleapp.mainScreen.Scan_Barcode
+import com.example.parawaleapp.printer.BluetoothScreen
 import com.example.parawaleapp.sign_in.GoogleAuthUiclient
 import com.example.parawaleapp.sign_in.SignInViewModel
 import com.google.android.gms.auth.api.identity.Identity
@@ -161,7 +163,6 @@ fun MainScreen(
     scope: CoroutineScope,
     dishData: List<Dishfordb>
 ) {
-
     val scaffoldState = rememberScaffoldState()
     val navController = rememberNavController()
     val context = LocalContext.current
@@ -180,7 +181,6 @@ fun MainScreen(
                     ).show()
                 }
                 navController2.navigate("sign_in")
-
             })
 
     }, drawerGesturesEnabled = true,
@@ -202,13 +202,13 @@ fun MainScreen(
                 }
 
                 composable(Scan_Barcode.route) {
-                    BarCodeScreen()
+                    BarCodeScreen(dishData)
                 }
                 composable(Cart.route) {
                     CartDrawerPanel(navController = navController)
                 }
                 composable(AfterCart.route) {
-                    ConfirmCart()
+                    ConfirmCart(navController = navController)
                 }
                 composable(ProfileSet.route) {
                     Profileset(userData = googleAuthUiClient.getSinedInUser())
@@ -216,8 +216,9 @@ fun MainScreen(
                 composable(AddItems.route) {
                     ManageItem(userData = googleAuthUiClient.getSinedInUser(), dishData)
                 }
-
-
+                composable(BluetoothScreenRoute.route) {
+                    BluetoothScreen()
+                }
             }
         }
     }

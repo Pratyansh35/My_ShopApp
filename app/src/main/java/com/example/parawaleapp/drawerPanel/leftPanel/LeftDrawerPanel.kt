@@ -2,18 +2,21 @@ package com.example.parawaleapp.drawerPanel.leftPanel
 
 import android.util.Log
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Button
 import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.Card
@@ -26,7 +29,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -35,7 +37,6 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.example.parawaleapp.database.SlidesItems
-import com.example.parawaleapp.database.clearDataFromSharedPreferences
 import com.example.parawaleapp.database.img
 import com.example.parawaleapp.database.name
 import com.example.parawaleapp.mainScreen.MenuSlide
@@ -50,9 +51,13 @@ fun LeftDrawerPanel(
     userData: UserData?,
     signOut: () -> Unit
 ) {
-    val context = LocalContext.current
     Column(
-        Modifier.fillMaxWidth()
+        Modifier
+            .fillMaxSize()
+            .scrollable(
+                rememberScrollState(),
+                orientation = androidx.compose.foundation.gestures.Orientation.Vertical)
+
     ) {
         Card(
             modifier = Modifier
@@ -72,7 +77,10 @@ fun LeftDrawerPanel(
 
 
             ) {
-                Log.d("leftPic", "got img = $img    /n got googlepicc = ${userData?.progilePictureUrl}")
+                Log.d(
+                    "leftPic",
+                    "got img = $img    /n got googlepicc = ${userData?.progilePictureUrl}"
+                )
                 AsyncImage(
 
                     model = if (img.toString().equals("")) {
@@ -127,29 +135,19 @@ fun LeftDrawerPanel(
                 )
             }
         }
-
-
-        Row(
-            Modifier
+        Button(
+            onClick = {
+                signOut()
+            },
+            colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFFF4CE14)),
+            shape = RoundedCornerShape(40),
+            modifier = Modifier
+                .padding(10.dp)
                 .fillMaxWidth()
-                .fillMaxHeight(),
-            horizontalArrangement = Arrangement.Center,
-            verticalAlignment = Alignment.Bottom
+                .height(50.dp)
         ) {
-            Button(
-                onClick = {
-                    signOut()
-                },
-                colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFFF4CE14)),
-                shape = RoundedCornerShape(40),
-                modifier = Modifier
-                    .padding(10.dp)
-                    .fillMaxWidth()
-                    .height(50.dp)
-                    .align(Alignment.CenterVertically)
-            ) {
-                Text(text = "LOG OUT", color = Color.Black, fontWeight = FontWeight.Bold)
-            }
+            Text(text = "LOG OUT", color = Color.Black, fontWeight = FontWeight.Bold)
         }
+
     }
 }
