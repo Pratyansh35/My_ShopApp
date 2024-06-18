@@ -9,22 +9,23 @@ data class Dishfordb(
     val name: String = "",
     val price: String = "",
     var count: Int = 0,
+    var weight: String,
     val description: String = "",
     val category: String = "",
     val imageUrl: String,
     val barcode: String,
     val mrp: String
 ) {
-    constructor() : this("", "", 0, "", "", "", "", "")
+    constructor() : this("", "", 0,"", "", "", "", "", "")
 }
 
 // RealTime Database
 val mfirebaseDatabase =
     FirebaseDatabase.getInstance("https://myparawale-app-default-rtdb.asia-southeast1.firebasedatabase.app/")
 val datareference = mfirebaseDatabase.reference
-suspend fun getdishes(): List<Dishfordb>? {
+suspend fun getdishes(child : String): List<Dishfordb>? {
     return try {
-        val task = datareference.get().await()
+        val task = datareference.child(child).get().await()
 
         task.children.mapNotNull { childSnapshot ->
             try {

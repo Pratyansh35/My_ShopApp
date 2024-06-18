@@ -17,8 +17,8 @@ var img by mutableStateOf<Uri?>(null)
 
 // FOR CART
 var count by mutableStateOf(0)
-var total by mutableStateOf(0)
-var totalmrp by mutableStateOf(0)
+var total by mutableStateOf(0.00)
+var totalmrp by mutableStateOf(0.00)
 var cartItems by mutableStateOf(mutableListOf<Dishfordb>())
 
 fun saveDataToSharedPreferences(context: Context) {
@@ -61,7 +61,7 @@ fun getCartItemsFromSharedPreferences(context: Context) {
     val cartItemsJson = sharedPreferences.getString("cartItems", "")
 
     count = sharedPreferences.getString("count", "")?.toInt() ?: 0
-    total = sharedPreferences.getString("total", "")?.toInt() ?: 0
+    total = sharedPreferences.getString("total", "")?.toDouble() ?: 0.00
     // Convert the JSON string back to a MutableList<Dishfordb>
     val gson = Gson()
     val type = object : TypeToken<MutableList<Dishfordb>>() {}.type
@@ -79,8 +79,8 @@ fun clearDataFromSharedPreferences(context: Context) {
 
 
 fun totalcount() {
-    total = 0
-    totalmrp = 0
+    total = 0.0
+    totalmrp = 0.00
     for (i in cartItems) {
         val priceWithoutCurrency = i.price.removePrefix("₹")
         val mrpWithoutCurrency = i.mrp.removePrefix("₹")
@@ -204,24 +204,25 @@ data class Slidess(
     val Type: String,
     val Description: String,
     val image: Int,
-)
+
+    )
 
 val SlidesItems = listOf(
     Slidess(
         "Cart", "see items added to cart", R.drawable.ig_cart
-    ),
-//    Slidess(
-//        "Wishlist", "see items added to wishlist", R.drawable.wishheart)
-    Slidess(
+    ), Slidess(
+        "Wishlist", "see items added to wishlist", R.drawable.wishheart
+    ), Slidess(
         "Orders", "see your previous orders", R.drawable.order_cardboard
     ), Slidess(
         "Manage Account", "edit your account details", R.drawable.edit_account_logo
     ), Slidess(
         "Settings", "Notification, Language", R.drawable.setting
     ), Slidess(
+        "Customers Order", "See all Customers order", R.drawable.additemcloud
+    ), Slidess(
         "Add Items", "Add items to database", R.drawable.additemcloud
-    ),
-    Slidess(
+    ), Slidess(
         "Connect Printer", "Select your bluetooth printing", R.drawable.ic_location
     )
 

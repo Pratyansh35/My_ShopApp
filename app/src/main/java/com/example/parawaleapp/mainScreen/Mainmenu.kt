@@ -66,58 +66,56 @@ fun MenuCategory(category: String) {
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun MenuSlide(
-    Slidess: Slidess,
+    slidess: Slidess,
     navController: NavController? = null,
     scaffoldState: ScaffoldState,
     scope: CoroutineScope
 ) {
-    Card(modifier = Modifier
-        .fillMaxWidth()
-        .padding(8.dp, 8.dp, 8.dp, 20.dp), onClick = {
-        if (Slidess.Type == "Cart") {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(8.dp, 8.dp, 8.dp, 20.dp),
+        onClick = {
             scope.launch { scaffoldState.drawerState.close() }
-            navController?.navigate("cart")
-        } else if (Slidess.Type == "Manage Account") {
-            scope.launch { scaffoldState.drawerState.close() }
-            navController?.navigate("ProfileSet")
-        } else if (Slidess.Type == "Add Items") {
-            scope.launch { scaffoldState.drawerState.close() }
-            navController?.navigate("AddItems")
-        } else if (Slidess.Type == "Connect Printer") {
-            scope.launch { scaffoldState.drawerState.close() }
-            navController?.navigate("BluetoothScreenRoute")
+            val route = when (slidess.Type) {
+                "Cart" -> Cart.route
+                "Manage Account" -> ProfileSet.route
+                "Add Items" -> AddItems.route
+                "Connect Printer" -> BluetoothScreenRoute.route
+                "Customers Order" -> ViewOrder.route
+                else -> null
+            }
+            route?.let { navController?.navigate(it) }
         }
-
-    }
-
     ) {
-
         Row {
             Image(
-                painter = painterResource(id = Slidess.image),
-                contentDescription = "",
+                painter = painterResource(id = slidess.image),
+                contentDescription = slidess.Type,
                 modifier = Modifier
                     .size(50.dp)
                     .padding(8.dp)
             )
-
-            Column {
-
+            Column(
+                modifier = Modifier
+                    .padding(start = 8.dp)
+                    .align(Alignment.CenterVertically)
+            ) {
                 Text(
-                    text = Slidess.Type,
+                    text = slidess.Type,
                     fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(start = 8.dp)
+                    fontWeight = FontWeight.Bold
                 )
                 Text(
-                    text = Slidess.Description,
-                    fontSize = 14.sp,
-                    modifier = Modifier.padding(start = 8.dp)
+                    text = slidess.Description,
+                    fontSize = 14.sp
                 )
             }
         }
     }
 }
+
+
 
 
 @Composable

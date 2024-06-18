@@ -14,6 +14,11 @@ import com.google.firebase.auth.auth
 import kotlinx.coroutines.tasks.await
 import java.util.concurrent.CancellationException
 
+val listofAuthorizedUsersEmails = listOf(
+    "pratyansh35@gmail.com",
+    "rajmad007au@gmail.com",
+    "bp20010327@gmail.com",
+    "pratyansh35@gmail.com")
 
 class GoogleAuthUiclient(
     private val context: Context, private val oneTapClient: SignInClient
@@ -45,7 +50,8 @@ class GoogleAuthUiclient(
                             userId = uid,
                             userName = it,
                             progilePictureUrl = photoUrl?.toString(),
-                            userEmail = email
+                            userEmail = email,
+                            phoneno = null
                         )
                     }
                 }, errorMessage = null
@@ -76,7 +82,8 @@ class GoogleAuthUiclient(
                 userId = uid,
                 userName = it,
                 progilePictureUrl = photoUrl?.toString(),
-                userEmail = email
+                userEmail = email,
+                phoneno = null
             )
         }
     }

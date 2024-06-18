@@ -1,14 +1,10 @@
-package com.example.parawaleapp.mainScreen
-
 import com.example.parawaleapp.R
-
 
 interface Destinations {
     val route: String
     val icon: Int
     val title: String
 }
-
 
 object Login : Destinations {
     override val route = "Login"
@@ -40,7 +36,6 @@ object Scan_Barcode : Destinations {
     override val title = "Scan_Barcode"
 }
 
-
 object ProfileSet : Destinations {
     override val route = "ProfileSet"
     override val icon = R.drawable.ic_location
@@ -63,4 +58,19 @@ object BluetoothScreenRoute : Destinations {
     override val route = "BluetoothScreenRoute"
     override val icon = R.drawable.setting
     override val title = "BluetoothScreenRoute"
+
+}
+
+
+object ViewOrder : Destinations {
+    override val route = "viewOrders"
+    override val icon = R.drawable.ic_menu
+    override val title = "View Orders"
+}
+
+
+object OrderDetails : Destinations {
+    override val route = "order_details/{email}"
+    override val icon = R.drawable.usericon
+    override val title = "OrderDetails"
 }

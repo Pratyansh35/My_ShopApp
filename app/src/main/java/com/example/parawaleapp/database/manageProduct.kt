@@ -4,9 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -23,9 +21,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.VerticalAlignmentLine
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -42,6 +37,7 @@ fun topBar() {
                 modify = false
                 add = true
                 delete = false
+                showModifyScreen = false
             }, if (!add) {
                 Modifier
                     .weight(1f)
@@ -82,11 +78,12 @@ fun topBar() {
                 modify = true
                 add = false
                 delete = false
+                showModifyScreen = false
             }, if (!modify) {
                 Modifier
                     .weight(1f)
                     .align(Alignment.CenterVertically)
-            } else {
+            }else {
                 Modifier
                     .weight(1f)
                     .align(Alignment.CenterVertically)
@@ -124,6 +121,7 @@ fun topBar() {
                 modify = false
                 add = false
                 delete = true
+                showModifyScreen = false
             }, if (!delete) {
                 Modifier
                     .weight(1f)
@@ -165,58 +163,62 @@ fun topBar() {
 var add by mutableStateOf(true)
 var modify by mutableStateOf(false)
 var delete by mutableStateOf(false)
+var showModifyScreen by mutableStateOf(false)
 
 @Composable
 fun ManageItem(
     userData: UserData?, dishData: List<Dishfordb>
 ) {
     var selectedDish by remember { mutableStateOf<Dishfordb?>(null) }
-    var showModifyScreen by remember { mutableStateOf(false) }
 
     Column(modifier = Modifier.fillMaxSize()) {
         topBar()
         if (userData?.userEmail != "pratyansh35@gmail.com") {
             Box(
-                modifier = Modifier
-                    .fillMaxSize()  // This will make the Box fill the entire screen
+                modifier = Modifier.fillMaxSize()
             ) {
                 Text(
                     text = "You are not authorized to access this page",
-                    modifier = Modifier.align(Alignment.Center),  // Center the text inside the Box
+                    modifier = Modifier.align(Alignment.Center),
                     color = Color(0xFFFF5100),
                     fontSize = 22.sp,
                     textAlign = TextAlign.Center
                 )
             }
-        }
-        else {
-            if (!add) {
-                if (showModifyScreen) {
-                    selectedDish?.let { dish ->
-                        // Make sure that the ModifyScreen composable is defined correctly
-                        ModifyScreen(dish = dish, showModifyScreen = {
-                            showModifyScreen = false
-                        })
-
-                    }
-                } else if (!delete) {
-                    Column {
-                        Divider(
-                            modifier = Modifier.padding(8.dp), color = Color.Gray, thickness = 1.dp
-                        )
-                        LazyColumn {
-                            items(dishData) { dish ->
-                                // Ensure that the ModifyItemScreen composable is defined correctly
-                                ModifyItemScreen(dish = dish, onEditClicked = {
-                                    selectedDish = dish
-                                    showModifyScreen = true
-                                })
-                            }
+        } else {
+            if (add) {
+                AddItemScreen()
+            } else if (showModifyScreen) {
+                selectedDish?.let { dish ->
+                    ModifyScreen(dish = dish, showModifyScreen = {
+                        showModifyScreen = false
+                    })
+                }
+            } else if (modify) {
+                Column {
+                    Divider(
+                        modifier = Modifier.padding(8.dp), color = Color.Gray, thickness = 1.dp
+                    )
+                    LazyColumn {
+                        items(dishData) { dish ->
+                            ModifyItemScreen(dish = dish, onEditClicked = {
+                                selectedDish = dish
+                                showModifyScreen = true
+                            })
                         }
                     }
                 }
-            } else {
-                AddItemScreen()
+            } else if (delete) {
+                Column {
+                    Divider(
+                        modifier = Modifier.padding(8.dp), color = Color.Gray, thickness = 1.dp
+                    )
+                    LazyColumn {
+                        items(dishData) { dish ->
+                            deleteItemLayout(dish)
+                        }
+                    }
+                }
             }
         }
     }

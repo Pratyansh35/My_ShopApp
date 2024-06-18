@@ -45,6 +45,7 @@ fun ModifyScreen(dish: Dishfordb, showModifyScreen: () -> Unit) {
     var name by remember { mutableStateOf(TextFieldValue(dish.name)) }
     var description by remember { mutableStateOf(TextFieldValue(dish.description)) }
     var price by remember { mutableStateOf(TextFieldValue(dish.price.trimStart('₹'))) }
+    var weight by remember { mutableStateOf(TextFieldValue(dish.weight)) }
     var category by remember { mutableStateOf(TextFieldValue(dish.category)) }
     var selectImgUri by remember { mutableStateOf(dish.imageUrl) }
     var itembarcode by remember { mutableStateOf(dish.barcode) }
@@ -116,11 +117,23 @@ fun ModifyScreen(dish: Dishfordb, showModifyScreen: () -> Unit) {
             )
         )
         Spacer(modifier = Modifier.height(8.dp))
-
+        OutlinedTextField(
+            value = weight,
+            onValueChange = { weight = it },
+            label = { androidx.compose.material3.Text(text = "Product weight") },
+            modifier = Modifier
+                .align(Alignment.CenterHorizontally)
+                .padding(start = 10.dp, end = 10.dp, top = 4.dp, bottom = 4.dp),
+            maxLines = 1,
+            textStyle = TextStyle(fontSize = 16.sp),
+            keyboardOptions = KeyboardOptions.Default.copy(
+                keyboardType = KeyboardType.Number
+            )
+        )
         Row(
             modifier = Modifier
                 .padding(8.dp) // Consistent padding around the Row
-                .height(88.dp) // Slightly increased height for better spacing
+                .height(88.dp) // Fixed height for the Row
                 .fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween // Ensures even spacing between elements
@@ -191,6 +204,7 @@ fun ModifyScreen(dish: Dishfordb, showModifyScreen: () -> Unit) {
                         val updatedDish = Dishfordb(
                             name = name.text,
                             description = description.text,
+                            weight = weight.text,
                             price = '₹' + price.text,
                             category = category.text,
                             imageUrl = selectImgUri,
@@ -198,7 +212,7 @@ fun ModifyScreen(dish: Dishfordb, showModifyScreen: () -> Unit) {
                             mrp = "₹$Itemmrp"
                         )
                         // Update the database with the updated Dishfordb object
-                        datareference.child(name.text).setValue(updatedDish).addOnSuccessListener {
+                        datareference.child("Items").child(name.text).setValue(updatedDish).addOnSuccessListener {
                             Toast.makeText(
                                 context, "Item Updated Successfully", Toast.LENGTH_SHORT
                             ).show()
@@ -215,6 +229,7 @@ fun ModifyScreen(dish: Dishfordb, showModifyScreen: () -> Unit) {
                                     Dishfordb(
                                         name = name.text,
                                         description = description.text,
+                                        weight = weight.text,
                                         price = '₹' +price.text,
                                         category = category.text,
                                         imageUrl = imageUrl,

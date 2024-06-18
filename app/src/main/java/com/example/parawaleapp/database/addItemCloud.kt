@@ -58,6 +58,9 @@ fun AddItemScreen() {
     var category by remember {
         mutableStateOf("")
     }
+    var weight by remember {
+        mutableStateOf("")
+    }
     var image by remember {
         mutableStateOf<Uri?>(null)
     }
@@ -144,6 +147,21 @@ fun AddItemScreen() {
             textStyle = TextStyle(fontSize = 12.sp),
             keyboardOptions = KeyboardOptions.Default.copy(
                 keyboardType = KeyboardType.Text
+            )
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+
+        OutlinedTextField(
+            value = weight,
+            onValueChange = { weight = it },
+            label = { androidx.compose.material3.Text(text = "Product weight in grams") },
+            modifier = Modifier
+                .align(Alignment.CenterHorizontally)
+                .padding(start = 10.dp, end = 10.dp, top = 4.dp, bottom = 4.dp),
+            maxLines = 1,
+            textStyle = TextStyle(fontSize = 16.sp),
+            keyboardOptions = KeyboardOptions.Default.copy(
+                keyboardType = KeyboardType.Number
             )
         )
         Spacer(modifier = Modifier.height(8.dp))
@@ -250,7 +268,7 @@ fun AddItemScreen() {
                         itembarcode = name
                     }
                     addItemToDatabase(
-                        name, "₹$price", description, category, image, context, itembarcode, Itemmrp
+                        name, "₹$price", description, weight ,category, image, context, itembarcode, Itemmrp
                     )
 
                 }
@@ -272,6 +290,7 @@ fun addItemToDatabase(
     name: String,
     price: String,
     description: String,
+    weight: String,
     category: String,
     image: Uri?,
     context: Context,
@@ -280,10 +299,10 @@ fun addItemToDatabase(
 ) {
     getImgUrl(image, context, name) { imgUrl ->
         // Use the obtained imgUrl to create the Dishfordb object
-        val dish = imgUrl?.let { Dishfordb(name, price, 0, description, category, it, barcode, mrp) }
+        val dish = imgUrl?.let { Dishfordb(name, price, 0, weight,description, category, it, barcode, mrp) }
 
         // Set the dish directly at the specified key (name) in the database
-        datareference.child(name).setValue(dish).addOnSuccessListener {
+        datareference.child("Items").child(name).setValue(dish).addOnSuccessListener {
             // Handle the success case
             Toast.makeText(context, "Item Added Successfully", Toast.LENGTH_SHORT).show()
         }.addOnFailureListener { exception ->

@@ -112,7 +112,8 @@ fun Profileset(userData: UserData?) {
 
         OutlinedTextField(
             value = phonenotemp,
-            onValueChange = { phonenotemp = it },
+            onValueChange = { phonenotemp = it
+                phoneno = it},
             label = { Text(text = "Phone no.") },
             modifier = Modifier.padding(10.dp),
             singleLine = true,

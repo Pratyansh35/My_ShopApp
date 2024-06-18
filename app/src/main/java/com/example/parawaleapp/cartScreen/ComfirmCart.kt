@@ -31,16 +31,21 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.app.ActivityCompat
 import androidx.navigation.NavController
+import com.example.parawaleapp.SendViewOrders.sendOrders
 import com.example.parawaleapp.database.Dishfordb
 import com.example.parawaleapp.database.cartItems
 import com.example.parawaleapp.database.total
 import com.example.parawaleapp.database.totalmrp
+import com.example.parawaleapp.sign_in.UserData
 import java.io.IOException
 import java.io.OutputStream
+import java.text.SimpleDateFormat
+import java.util.Date
 import java.util.IllegalFormatConversionException
 import java.util.Locale
 import java.util.UUID
@@ -61,25 +66,36 @@ fun CartLayout() {
                 .weight(1f)
                 .align(Alignment.CenterVertically),
             textAlign = TextAlign.Center,
-            fontWeight = FontWeight.Bold
+            fontWeight = FontWeight.Bold,
+            fontSize = 13.sp
         )
         Text(
             text = "Quantity",
             modifier = Modifier.weight(1f),
             textAlign = TextAlign.Center,
-            fontWeight = FontWeight.Bold
+            fontWeight = FontWeight.Bold,
+            fontSize = 13.sp
         )
         Text(
             text = "MRP",
             modifier = Modifier.weight(1f),
             textAlign = TextAlign.Center,
-            fontWeight = FontWeight.Bold
+            fontWeight = FontWeight.Bold,
+            fontSize = 13.sp
+        )
+        Text(
+            text = "Offer",
+            modifier = Modifier.weight(1f),
+            textAlign = TextAlign.Center,
+            fontWeight = FontWeight.Bold,
+            fontSize = 13.sp
         )
         Text(
             text = "Total",
             modifier = Modifier.weight(1f),
             textAlign = TextAlign.Center,
-            fontWeight = FontWeight.Bold
+            fontWeight = FontWeight.Bold,
+            fontSize = 13.sp
         )
     }
 }
@@ -87,7 +103,6 @@ fun CartLayout() {
 
 @Composable
 fun ConfirmItems(dish: Dishfordb) {
-
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -108,7 +123,18 @@ fun ConfirmItems(dish: Dishfordb) {
             modifier = Modifier.weight(1f),
             textAlign = TextAlign.Center
         )
-        Text(text = dish.price, modifier = Modifier.weight(1f), textAlign = TextAlign.Center)
+        Text(
+            text = dish.mrp,
+            modifier = Modifier.weight(1f),
+            textAlign = TextAlign.Center,
+            textDecoration = TextDecoration.LineThrough
+        )
+        Text(
+            text = dish.price,
+            modifier = Modifier.weight(1f),
+            textAlign = TextAlign.Center,
+            color = Color(0xFF449C44)
+        )
         Text(
             text = (dish.count * dish.price.removePrefix("₹").toDouble()).toString(),
             modifier = Modifier.weight(1f),
@@ -119,9 +145,10 @@ fun ConfirmItems(dish: Dishfordb) {
 
 
 var selectedPrinter by mutableStateOf<String>("")
+
 @Composable
-fun ConfirmCart(navController: NavController? = null) {
-    val context =  LocalContext.current
+fun ConfirmCart(navController: NavController? = null, userData: UserData?) {
+    val context = LocalContext.current
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -157,16 +184,19 @@ fun ConfirmCart(navController: NavController? = null) {
                 ConfirmItems(dish)
             }
         }
-        Row(modifier = Modifier
-            .padding(10.dp)
-            .fillMaxWidth(),
+        Row(
+            modifier = Modifier
+                .padding(10.dp)
+                .fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Text(text = "Total MRP: ₹${totalmrp}", modifier = Modifier.padding(10.dp))
             Row(modifier = Modifier.padding(10.dp)) {
                 Text(text = "Discount on MRP: ")
                 Text(
-                    text = "-₹${totalmrp - total}", fontWeight = FontWeight.Bold, color = Color(0xFF449C44)
+                    text = "-₹${totalmrp - total}",
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF449C44)
                 )
             }
         }
@@ -179,41 +209,53 @@ fun ConfirmCart(navController: NavController? = null) {
             fontSize = 20.sp,
             fontWeight = FontWeight.Bold
         )
-        Button(
-            onClick = {
-                if(
-                    selectedPrinter.isEmpty()
-                ) {
-                    Toast.makeText(context, "Please select a printer", Toast.LENGTH_SHORT).show()
-                    navController?.navigate("BluetoothScreenRoute")
-                    return@Button
-                }
 
-                val printData = formatForPrinting(cartItems, totalmrp.toDouble(), total.toDouble())
-                printData( context ,selectedPrinter, printData)
-            },
-            colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFFF4CE14)),
-            shape = RoundedCornerShape(40),
-            modifier = Modifier
-                .padding(10.dp)
-                .fillMaxWidth()
-                .height(50.dp)
-                .align(Alignment.End)
-        ) {
-            Text(text = "Print Bill", color = Color.Black, fontWeight = FontWeight.Bold)
+        if (userData?.userEmail.equals("pratyansh35@gmail.com")) {
+            Button(
+                onClick = {
+                    if (selectedPrinter.isEmpty()) {
+                        Toast.makeText(context, "Please select a printer", Toast.LENGTH_SHORT)
+                            .show()
+                        navController?.navigate("BluetoothScreenRoute")
+                        return@Button
+                    }
+
+                    val printData =
+                        formatForPrinting(context, cartItems, totalmrp.toDouble(), total.toDouble())
+                    printData(context, selectedPrinter, printData)
+                },
+                colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFFF4CE14)),
+                shape = RoundedCornerShape(40),
+                modifier = Modifier
+                    .padding(10.dp)
+                    .fillMaxWidth()
+                    .height(50.dp)
+                    .align(Alignment.End)
+            ) {
+                Text(text = "Print Bill", color = Color.Black, fontWeight = FontWeight.Bold)
+            }
+        }else{
+            Button(
+                onClick = {
+                    sendOrders(context , userData = userData, cartItems = cartItems, totalMrp = totalmrp ,total = total)
+                },
+                colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFFF4CE14)),
+                shape = RoundedCornerShape(40),
+                modifier = Modifier
+                    .padding(10.dp)
+                    .fillMaxWidth()
+                    .height(50.dp)
+                    .align(Alignment.End)
+            ) {
+                Text(text = "Send Order", color = Color.Black, fontWeight = FontWeight.Bold)
+            }
         }
     }
 }
 
 
-
-
-
-
 fun formatForPrinting(
-    cartItems: List<Dishfordb>,
-    totalMrp: Double,
-    total: Double
+    context: Context, cartItems: List<Dishfordb>, totalMrp: Double, total: Double
 ): String {
     val ESC = "\u001B"
     val GS = "\u001D"
@@ -230,11 +272,25 @@ fun formatForPrinting(
 
     sb.append(InitializePrinter)
     sb.append(AlignCenter)
-    sb.append(DoubleOn + "Parawale\n\n" + DoubleOff)  // Set "Parawale" to bold and larger font
-    sb.append("Cart Summary\n")
+    sb.append(BoldOn + DoubleOn + "Parawale\n" + DoubleOff + BoldOff)
+    sb.append("35, MILL GATE, PHARENDA\n")
+    sb.append("MAHARAJGANJ, 273155\n")
+    sb.append("PHONE: 7007254934\n")
+    sb.append("GSTIN: 09AABCD1234E1Z5\n\n")
+
+    // Get current date and next bill number
+    val currentDate = getCurrentDate()
+    val billNumber = getNextBillNumber(context)
+
+    // Bill number and date on the same line
+    val maxWidth = 30  // Adjust based on your printer's character width
+    val spaces = maxWidth - billNumber.length - currentDate.length
+    sb.append(AlignLeft + billNumber + " ".repeat(spaces) + currentDate + "\n")
+
+    sb.append(AlignCenter + "Cart Summary\n")
 
     sb.append("------------------------------\n")
-    sb.append("Item Name    Qty   MRP    Total\n")
+    sb.append("Name       Qty   Price    Total\n")
     sb.append("------------------------------\n")
 
     try {
@@ -242,8 +298,13 @@ fun formatForPrinting(
             val itemNameChunks = dish.name.chunked(10)
             val price = dish.price.removePrefix("₹").toDoubleOrNull() ?: 0.0
             val totalDishPrice = dish.count * price
-            val formattedPrice = String.format(Locale.US, "%.2f", price) // Format price to 2 decimal places
-            val formattedTotalDishPrice = String.format(Locale.US, "%.2f", totalDishPrice) // Format total dish price to 2 decimal places
+            val formattedPrice =
+                String.format(Locale.US, "%.2f", price) // Format price to 2 decimal places
+            val formattedTotalDishPrice = String.format(
+                Locale.US,
+                "%.2f",
+                totalDishPrice
+            ) // Format total dish price to 2 decimal places
 
             itemNameChunks.forEachIndexed { index, chunk ->
                 if (index == 0) {
@@ -263,9 +324,7 @@ fun formatForPrinting(
                     sb.append(AlignLeft)
                     sb.append(
                         String.format(
-                            Locale.US,
-                            " %-9s\n",
-                            chunk
+                            Locale.US, "%-9s\n", chunk
                         )
                     )
                     sb.append(AlignCenter)
@@ -276,7 +335,7 @@ fun formatForPrinting(
         }
 
         sb.append("------------------------------\n")
-        sb.append(AlignRight)  // Center align for the totals
+        sb.append(AlignRight)  // Right align for the totals
 
         sb.append(String.format(Locale.US, "Total MRP: %.2f\n", totalMrp))
         sb.append(String.format(Locale.US, "Discount: -%.2f\n\n", totalMrp - total))
@@ -302,9 +361,21 @@ fun formatForPrinting(
 }
 
 
+fun getCurrentDate(): String {
+    val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.US)
+    return dateFormat.format(Date())
+}
 
-
-
+// Function to get and increment the bill number
+fun getNextBillNumber(context: Context): String {
+    val sharedPreferences = context.getSharedPreferences("billing_prefs", Context.MODE_PRIVATE)
+    val billNumber = sharedPreferences.getInt("bill_number", 0) + 1
+    with(sharedPreferences.edit()) {
+        putInt("bill_number", billNumber)
+        apply()
+    }
+    return "SR$billNumber"
+}
 
 
 fun printData(context: Context, printerAddress: String, data: String) {
@@ -322,8 +393,7 @@ fun printData(context: Context, printerAddress: String, data: String) {
 
     try {
         if (ActivityCompat.checkSelfPermission(
-                context,
-                Manifest.permission.BLUETOOTH_CONNECT
+                context, Manifest.permission.BLUETOOTH_CONNECT
             ) != PackageManager.PERMISSION_GRANTED
         ) {
             Toast.makeText(context, "Bluetooth permission not granted", Toast.LENGTH_SHORT).show()

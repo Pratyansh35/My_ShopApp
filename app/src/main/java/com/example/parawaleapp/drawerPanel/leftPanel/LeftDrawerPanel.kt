@@ -1,5 +1,6 @@
 package com.example.parawaleapp.drawerPanel.leftPanel
 
+import android.content.ClipData.Item
 import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.scrollable
@@ -41,6 +42,7 @@ import com.example.parawaleapp.database.img
 import com.example.parawaleapp.database.name
 import com.example.parawaleapp.mainScreen.MenuSlide
 import com.example.parawaleapp.sign_in.UserData
+import com.example.parawaleapp.sign_in.listofAuthorizedUsersEmails
 import kotlinx.coroutines.CoroutineScope
 
 @Composable
@@ -56,14 +58,14 @@ fun LeftDrawerPanel(
             .fillMaxSize()
             .scrollable(
                 rememberScrollState(),
-                orientation = androidx.compose.foundation.gestures.Orientation.Vertical)
-
+                orientation = androidx.compose.foundation.gestures.Orientation.Vertical
+            )
     ) {
         Card(
             modifier = Modifier
                 .height(150.dp)
                 .fillMaxWidth()
-        ) {
+        ){
             Row(
                 modifier = Modifier
                     .background(
@@ -125,29 +127,43 @@ fun LeftDrawerPanel(
                 }
             }
         }
-        LazyColumn(modifier = Modifier.padding(top = 15.dp)) {
-            items(SlidesItems) { Slidess ->
-                MenuSlide(
-                    Slidess,
-                    scope = scope,
-                    scaffoldState = scaffoldState,
-                    navController = navController
-                )
+
+            LazyColumn(modifier = Modifier.padding(top = 10.dp).scrollable(
+                rememberScrollState(),
+                orientation = androidx.compose.foundation.gestures.Orientation.Vertical)) {
+                items(SlidesItems) { Slidess ->
+                    val isAuthorized = Slidess.Type !in listOf("Customers Order", "Add Items", "Connect Printer") ||
+                            (Slidess.Type in listOf("Customers Order", "Add Items", "Connect Printer") && listofAuthorizedUsersEmails.contains(userData?.userEmail))
+
+                    if (isAuthorized) {
+                        MenuSlide(
+                            Slidess,
+                            scope = scope,
+                            scaffoldState = scaffoldState,
+                            navController = navController
+                        )
+                    }
+                }
+
+                item {
+                    Button(
+                        onClick = {
+                            signOut()
+                        },
+                        colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFFF4CE14)),
+                        shape = RoundedCornerShape(40),
+                        modifier = Modifier
+                            .padding(10.dp)
+                            .fillMaxWidth()
+                            .height(50.dp)
+                    ) {
+                        Text(text = "LOG OUT", color = Color.Black, fontWeight = FontWeight.Bold)
+                    }
+                }
             }
-        }
-        Button(
-            onClick = {
-                signOut()
-            },
-            colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFFF4CE14)),
-            shape = RoundedCornerShape(40),
-            modifier = Modifier
-                .padding(10.dp)
-                .fillMaxWidth()
-                .height(50.dp)
-        ) {
-            Text(text = "LOG OUT", color = Color.Black, fontWeight = FontWeight.Bold)
-        }
+
+
+
 
     }
 }
