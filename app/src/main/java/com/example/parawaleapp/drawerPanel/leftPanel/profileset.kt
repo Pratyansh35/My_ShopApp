@@ -1,7 +1,6 @@
 package com.example.parawaleapp.drawerPanel.leftPanel
 
 import android.net.Uri
-import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
@@ -61,13 +60,13 @@ fun Profileset(userData: UserData?) {
         )
     }
 
-    val singlePhotoPickerLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.PickVisualMedia(),
-        onResult = { uri ->
-            if (uri != null) {
-                selectImgUri = uri.toString()
-            }
-        })
+    val singlePhotoPickerLauncher =
+        rememberLauncherForActivityResult(contract = ActivityResultContracts.PickVisualMedia(),
+            onResult = { uri ->
+                if (uri != null) {
+                    selectImgUri = uri.toString()
+                }
+            })
 
     Column(
         modifier = Modifier
@@ -101,8 +100,7 @@ fun Profileset(userData: UserData?) {
         )
 
         nametemp?.let {
-            OutlinedTextField(
-                value = it,
+            OutlinedTextField(value = it,
                 onValueChange = { nametemp = it },
                 label = { Text(text = "Full name") },
                 modifier = Modifier.padding(10.dp),
@@ -110,10 +108,11 @@ fun Profileset(userData: UserData?) {
             )
         }
 
-        OutlinedTextField(
-            value = phonenotemp,
-            onValueChange = { phonenotemp = it
-                phoneno = it},
+        OutlinedTextField(value = phonenotemp,
+            onValueChange = {
+                phonenotemp = it
+                phoneno = it
+            },
             label = { Text(text = "Phone no.") },
             modifier = Modifier.padding(10.dp),
             singleLine = true,
@@ -135,8 +134,7 @@ fun Profileset(userData: UserData?) {
             )
             AsyncImage(model = if (img.toString().equals("")) {
                 userData?.progilePictureUrl
-            } else img!!
-            ,
+            } else img!!,
                 contentDescription = "userImage",
                 modifier = Modifier
                     .padding(start = 10.dp)

@@ -69,8 +69,8 @@ object ViewOrder : Destinations {
 }
 
 
-object OrderDetails : Destinations {
-    override val route = "order_details/{email}"
+object PreviousOrders : Destinations {
+    override val route = "PreviousOrders"
     override val icon = R.drawable.usericon
-    override val title = "OrderDetails"
+    override val title = "PreviousOrders"
 }

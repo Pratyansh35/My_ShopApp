@@ -1,5 +1,6 @@
 package com.example.parawaleapp.mainScreen
 
+import PreviousOrders
 import android.net.Uri
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
@@ -83,6 +84,7 @@ fun MenuSlide(
                 "Add Items" -> AddItems.route
                 "Connect Printer" -> BluetoothScreenRoute.route
                 "Customers Order" -> ViewOrder.route
+                "Orders" -> PreviousOrders.route
                 else -> null
             }
             route?.let { navController?.navigate(it) }

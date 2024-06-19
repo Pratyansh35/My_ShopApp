@@ -52,6 +52,7 @@ import com.example.parawaleapp.SendViewOrders.ViewOrders
 import com.example.parawaleapp.barcodeScreen.BarCodeScreen
 import com.example.parawaleapp.cartScreen.CartDrawerPanel
 import com.example.parawaleapp.cartScreen.ConfirmCart
+import com.example.parawaleapp.cartScreen.PreviousOrders
 import com.example.parawaleapp.database.Dishfordb
 import com.example.parawaleapp.database.ManageItem
 import com.example.parawaleapp.database.clearDataFromSharedPreferences
@@ -65,6 +66,7 @@ import com.example.parawaleapp.mainScreen.NavBar
 import com.example.parawaleapp.printer.BluetoothScreen
 import com.example.parawaleapp.sign_in.GoogleAuthUiclient
 import com.example.parawaleapp.sign_in.SignInViewModel
+import com.example.parawaleapp.sign_in.UserData
 import com.google.android.gms.auth.api.identity.Identity
 import com.google.firebase.FirebaseApp
 import kotlinx.coroutines.CoroutineScope
@@ -213,11 +215,16 @@ fun MainScreen(
                     val email = backStackEntry.arguments?.getString("email")
                     PersonOrdersScreen(navController, email)
                 }
-                composable("orderDetails/{email}/{date}/{name}") { backStackEntry ->
+                composable("orderDetails/{email}/{date}/{name}/{orderedItems}") { backStackEntry ->
                     val email = backStackEntry.arguments?.getString("email")
                     val date = backStackEntry.arguments?.getString("date")
                     val name = backStackEntry.arguments?.getString("name")
-                    OrderDetailsScreen(navController, email, date, name)
+                    val orderedItemsJson = backStackEntry.arguments?.getString("orderedItems")
+                    val loggedemail = googleAuthUiClient.getSinedInUser()?.userEmail
+                    OrderDetailsScreen(navController, email, date, name, loggedemail, orderedItemsJson)
+                }
+                composable(PreviousOrders.route) {
+                    PreviousOrders(navController, googleAuthUiClient.getSinedInUser())
                 }
             }
         }

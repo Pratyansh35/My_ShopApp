@@ -4,6 +4,7 @@ import android.net.Uri
 import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -14,6 +15,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Button
 import androidx.compose.material.ButtonDefaults
@@ -39,10 +41,8 @@ import com.example.parawaleapp.cartScreen.formatForPrinting
 import com.example.parawaleapp.cartScreen.printData
 import com.example.parawaleapp.cartScreen.selectedPrinter
 import com.example.parawaleapp.database.Dishfordb
-import com.example.parawaleapp.database.cartItems
 import com.example.parawaleapp.database.datareference
-import com.example.parawaleapp.database.total
-import com.example.parawaleapp.database.totalmrp
+import com.google.gson.Gson
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -57,6 +57,7 @@ data class EmailOrder(
 
 data class OrdersFromEmails(
     val date: String,
+    val atTime: String,
     val totalprice: Double = 0.0,
     val totalmrp: Double = 0.0,
     val orderedItems: List<Dishfordb> = emptyList()
@@ -88,17 +89,22 @@ fun fetchAllOrders(callback: (List<EmailOrder>) -> Unit) {
             val orders = mutableListOf<OrdersFromEmails>()
 
             for (orderSnapshot in ordersSnapshot.children) {
-                val simpleDateFormat = SimpleDateFormat("dd/mm/yy", Locale.getDefault())
-                val date = simpleDateFormat.format(Date(orderSnapshot.key?.toLong() ?: 0))
+                val orderTimestamp = orderSnapshot.key?.toLongOrNull() ?: 0L
+                val DateFormat = SimpleDateFormat("dd MMM yy", Locale.getDefault())
+                val date = DateFormat.format(Date(orderTimestamp))
+                val TimeFormat = SimpleDateFormat("hh:mm a", Locale.getDefault())
+                val atTime = TimeFormat.format(Date(orderTimestamp))
+                Log.e("gotdate", "Formatted Date: $date, Timestamp: $orderTimestamp")
 
-                Log.e("gotdate", date)
                 val totalMrp = orderSnapshot.child("totalMrp").getValue(Double::class.java) ?: 0.0
                 val total = orderSnapshot.child("total").getValue(Double::class.java) ?: 0.0
-                val items = orderSnapshot.child("items").children.map {
-                    it.getValue(Dishfordb::class.java)!!
+                val items = orderSnapshot.child("items").children.mapNotNull {
+                    it.getValue(Dishfordb::class.java)
                 }
-                orders.add(OrdersFromEmails(date, totalMrp, total, items))
+
+                orders.add(OrdersFromEmails(date, atTime,totalMrp, total, items))
             }
+
 
             allOrders.add(EmailOrder(email, username, contactno, orders))
         }
@@ -183,54 +189,95 @@ fun ViewOrders(navController: NavController) {
 fun PersonOrdersScreen(navController: NavController, email: String?) {
     val orders = orderList.find { it.email == email }?.orders ?: emptyList()
     val name = orderList.find { it.email == email }?.username ?: "N/A"
-    Column {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .scrollable(
+                rememberScrollState(),
+                orientation = androidx.compose.foundation.gestures.Orientation.Vertical
+            )
+    ) {
         Text(
             text = "Orders for\n ${email?.replace(",", ".")}",
-            modifier = Modifier.padding(5.dp, top = 20.dp).fillMaxWidth(),
+            modifier = Modifier
+                .padding(5.dp, top = 20.dp)
+                .fillMaxWidth(),
             fontSize = 10.sp,
             textAlign = TextAlign.Center
         )
         Text(
             text = name,
-            modifier = Modifier.padding(5.dp).fillMaxWidth(),
+            modifier = Modifier
+                .padding(5.dp)
+                .fillMaxWidth(),
             fontSize = 20.sp,
             textAlign = TextAlign.Center
         )
-        LazyColumn {
-            items(orders) { order ->
-                Card(
-                    modifier = Modifier
-                        .padding(10.dp)
-                        .fillMaxWidth()
-                        .clickable {
-                            navController.navigate(
-                                "orderDetails/${Uri.encode(email)}/${
-                                    Uri.encode(
-                                        order.date
-                                    )
-                                }/${orderList.find { it.email == email }?.username}"
-                            )
-                        }, shape = RoundedCornerShape(10.dp), elevation = 10.dp
-                ) {
-                    Column {
-                        Text(
-                            text = "Date: ${order.date}",
-                            modifier = Modifier
-                                .padding(10.dp)
-                                .fillMaxWidth(),
-                            textAlign = TextAlign.Center,
-                            fontSize = 18.sp,
-                            color = Color.Black
-                        )
-                        Text(
-                            text = "Total Price: ${order.totalprice}",
-                            modifier = Modifier
-                                .padding(10.dp)
-                                .fillMaxWidth(),
-                            textAlign = TextAlign.Center,
-                            fontSize = 14.sp,
-                            color = Color.Black
-                        )
+        Row {
+
+
+            LazyColumn {
+                items(orders) { order ->
+                    Card(
+                        modifier = Modifier
+                            .padding(10.dp)
+                            .fillMaxWidth()
+                            .clickable {
+                                val orderedItemsJson = Uri.encode(Gson().toJson(order.orderedItems))
+                                navController.navigate(
+                                    "orderDetails/${Uri.encode(email)}/${
+                                        Uri.encode(
+                                            order.date
+                                        )
+                                    }/${orderList.find { it.email == email }?.username}/${orderedItemsJson}"
+                                )
+                            }, shape = RoundedCornerShape(10.dp), elevation = 10.dp
+                    ) {
+                        Row {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = "Date: ${order.date}",
+                                    modifier = Modifier
+                                        .padding(10.dp)
+                                        .fillMaxWidth(),
+                                    textAlign = TextAlign.Center,
+                                    fontSize = 18.sp,
+                                    color = Color.Black
+                                )
+                                Text(
+                                    text = "at: ${order.atTime}",
+                                    modifier = Modifier
+                                        .padding(4.dp)
+                                        .fillMaxWidth(),
+                                    textAlign = TextAlign.Center,
+                                    fontSize = 15.sp,
+                                    color = Color.Black
+                                )
+                                Text(
+                                    text = "Total Price: ${order.totalmrp}",
+                                    modifier = Modifier
+                                        .padding(10.dp)
+                                        .fillMaxWidth(),
+                                    textAlign = TextAlign.Center,
+                                    fontSize = 14.sp,
+                                    color = Color.Black
+                                )
+                            }
+                            Column(
+                                modifier = Modifier
+                                    .weight(.3f)
+                                    .align(Alignment.CenterVertically)
+                            ) {
+                                Text(text = "Total items")
+                                Text(text = "${order.orderedItems.size}",modifier = Modifier
+                                    .padding(10.dp)
+                                    .fillMaxWidth(),
+                                    textAlign = TextAlign.Center,
+                                    fontSize = 14.sp,
+                                    color = Color.Black)
+                            }
+
+                        }
                     }
                 }
             }
@@ -240,10 +287,12 @@ fun PersonOrdersScreen(navController: NavController, email: String?) {
 
 
 @Composable
-fun OrderDetailsScreen(navController: NavController, email: String?, date: String?, name:String?) {
-    val orders = orderList.find { it.email == email }?.orders ?: emptyList()
-    val order = orders.find { it.date == date }
+fun OrderDetailsScreen(navController: NavController, email: String?, date: String?, name: String?, loggedUser: String?, orderedItemsJson: String?) {
     val context = LocalContext.current
+    val order = Gson().fromJson(orderedItemsJson, Array<Dishfordb>::class.java).toList()
+    val mrp = order.sumOf { it.mrp.removePrefix("₹").toDouble() }
+    val total = order.sumOf { it.count * it.price.removePrefix("₹").toDouble() }
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -262,7 +311,6 @@ fun OrderDetailsScreen(navController: NavController, email: String?, date: Strin
                     fontSize = 15.sp,
                     color = Color.Red,
                     fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
-
                 )
                 Text(
                     text = "${name}",
@@ -273,7 +321,6 @@ fun OrderDetailsScreen(navController: NavController, email: String?, date: Strin
                     fontSize = 25.sp,
                     color = Color.Red,
                     fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
-
                 )
                 Text(
                     text = "Order Details",
@@ -286,22 +333,22 @@ fun OrderDetailsScreen(navController: NavController, email: String?, date: Strin
                 )
                 CartLayout()
             }
-            items(order?.orderedItems ?: emptyList()) { dish ->
+            items(order) { dish ->
                 ConfirmItems(dish)
             }
         }
         Row(
             modifier = Modifier
-                .padding(10.dp)
+                .padding(top = 2.dp, start = 10.dp, end = 10.dp)
                 .fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Text(text = "MRP: ₹${order?.totalprice}", modifier = Modifier.padding(10.dp))
+            Text(text = "MRP: ₹${mrp}", modifier = Modifier.padding(5.dp))
             Row(modifier = Modifier.padding(10.dp)) {
                 Text(text = "Discount on MRP: ")
                 if (order != null) {
                     Text(
-                        text = "-₹${order.totalprice - order.totalmrp }",
+                        text = "-₹${mrp - total}",
                         fontWeight = FontWeight.Bold,
                         color = Color(0xFF449C44)
                     )
@@ -309,40 +356,34 @@ fun OrderDetailsScreen(navController: NavController, email: String?, date: Strin
             }
         }
         Text(
-            text = "Total Amount: ₹${order?.totalmrp}",
+            text = "Total Amount: ₹${total}",
             modifier = Modifier
-                .padding(10.dp)
+                .padding(5.dp)
                 .fillMaxWidth(),
             textAlign = TextAlign.Center,
             fontSize = 20.sp,
             fontWeight = FontWeight.Bold
         )
-
-        Button(
-            onClick = {
-                if (selectedPrinter.isEmpty()) {
-                    Toast.makeText(context, "Please select a printer", Toast.LENGTH_SHORT).show()
-                    navController.navigate("BluetoothScreenRoute")
-                    return@Button
-                }
-
-                val printData =
-                    order?.let { formatForPrinting(context, it.orderedItems , order.totalmrp, order.totalprice) }
-                if (printData != null) {
-                    printData(context, selectedPrinter, printData)
-                }
-            },
-            colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFFF4CE14)),
-            shape = RoundedCornerShape(40),
-            modifier = Modifier
-                .padding(10.dp)
-                .fillMaxWidth()
-                .height(50.dp)
-                .align(Alignment.End)
-        ) {
-            Text(text = "Print Bill", color = Color.Black, fontWeight = FontWeight.Bold)
+        if (loggedUser == "pratyansh35@gmail.com") {
+            Button(
+                onClick = {
+                    if (selectedPrinter.isEmpty()) {
+                        Toast.makeText(context, "Please select a printer", Toast.LENGTH_SHORT).show()
+                        navController.navigate("BluetoothScreenRoute")
+                        return@Button
+                    }
+                    printData(context, selectedPrinter, formatForPrinting(context, order, mrp, total))
+                },
+                colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFFF4CE14)),
+                shape = RoundedCornerShape(40),
+                modifier = Modifier
+                    .padding(10.dp)
+                    .fillMaxWidth()
+                    .height(50.dp)
+                    .align(Alignment.End)
+            ) {
+                Text(text = "Print Bill", color = Color.Black, fontWeight = FontWeight.Bold)
+            }
         }
-
     }
-
 }
