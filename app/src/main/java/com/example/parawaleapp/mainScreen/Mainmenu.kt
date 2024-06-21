@@ -1,7 +1,9 @@
 package com.example.parawaleapp.mainScreen
 
 import PreviousOrders
+import SettingScreen
 import android.net.Uri
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -85,6 +87,7 @@ fun MenuSlide(
                 "Connect Printer" -> BluetoothScreenRoute.route
                 "Customers Order" -> ViewOrder.route
                 "Orders" -> PreviousOrders.route
+                "Settings" -> SettingScreen.route
                 else -> null
             }
             route?.let { navController?.navigate(it) }
@@ -163,6 +166,9 @@ fun MenuDish(dish: Dishfordb) {
                                 countItems()
                                 totalcount()
                                 saveCartItemsToSharedPreferences(context)
+                                val charLen = dish.name.length;
+                                val truncatedString = if (charLen > 8) { dish.name.substring(0, 8) + "..." } else { dish.name }
+                                Toast.makeText(context, "Added to Cart: ${truncatedString}", Toast.LENGTH_SHORT).show()
                             },
                             colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFFF4CE14)),
                             shape = RoundedCornerShape(40)

@@ -4,6 +4,7 @@ import android.net.Uri
 import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -60,17 +61,17 @@ data class OrdersFromEmails(
     val atTime: String,
     val totalprice: Double = 0.0,
     val totalmrp: Double = 0.0,
-    val orderedItems: List<Dishfordb> = emptyList()
+    val orderedItems: List<Dishfordb> = emptyList(),
+    val orderStatus: String
 )
 
-var orderList by mutableStateOf<List<EmailOrder>>(emptyList())
-
+var AllOrdersList by mutableStateOf<List<EmailOrder>>(emptyList())
 
 @Composable
 fun FetchAllOrdersAndUpdateState() {
     LaunchedEffect(Unit) {
         fetchAllOrders { fetchedOrders ->
-            orderList = fetchedOrders
+            AllOrdersList = fetchedOrders
         }
     }
 }
@@ -82,9 +83,9 @@ fun fetchAllOrders(callback: (List<EmailOrder>) -> Unit) {
         val allOrders = mutableListOf<EmailOrder>()
 
         for (userSnapshot in dataSnapshot.children) {
-            val email = userSnapshot.key ?: ""
-            val username = userSnapshot.child("username").getValue(String::class.java) ?: ""
-            val contactno = userSnapshot.child("contactno").getValue(String::class.java) ?: ""
+            val email = userSnapshot.key ?: "N/A"
+            val username = userSnapshot.child("username").getValue(String::class.java) ?: "N/A"
+            val contactno = userSnapshot.child("contactno").getValue(String::class.java) ?: "N/A"
             val ordersSnapshot = userSnapshot.child("orders")
             val orders = mutableListOf<OrdersFromEmails>()
 
@@ -94,18 +95,16 @@ fun fetchAllOrders(callback: (List<EmailOrder>) -> Unit) {
                 val date = DateFormat.format(Date(orderTimestamp))
                 val TimeFormat = SimpleDateFormat("hh:mm a", Locale.getDefault())
                 val atTime = TimeFormat.format(Date(orderTimestamp))
-                Log.e("gotdate", "Formatted Date: $date, Timestamp: $orderTimestamp")
 
                 val totalMrp = orderSnapshot.child("totalMrp").getValue(Double::class.java) ?: 0.0
                 val total = orderSnapshot.child("total").getValue(Double::class.java) ?: 0.0
+                val orderStatus =
+                    orderSnapshot.child("Order Status").getValue(String::class.java) ?: ""
                 val items = orderSnapshot.child("items").children.mapNotNull {
                     it.getValue(Dishfordb::class.java)
                 }
-
-                orders.add(OrdersFromEmails(date, atTime,totalMrp, total, items))
+                orders.add(OrdersFromEmails(date, atTime, totalMrp, total, items, orderStatus))
             }
-
-
             allOrders.add(EmailOrder(email, username, contactno, orders))
         }
 
@@ -119,63 +118,74 @@ fun fetchAllOrders(callback: (List<EmailOrder>) -> Unit) {
 fun ViewOrders(navController: NavController) {
     FetchAllOrdersAndUpdateState()
 
-    if (orderList.isEmpty()) {
-        Text(
-            "No orders found",
-            modifier = Modifier
-                .padding(10.dp)
-                .fillMaxSize(),
-            textAlign = TextAlign.Center
-        )
-    } else {
-        LazyColumn {
-            items(orderList) { order ->
-                Card(
-                    modifier = Modifier
-                        .padding(10.dp)
-                        .fillMaxWidth()
-                        .clickable {
-                            navController.navigate("personOrders/${order.email}")
-                        }, shape = RoundedCornerShape(10.dp), elevation = 10.dp
-                ) {
-                    Column {
-                        Text(
-                            text = "Username: ${order.username}",
-                            modifier = Modifier
-                                .padding(10.dp)
-                                .fillMaxWidth(),
-                            textAlign = TextAlign.Center,
-                            fontSize = 18.sp,
-                            color = Color.Black
-                        )
-                        Text(
-                            text = "Email: ${order.email.replace(",", ".")}",
-                            modifier = Modifier
-                                .padding(10.dp)
-                                .fillMaxWidth(),
-                            textAlign = TextAlign.Center,
-                            fontSize = 14.sp,
-                            color = Color.Black
-                        )
-                        Row(modifier = Modifier.fillMaxWidth()) {
+    // Determine which list to show based on the state
+    val orderList = when {
+        Pending -> AllOrdersList.filter { order -> order.orders.any { it.orderStatus == "Pending" } }
+        Completed -> AllOrdersList.filter { order -> order.orders.any { it.orderStatus == "Completed" } }
+        Cancelled -> AllOrdersList.filter { order -> order.orders.any { it.orderStatus == "Cancelled" } }
+        else -> AllOrdersList
+    }
+    Column {
+        OrderStatusSelectBar()
+
+        if (orderList.isEmpty()) {
+            Text(
+                "No orders found",
+                modifier = Modifier
+                    .padding(10.dp)
+                    .fillMaxSize(),
+                textAlign = TextAlign.Center
+            )
+        } else {
+            LazyColumn {
+                items(orderList) { order ->
+                    Card(
+                        modifier = Modifier
+                            .padding(10.dp)
+                            .fillMaxWidth()
+                            .clickable {
+                                navController.navigate("personOrders/${order.email}")
+                            }, shape = RoundedCornerShape(10.dp), elevation = 10.dp
+                    ) {
+                        Column {
                             Text(
-                                text = "Contact: ${order.contactno}",
+                                text = "Username: ${order.username}",
                                 modifier = Modifier
                                     .padding(10.dp)
-                                    .weight(1f),
+                                    .fillMaxWidth(),
                                 textAlign = TextAlign.Center,
-                                fontSize = 12.sp,
-                                color = Color.Gray
+                                fontSize = 18.sp,
+                                color = Color.Black
                             )
                             Text(
-                                text = "Total Orders: ${order.orders.size}",
+                                text = "Email: ${order.email.replace(",", ".")}",
                                 modifier = Modifier
-                                    .padding(2.dp)
-                                    .weight(1f),
+                                    .padding(10.dp)
+                                    .fillMaxWidth(),
                                 textAlign = TextAlign.Center,
-                                fontSize = 8.sp,
-                                color = Color.Gray
+                                fontSize = 14.sp,
+                                color = Color.Black
                             )
+                            Row(modifier = Modifier.fillMaxWidth()) {
+                                Text(
+                                    text = "Contact: ${order.contactno}",
+                                    modifier = Modifier
+                                        .padding(10.dp)
+                                        .weight(1f),
+                                    textAlign = TextAlign.Center,
+                                    fontSize = 12.sp,
+                                    color = Color.Gray
+                                )
+                                Text(
+                                    text = "Total Orders: ${order.orders.size}",
+                                    modifier = Modifier
+                                        .padding(2.dp)
+                                        .weight(1f),
+                                    textAlign = TextAlign.Center,
+                                    fontSize = 8.sp,
+                                    color = Color.Gray
+                                )
+                            }
                         }
                     }
                 }
@@ -185,16 +195,27 @@ fun ViewOrders(navController: NavController) {
 }
 
 
+
 @Composable
 fun PersonOrdersScreen(navController: NavController, email: String?) {
-    val orders = orderList.find { it.email == email }?.orders ?: emptyList()
-    val name = orderList.find { it.email == email }?.username ?: "N/A"
+    val user = AllOrdersList.find { it.email == email }
+    val orders = user?.orders?.filter { order ->
+        (order.orderStatus == "Completed" && Completed) ||
+                (order.orderStatus == "Pending" && Pending) ||
+                (order.orderStatus == "Cancelled" && Cancelled)
+    } ?: emptyList()
+    val name = user?.username ?: "N/A"
+
+    val totalPendingItems = orders.count { it.orderStatus == "Pending" }
+    val totalCompletedItems = orders.count { it.orderStatus == "Completed" }
+    val totalCancelledItems = orders.count { it.orderStatus == "Cancelled" }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
             .scrollable(
                 rememberScrollState(),
-                orientation = androidx.compose.foundation.gestures.Orientation.Vertical
+                orientation = Orientation.Vertical
             )
     ) {
         Text(
@@ -213,85 +234,123 @@ fun PersonOrdersScreen(navController: NavController, email: String?) {
             fontSize = 20.sp,
             textAlign = TextAlign.Center
         )
+        if (Pending) {
+            Text(
+                text = "Total Pending Orders: $totalPendingItems",
+                modifier = Modifier
+                    .padding(10.dp)
+                    .fillMaxWidth(),
+                fontSize = 16.sp,
+                textAlign = TextAlign.Center,
+                color = Color.Red
+            )
+        } else if (Completed) {
+            Text(
+                text = "Total Completed Orders: $totalCompletedItems",
+                modifier = Modifier
+                    .padding(10.dp)
+                    .fillMaxWidth(),
+                fontSize = 16.sp,
+                textAlign = TextAlign.Center,
+                color = Color.Green
+            )
+        } else if (Cancelled) {
+            Text(
+                text = "Total Cancelled Orders: $totalCancelledItems",
+                modifier = Modifier
+                    .padding(10.dp)
+                    .fillMaxWidth(),
+                fontSize = 16.sp,
+                textAlign = TextAlign.Center,
+                color = Color.Gray
+            )
+        }
+        LazyColumn {
+            items(orders) { order ->
+                OrderCard(navController, email, user?.username, order)
+            }
+        }
+    }
+}
+
+@Composable
+fun OrderCard(navController: NavController, email: String?, username: String?, order: OrdersFromEmails) {
+    Card(
+        modifier = Modifier
+            .padding(10.dp)
+            .fillMaxWidth()
+            .clickable {
+                val orderedItemsJson = Uri.encode(Gson().toJson(order.orderedItems))
+                navController.navigate(
+                    "orderDetails/${Uri.encode(email)}/${Uri.encode(order.date)}/$username/$orderedItemsJson"
+                )
+            }, shape = RoundedCornerShape(10.dp), elevation = 10.dp
+    ) {
         Row {
-
-
-            LazyColumn {
-                items(orders) { order ->
-                    Card(
-                        modifier = Modifier
-                            .padding(10.dp)
-                            .fillMaxWidth()
-                            .clickable {
-                                val orderedItemsJson = Uri.encode(Gson().toJson(order.orderedItems))
-                                navController.navigate(
-                                    "orderDetails/${Uri.encode(email)}/${
-                                        Uri.encode(
-                                            order.date
-                                        )
-                                    }/${orderList.find { it.email == email }?.username}/${orderedItemsJson}"
-                                )
-                            }, shape = RoundedCornerShape(10.dp), elevation = 10.dp
-                    ) {
-                        Row {
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    text = "Date: ${order.date}",
-                                    modifier = Modifier
-                                        .padding(10.dp)
-                                        .fillMaxWidth(),
-                                    textAlign = TextAlign.Center,
-                                    fontSize = 18.sp,
-                                    color = Color.Black
-                                )
-                                Text(
-                                    text = "at: ${order.atTime}",
-                                    modifier = Modifier
-                                        .padding(4.dp)
-                                        .fillMaxWidth(),
-                                    textAlign = TextAlign.Center,
-                                    fontSize = 15.sp,
-                                    color = Color.Black
-                                )
-                                Text(
-                                    text = "Total Price: ${order.totalmrp}",
-                                    modifier = Modifier
-                                        .padding(10.dp)
-                                        .fillMaxWidth(),
-                                    textAlign = TextAlign.Center,
-                                    fontSize = 14.sp,
-                                    color = Color.Black
-                                )
-                            }
-                            Column(
-                                modifier = Modifier
-                                    .weight(.3f)
-                                    .align(Alignment.CenterVertically)
-                            ) {
-                                Text(text = "Total items")
-                                Text(text = "${order.orderedItems.size}",modifier = Modifier
-                                    .padding(10.dp)
-                                    .fillMaxWidth(),
-                                    textAlign = TextAlign.Center,
-                                    fontSize = 14.sp,
-                                    color = Color.Black)
-                            }
-
-                        }
-                    }
-                }
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = "Date: ${order.date}",
+                    modifier = Modifier
+                        .padding(10.dp)
+                        .fillMaxWidth(),
+                    textAlign = TextAlign.Center,
+                    fontSize = 18.sp,
+                    color = Color.Black
+                )
+                Text(
+                    text = "at: ${order.atTime}",
+                    modifier = Modifier
+                        .padding(4.dp)
+                        .fillMaxWidth(),
+                    textAlign = TextAlign.Center,
+                    fontSize = 15.sp,
+                    color = Color.Black
+                )
+                Text(
+                    text = "Total Price: ${order.totalmrp}",
+                    modifier = Modifier
+                        .padding(10.dp)
+                        .fillMaxWidth(),
+                    textAlign = TextAlign.Center,
+                    fontSize = 14.sp,
+                    color = Color.Black
+                )
+            }
+            Column(
+                modifier = Modifier
+                    .weight(.3f)
+                    .align(Alignment.CenterVertically)
+            ) {
+                Text(text = "Total items")
+                Text(
+                    text = "${order.orderedItems.size}",
+                    modifier = Modifier
+                        .padding(10.dp)
+                        .fillMaxWidth(),
+                    textAlign = TextAlign.Center,
+                    fontSize = 14.sp,
+                    color = Color.Black
+                )
             }
         }
     }
 }
 
 
+
 @Composable
-fun OrderDetailsScreen(navController: NavController, email: String?, date: String?, name: String?, loggedUser: String?, orderedItemsJson: String?) {
+fun OrderDetailsScreen(
+    navController: NavController,
+    email: String?,
+    date: String?,
+    name: String?,
+    loggedUser: String?,
+    orderedItemsJson: String?
+) {
     val context = LocalContext.current
     val order = Gson().fromJson(orderedItemsJson, Array<Dishfordb>::class.java).toList()
-    val mrp = order.sumOf { it.mrp.removePrefix("₹").toDouble() }
-    val total = order.sumOf { it.count * it.price.removePrefix("₹").toDouble() }
+    val totalMRP = order.sumOf { it.count * it.mrp.removePrefix("₹").toDouble() }
+    val totalPrice = order.sumOf { it.count * it.price.removePrefix("₹").toDouble() }
 
     Column(
         modifier = Modifier
@@ -343,12 +402,12 @@ fun OrderDetailsScreen(navController: NavController, email: String?, date: Strin
                 .fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Text(text = "MRP: ₹${mrp}", modifier = Modifier.padding(5.dp))
+            Text(text = "MRP: ₹${totalMRP}", modifier = Modifier.padding(5.dp))
             Row(modifier = Modifier.padding(10.dp)) {
                 Text(text = "Discount on MRP: ")
                 if (order != null) {
                     Text(
-                        text = "-₹${mrp - total}",
+                        text = "-₹${totalMRP - totalPrice}",
                         fontWeight = FontWeight.Bold,
                         color = Color(0xFF449C44)
                     )
@@ -356,7 +415,7 @@ fun OrderDetailsScreen(navController: NavController, email: String?, date: Strin
             }
         }
         Text(
-            text = "Total Amount: ₹${total}",
+            text = "Total Amount: ₹${totalPrice}",
             modifier = Modifier
                 .padding(5.dp)
                 .fillMaxWidth(),
@@ -368,11 +427,16 @@ fun OrderDetailsScreen(navController: NavController, email: String?, date: Strin
             Button(
                 onClick = {
                     if (selectedPrinter.isEmpty()) {
-                        Toast.makeText(context, "Please select a printer", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, "Please select a printer", Toast.LENGTH_SHORT)
+                            .show()
                         navController.navigate("BluetoothScreenRoute")
                         return@Button
                     }
-                    printData(context, selectedPrinter, formatForPrinting(context, order, mrp, total))
+                    printData(
+                        context,
+                        selectedPrinter,
+                        formatForPrinting(context, order, totalMRP, totalPrice)
+                    )
                 },
                 colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFFF4CE14)),
                 shape = RoundedCornerShape(40),

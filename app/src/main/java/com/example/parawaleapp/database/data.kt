@@ -116,6 +116,8 @@ data class Slidess(
 
     )
 
+
+
 val SlidesItems = listOf(
     Slidess(
         "Cart", "see items added to cart", R.drawable.ig_cart
@@ -123,17 +125,20 @@ val SlidesItems = listOf(
         "Wishlist", "see items added to wishlist", R.drawable.wishheart
     ), Slidess(
         "Orders", "see your previous orders", R.drawable.order_cardboard
-    ), Slidess(
-        "Manage Account", "edit your account details", R.drawable.edit_account_logo
-    ), Slidess(
+    )
+//    , Slidess(
+//        "Manage Account", "edit your account details", R.drawable.edit_account_logo
+//    )
+    , Slidess(
         "Settings", "Notification, Language", R.drawable.setting
     ), Slidess(
         "Customers Order", "See all Customers order", R.drawable.additemcloud
     ), Slidess(
         "Add Items", "Add items to database", R.drawable.additemcloud
-    ), Slidess(
-        "Connect Printer", "Select your bluetooth printing", R.drawable.ic_location
     )
+//    , Slidess(
+//        "Connect Printer", "Select your bluetooth printing", R.drawable.ic_location
+//    )
 
 
 )

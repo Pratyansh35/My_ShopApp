@@ -9,6 +9,7 @@ import Login
 import Menu
 import ProfileSet
 import Scan_Barcode
+import SettingScreen
 import ViewOrder
 import android.os.Bundle
 import android.widget.Toast
@@ -60,6 +61,7 @@ import com.example.parawaleapp.database.getdishes
 import com.example.parawaleapp.database.restoreDataFromSharedPreferences
 import com.example.parawaleapp.drawerPanel.leftPanel.LeftDrawerPanel
 import com.example.parawaleapp.drawerPanel.leftPanel.Profileset
+import com.example.parawaleapp.drawerPanel.leftPanel.Settings
 import com.example.parawaleapp.mainScreen.HomeScreen
 import com.example.parawaleapp.mainScreen.MenuListScreen
 import com.example.parawaleapp.mainScreen.NavBar
@@ -208,6 +210,13 @@ fun MainScreen(
                     ManageItem(
                         userData = googleAuthUiClient.getSinedInUser(), dishData = dishData
                     )
+                }
+                composable(SettingScreen.route) {
+                    Settings( scope = scope,
+                        navController = navController,
+                        userData = googleAuthUiClient.getSinedInUser(),
+                        scaffoldState = scaffoldState
+                       )
                 }
                 composable(BluetoothScreenRoute.route) { BluetoothScreen() }
                 composable(ViewOrder.route) { ViewOrders(navController = navController) }

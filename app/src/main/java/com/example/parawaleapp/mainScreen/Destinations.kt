@@ -74,3 +74,8 @@ object PreviousOrders : Destinations {
     override val icon = R.drawable.usericon
     override val title = "PreviousOrders"
 }
+object SettingScreen : Destinations {
+    override val route = "SettingScreen"
+    override val icon = R.drawable.usericon
+    override val title = "SettingScreen"
+}

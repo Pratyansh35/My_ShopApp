@@ -24,7 +24,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.parawaleapp.SendViewOrders.FetchAllOrdersAndUpdateState
-import com.example.parawaleapp.SendViewOrders.orderList
+import com.example.parawaleapp.SendViewOrders.AllOrdersList
 import com.example.parawaleapp.sign_in.UserData
 import com.google.gson.Gson
 
@@ -32,15 +32,15 @@ import com.google.gson.Gson
 fun PreviousOrders(navController: NavController, userData: UserData?) {
     FetchAllOrdersAndUpdateState()
     val logedemail = userData?.userEmail?.replace(".", ",")
-    val orders = orderList.find {
+    val orders = AllOrdersList.find {
         it.email == logedemail
     }?.orders ?: emptyList()
 
-    for (emails in orderList) {
+    for (emails in AllOrdersList) {
         Log.e("emaily", " email: ${emails.email} \n  logged email: ${logedemail}")
     }
 
-    val name = orderList.find { it.email == logedemail }?.username ?: "No orders !!"
+    val name = AllOrdersList.find { it.email == logedemail }?.username ?: "No orders !!"
 
     Column(
         modifier = Modifier
@@ -86,7 +86,7 @@ fun PreviousOrders(navController: NavController, userData: UserData?) {
                             .clickable {
                                 val orderedItemsJson = Uri.encode(Gson().toJson(order.orderedItems))
                                 navController.navigate(
-                                    "orderDetails/${Uri.encode(logedemail)}/${Uri.encode(order.date)}/${Uri.encode(orderList.find { it.email == logedemail }?.username)}/$orderedItemsJson"
+                                    "orderDetails/${Uri.encode(logedemail)}/${Uri.encode(order.date)}/${Uri.encode(AllOrdersList.find { it.email == logedemail }?.username)}/$orderedItemsJson"
                                 )
                             }, shape = RoundedCornerShape(10.dp), elevation = 10.dp
                     ) {

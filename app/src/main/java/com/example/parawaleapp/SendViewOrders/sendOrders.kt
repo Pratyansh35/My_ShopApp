@@ -32,7 +32,8 @@ fun sendOrders(
     val orderDetails = mapOf(
         "totalMrp" to totalMrp,
         "total" to total,
-        "items" to cartItems
+        "items" to cartItems,
+        "Order Status" to "Pending"
     )
 
     useremail?.let {
@@ -41,7 +42,6 @@ fun sendOrders(
         // Save the username at the user level
         userRef.child("username").setValue(username)
         userRef.child("contactno").setValue(phoneno)
-        // Save the order under the orders node with the timestamp
         userRef.child("orders").child(orderTimestamp).setValue(orderDetails)
             .addOnSuccessListener {
                 Toast.makeText(context, "Order Placed Successfully", Toast.LENGTH_SHORT).show()

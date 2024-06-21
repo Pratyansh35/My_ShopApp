@@ -1,6 +1,5 @@
 package com.example.parawaleapp.drawerPanel.leftPanel
 
-import android.content.ClipData.Item
 import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.scrollable
@@ -17,7 +16,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Button
 import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.Card
@@ -65,7 +63,7 @@ fun LeftDrawerPanel(
             modifier = Modifier
                 .height(150.dp)
                 .fillMaxWidth()
-        ){
+        ) {
             Row(
                 modifier = Modifier
                     .background(
@@ -128,41 +126,51 @@ fun LeftDrawerPanel(
             }
         }
 
-            LazyColumn(modifier = Modifier.padding(top = 10.dp).scrollable(
-                rememberScrollState(),
-                orientation = androidx.compose.foundation.gestures.Orientation.Vertical)) {
-                items(SlidesItems) { Slidess ->
-                    val isAuthorized = Slidess.Type !in listOf("Customers Order", "Add Items", "Connect Printer") ||
-                            (Slidess.Type in listOf("Customers Order", "Add Items", "Connect Printer") && listofAuthorizedUsersEmails.contains(userData?.userEmail))
+        LazyColumn(
+            modifier = Modifier
+                .padding(top = 10.dp)
+                .scrollable(
+                    rememberScrollState(),
+                    orientation = androidx.compose.foundation.gestures.Orientation.Vertical
+                )
+        ) {
+            items(SlidesItems) { Slidess ->
+                val isAuthorized = Slidess.Type !in listOf(
+                    "Customers Order",
+                    "Add Items",
+                    "Connect Printer"
+                ) || (Slidess.Type in listOf(
+                    "Customers Order",
+                    "Add Items",
+                    "Connect Printer"
+                ) && listofAuthorizedUsersEmails.contains(userData?.userEmail))
 
-                    if (isAuthorized) {
-                        MenuSlide(
-                            Slidess,
-                            scope = scope,
-                            scaffoldState = scaffoldState,
-                            navController = navController
-                        )
-                    }
-                }
-
-                item {
-                    Button(
-                        onClick = {
-                            signOut()
-                        },
-                        colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFFF4CE14)),
-                        shape = RoundedCornerShape(40),
-                        modifier = Modifier
-                            .padding(10.dp)
-                            .fillMaxWidth()
-                            .height(50.dp)
-                    ) {
-                        Text(text = "LOG OUT", color = Color.Black, fontWeight = FontWeight.Bold)
-                    }
+                if (isAuthorized) {
+                    MenuSlide(
+                        Slidess,
+                        scope = scope,
+                        scaffoldState = scaffoldState,
+                        navController = navController
+                    )
                 }
             }
 
-
+            item {
+                Button(
+                    onClick = {
+                        signOut()
+                    },
+                    colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFFF4CE14)),
+                    shape = RoundedCornerShape(40),
+                    modifier = Modifier
+                        .padding(10.dp)
+                        .fillMaxWidth()
+                        .height(50.dp)
+                ) {
+                    Text(text = "LOG OUT", color = Color.Black, fontWeight = FontWeight.Bold)
+                }
+            }
+        }
 
 
     }
