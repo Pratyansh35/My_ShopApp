@@ -79,3 +79,9 @@ object SettingScreen : Destinations {
     override val icon = R.drawable.usericon
     override val title = "SettingScreen"
 }
+
+object PaymentScreen : Destinations {
+    override val route = "PaymentScreen"
+    override val icon = R.drawable.usericon
+    override val title = "PaymentScreen"
+}

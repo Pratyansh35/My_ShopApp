@@ -237,7 +237,8 @@ fun ConfirmCart(navController: NavController? = null, userData: UserData?) {
         }else{
             Button(
                 onClick = {
-                    sendOrders(context , userData = userData, cartItems = cartItems, totalMrp = totalmrp ,total = total)
+                    //sendOrders(context , userData = userData, cartItems = cartItems, totalMrp = totalmrp ,total = total)
+                    navController?.navigate("PaymentScreen/$totalmrp/$total")
                 },
                 colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFFF4CE14)),
                 shape = RoundedCornerShape(40),
@@ -340,7 +341,7 @@ fun formatForPrinting(
         sb.append(String.format(Locale.US, "Total MRP: %.2f\n", totalMrp))
         sb.append(String.format(Locale.US, "Discount: -%.2f\n\n", totalMrp - total))
         sb.append(AlignCenter)
-        sb.append(DoubleOn + "--Total Amount--\n" + DoubleOff)
+        sb.append("$DoubleOn--Total Amount--\n$DoubleOff")
         sb.append(DoubleOn)
         sb.append(String.format(Locale.US, "%.2f", total))
         sb.append(DoubleOff)

@@ -7,6 +7,7 @@ import Cart
 import Home
 import Login
 import Menu
+import PaymentScreenLayout
 import ProfileSet
 import Scan_Barcode
 import SettingScreen
@@ -234,6 +235,13 @@ fun MainScreen(
                 }
                 composable(PreviousOrders.route) {
                     PreviousOrders(navController, googleAuthUiClient.getSinedInUser())
+                }
+                composable("PaymentScreen/{totalMrp}/{totalValue}") { backStackEntry ->
+                    val totalMrp = backStackEntry.arguments?.getString("totalMrp")?.toDouble()
+                    val totalValue = backStackEntry.arguments?.getString("totalValue")?.toDouble()
+                    if (totalMrp != null && totalValue != null) {
+                        PaymentScreenLayout(totalMrp, totalValue, googleAuthUiClient.getSinedInUser())
+                    }
                 }
             }
         }

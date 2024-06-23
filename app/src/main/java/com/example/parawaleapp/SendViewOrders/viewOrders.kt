@@ -126,6 +126,13 @@ fun ViewOrders(navController: NavController) {
         else -> AllOrdersList
     }
     Column {
+        Text(
+            text = "Customers Orders",
+            modifier = Modifier.fillMaxWidth(),
+            textAlign = TextAlign.Center,
+            fontSize = 18.sp,
+            fontWeight = FontWeight.Bold, color = Color(0xFF775A65)
+        )
         OrderStatusSelectBar()
 
         if (orderList.isEmpty()) {
@@ -336,118 +343,3 @@ fun OrderCard(navController: NavController, email: String?, username: String?, o
     }
 }
 
-
-
-@Composable
-fun OrderDetailsScreen(
-    navController: NavController,
-    email: String?,
-    date: String?,
-    name: String?,
-    loggedUser: String?,
-    orderedItemsJson: String?
-) {
-    val context = LocalContext.current
-    val order = Gson().fromJson(orderedItemsJson, Array<Dishfordb>::class.java).toList()
-    val totalMRP = order.sumOf { it.count * it.mrp.removePrefix("₹").toDouble() }
-    val totalPrice = order.sumOf { it.count * it.price.removePrefix("₹").toDouble() }
-
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .fillMaxHeight()
-            .padding(5.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        LazyColumn(modifier = Modifier.weight(0.8f)) {
-            item {
-                Text(
-                    text = "${email?.replace(",", ".")}",
-                    modifier = Modifier
-                        .padding(5.dp, top = 20.dp)
-                        .fillMaxWidth(),
-                    textAlign = TextAlign.Center,
-                    fontSize = 15.sp,
-                    color = Color.Red,
-                    fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
-                )
-                Text(
-                    text = "${name}",
-                    modifier = Modifier
-                        .padding(5.dp)
-                        .fillMaxWidth(),
-                    textAlign = TextAlign.Center,
-                    fontSize = 25.sp,
-                    color = Color.Red,
-                    fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
-                )
-                Text(
-                    text = "Order Details",
-                    modifier = Modifier
-                        .padding(10.dp)
-                        .fillMaxWidth(),
-                    textAlign = TextAlign.Center,
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold
-                )
-                CartLayout()
-            }
-            items(order) { dish ->
-                ConfirmItems(dish)
-            }
-        }
-        Row(
-            modifier = Modifier
-                .padding(top = 2.dp, start = 10.dp, end = 10.dp)
-                .fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Text(text = "MRP: ₹${totalMRP}", modifier = Modifier.padding(5.dp))
-            Row(modifier = Modifier.padding(10.dp)) {
-                Text(text = "Discount on MRP: ")
-                if (order != null) {
-                    Text(
-                        text = "-₹${totalMRP - totalPrice}",
-                        fontWeight = FontWeight.Bold,
-                        color = Color(0xFF449C44)
-                    )
-                }
-            }
-        }
-        Text(
-            text = "Total Amount: ₹${totalPrice}",
-            modifier = Modifier
-                .padding(5.dp)
-                .fillMaxWidth(),
-            textAlign = TextAlign.Center,
-            fontSize = 20.sp,
-            fontWeight = FontWeight.Bold
-        )
-        if (loggedUser == "pratyansh35@gmail.com") {
-            Button(
-                onClick = {
-                    if (selectedPrinter.isEmpty()) {
-                        Toast.makeText(context, "Please select a printer", Toast.LENGTH_SHORT)
-                            .show()
-                        navController.navigate("BluetoothScreenRoute")
-                        return@Button
-                    }
-                    printData(
-                        context,
-                        selectedPrinter,
-                        formatForPrinting(context, order, totalMRP, totalPrice)
-                    )
-                },
-                colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFFF4CE14)),
-                shape = RoundedCornerShape(40),
-                modifier = Modifier
-                    .padding(10.dp)
-                    .fillMaxWidth()
-                    .height(50.dp)
-                    .align(Alignment.End)
-            ) {
-                Text(text = "Print Bill", color = Color.Black, fontWeight = FontWeight.Bold)
-            }
-        }
-    }
-}

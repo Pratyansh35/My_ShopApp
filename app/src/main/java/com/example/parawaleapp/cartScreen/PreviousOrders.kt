@@ -3,6 +3,7 @@ package com.example.parawaleapp.cartScreen
 import android.net.Uri
 import android.util.Log
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -19,12 +20,18 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.parawaleapp.SendViewOrders.FetchAllOrdersAndUpdateState
 import com.example.parawaleapp.SendViewOrders.AllOrdersList
+import com.example.parawaleapp.SendViewOrders.Cancelled
+import com.example.parawaleapp.SendViewOrders.Completed
+import com.example.parawaleapp.SendViewOrders.OrderCard
+import com.example.parawaleapp.SendViewOrders.OrderStatusSelectBar
+import com.example.parawaleapp.SendViewOrders.Pending
 import com.example.parawaleapp.sign_in.UserData
 import com.google.gson.Gson
 
@@ -32,36 +39,47 @@ import com.google.gson.Gson
 fun PreviousOrders(navController: NavController, userData: UserData?) {
     FetchAllOrdersAndUpdateState()
     val logedemail = userData?.userEmail?.replace(".", ",")
-    val orders = AllOrdersList.find {
-        it.email == logedemail
-    }?.orders ?: emptyList()
+    val user = AllOrdersList.find { it.email == logedemail }
+    val orders = user?.orders?.filter { order ->
+        (order.orderStatus == "Completed" && Completed) ||
+                (order.orderStatus == "Pending" && Pending) ||
+                (order.orderStatus == "Cancelled" && Cancelled)
+    } ?: emptyList()
 
-    for (emails in AllOrdersList) {
-        Log.e("emaily", " email: ${emails.email} \n  logged email: ${logedemail}")
-    }
+    val name = user?.username ?: "No orders !!"
 
-    val name = AllOrdersList.find { it.email == logedemail }?.username ?: "No orders !!"
+    val totalPendingItems = orders.count { it.orderStatus == "Pending" }
+    val totalCompletedItems = orders.count { it.orderStatus == "Completed" }
+    val totalCancelledItems = orders.count { it.orderStatus == "Cancelled" }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .scrollable(
                 rememberScrollState(),
-                orientation = androidx.compose.foundation.gestures.Orientation.Vertical
+                orientation = Orientation.Vertical
             )
     ) {
         Text(
-            text = "My orders\n ${logedemail?.replace(",", ".")}",
+            text = "My Orders",
+            modifier = Modifier.fillMaxWidth(),
+            textAlign = TextAlign.Center,
+            fontSize = 18.sp,
+            fontWeight = FontWeight.Bold,
+            color = Color(0xFF775A65)
+        )
+        OrderStatusSelectBar()
+        Text(
+            text = "${logedemail?.replace(",", ".")}",
             modifier = Modifier
                 .padding(5.dp, top = 20.dp)
                 .fillMaxWidth(),
             fontSize = 14.sp,
             textAlign = TextAlign.Center
         )
-
         if (name == "No orders !!") {
             Text(
-                name,
+                text = name,
                 modifier = Modifier
                     .padding(10.dp)
                     .fillMaxSize(),
@@ -77,67 +95,40 @@ fun PreviousOrders(navController: NavController, userData: UserData?) {
                 fontSize = 20.sp,
                 textAlign = TextAlign.Center
             )
+            if (Pending) {
+                Text(
+                    text = "Total Pending Orders: $totalPendingItems",
+                    modifier = Modifier
+                        .padding(10.dp)
+                        .fillMaxWidth(),
+                    fontSize = 16.sp,
+                    textAlign = TextAlign.Center,
+                    color = Color.Red
+                )
+            } else if (Completed) {
+                Text(
+                    text = "Total Completed Orders: $totalCompletedItems",
+                    modifier = Modifier
+                        .padding(10.dp)
+                        .fillMaxWidth(),
+                    fontSize = 16.sp,
+                    textAlign = TextAlign.Center,
+                    color = Color.Green
+                )
+            } else if (Cancelled) {
+                Text(
+                    text = "Total Cancelled Orders: $totalCancelledItems",
+                    modifier = Modifier
+                        .padding(10.dp)
+                        .fillMaxWidth(),
+                    fontSize = 16.sp,
+                    textAlign = TextAlign.Center,
+                    color = Color.Gray
+                )
+            }
             LazyColumn {
                 items(orders) { order ->
-                    Card(
-                        modifier = Modifier
-                            .padding(10.dp)
-                            .fillMaxWidth()
-                            .clickable {
-                                val orderedItemsJson = Uri.encode(Gson().toJson(order.orderedItems))
-                                navController.navigate(
-                                    "orderDetails/${Uri.encode(logedemail)}/${Uri.encode(order.date)}/${Uri.encode(AllOrdersList.find { it.email == logedemail }?.username)}/$orderedItemsJson"
-                                )
-                            }, shape = RoundedCornerShape(10.dp), elevation = 10.dp
-                    ) {
-                        Row {
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    text = "Date: ${order.date}",
-                                    modifier = Modifier
-                                        .padding(10.dp)
-                                        .fillMaxWidth(),
-                                    textAlign = TextAlign.Center,
-                                    fontSize = 18.sp,
-                                    color = Color.Black
-                                )
-                                Text(
-                                    text = "at: ${order.atTime}",
-                                    modifier = Modifier
-                                        .padding(4.dp)
-                                        .fillMaxWidth(),
-                                    textAlign = TextAlign.Center,
-                                    fontSize = 15.sp,
-                                    color = Color.Black
-                                )
-                                Text(
-                                    text = "Total Price: ${order.totalmrp}",
-                                    modifier = Modifier
-                                        .padding(10.dp)
-                                        .fillMaxWidth(),
-                                    textAlign = TextAlign.Center,
-                                    fontSize = 14.sp,
-                                    color = Color.Black
-                                )
-                            }
-                            Column(
-                                modifier = Modifier
-                                    .weight(.3f)
-                                    .align(Alignment.CenterVertically)
-                            ) {
-                                Text(text = "Total items")
-                                Text(
-                                    text = "${order.orderedItems.size}",
-                                    modifier = Modifier
-                                        .padding(10.dp)
-                                        .fillMaxWidth(),
-                                    textAlign = TextAlign.Center,
-                                    fontSize = 14.sp,
-                                    color = Color.Black
-                                )
-                            }
-                        }
-                    }
+                    OrderCard(navController, logedemail, user?.username, order)
                 }
             }
         }

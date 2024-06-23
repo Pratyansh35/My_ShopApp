@@ -30,14 +30,7 @@ var Cancelled by mutableStateOf(false)
 @Preview(showBackground = true)
 @Composable
 fun OrderStatusSelectBar() {
-    Column {
-        Text(
-            text = "Customers Orders",
-            modifier = Modifier.fillMaxWidth(),
-            textAlign = TextAlign.Center,
-            fontSize = 18.sp,
-            fontWeight = FontWeight.Bold, color = Color(0xFF775A65)
-        )
+
         Row(Modifier.height(48.dp)) {
             TextButton(
                 onClick = {
@@ -162,5 +155,5 @@ fun OrderStatusSelectBar() {
                 }
             }
         }
-    }
+
 }

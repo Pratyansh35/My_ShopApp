@@ -14,7 +14,11 @@ fun sendOrders(
     userData: UserData?,
     cartItems: List<Dishfordb>,
     totalMrp: Double,
-    total: Double
+    total: Double,
+    transactionId: String,
+    merchantCode: String,
+    amountReceived: String,
+    amountRemaining: String
 ) {
     if (userData == null) {
         Toast.makeText(context, "Please Sign In", Toast.LENGTH_SHORT).show()
@@ -33,7 +37,11 @@ fun sendOrders(
         "totalMrp" to totalMrp,
         "total" to total,
         "items" to cartItems,
-        "Order Status" to "Pending"
+        "Order Status" to "Pending",
+        "Transaction ID" to transactionId,
+        "Merchant Code" to merchantCode,
+        "Amount received" to amountReceived,
+        "Amount remaining" to amountRemaining
     )
 
     useremail?.let {

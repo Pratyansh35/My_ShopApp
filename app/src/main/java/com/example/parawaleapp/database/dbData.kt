@@ -19,6 +19,8 @@ data class Dishfordb(
     constructor() : this("", "", 0,"", "", "", "", "", "")
 }
 
+
+
 // RealTime Database
 val mfirebaseDatabase =
     FirebaseDatabase.getInstance("https://myparawale-app-default-rtdb.asia-southeast1.firebasedatabase.app/")
