@@ -40,7 +40,7 @@ android {
     }
 
     composeOptions {
-            kotlinCompilerExtensionVersion  '1.5.0'
+        kotlinCompilerExtensionVersion  '1.5.0'
     }
 
     packagingOptions {
@@ -51,6 +51,12 @@ android {
 }
 
 dependencies {
+    implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:2.5.0"
+    implementation "androidx.lifecycle:lifecycle-livedata-ktx:2.5.0"
+    implementation "androidx.room:room-runtime:2.5.0"
+    kapt "androidx.room:room-compiler:2.5.0"
+
+    implementation 'phonepe.intentsdk.android.release:IntentSDK:2.4.3'
     implementation "androidx.compose.runtime:runtime:1.5.4"
     implementation "androidx.compose.animation:animation:1.5.4"
     implementation 'com.google.code.gson:gson:2.10'
@@ -58,7 +64,7 @@ dependencies {
     implementation 'com.google.accompanist:accompanist-insets:0.23.1'
     implementation 'com.google.android.exoplayer:exoplayer-core:2.19.1'
     implementation 'com.google.android.exoplayer:exoplayer-ui:2.19.1'
-    implementation "androidx.compose.runtime:runtime-livedata:1.5.4" // Use the appropriate version
+    implementation "androidx.compose.runtime:runtime-livedata:1.5.4"
     implementation "androidx.paging:paging-compose:3.2.1"
     implementation "org.jetbrains.kotlinx:kotlinx-serialization-json:1.5.0"
 
@@ -81,14 +87,12 @@ dependencies {
     implementation 'androidx.compose.ui:ui-graphics'
     implementation 'androidx.compose.material3:material3'
 
-
     implementation(platform("com.google.firebase:firebase-bom:32.6.0"))
     implementation("com.google.firebase:firebase-analytics")
     implementation("com.google.firebase:firebase-auth")
     implementation("com.google.android.gms:play-services-auth:20.7.0")
     implementation("com.google.firebase:firebase-database-ktx")
     implementation("com.google.firebase:firebase-storage-ktx")
-
 
     implementation 'androidx.appcompat:appcompat:1.6.1'
     implementation 'com.google.android.material:material:1.11.0'

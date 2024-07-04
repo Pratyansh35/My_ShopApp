@@ -7,7 +7,6 @@ import Cart
 import Home
 import Login
 import Menu
-import PaymentScreenLayout
 import ProfileSet
 import Scan_Barcode
 import SettingScreen
@@ -48,6 +47,7 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.parawaleapp.PaymentUpi.PaymentScreenLayout
 import com.example.parawaleapp.SendViewOrders.OrderDetailsScreen
 import com.example.parawaleapp.SendViewOrders.PersonOrdersScreen
 import com.example.parawaleapp.SendViewOrders.ViewOrders
@@ -72,6 +72,8 @@ import com.example.parawaleapp.sign_in.SignInViewModel
 import com.example.parawaleapp.sign_in.UserData
 import com.google.android.gms.auth.api.identity.Identity
 import com.google.firebase.FirebaseApp
+import com.phonepe.intent.sdk.api.PhonePe
+import com.phonepe.intent.sdk.api.models.PhonePeEnvironment
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
@@ -86,6 +88,12 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        PhonePe.init(
+            this,
+            PhonePeEnvironment.SANDBOX, // Change to RELEASE when moving to production
+            "PGTESTPAYUAT",
+            null // Replace with your App ID or pass null if you don't have it
+        )
         setContent {
             Surface(
                 modifier = Modifier.fillMaxSize(), color = MaterialTheme.colors.background
