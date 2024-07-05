@@ -2,6 +2,7 @@ package com.example.parawaleapp
 
 import AddItems
 import AfterCart
+import AppLayout
 import BluetoothScreenRoute
 import Cart
 import Home
@@ -18,6 +19,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -47,6 +49,7 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.parawaleapp.AppLayout.AppLayoutScreen
 import com.example.parawaleapp.PaymentUpi.PaymentScreenLayout
 import com.example.parawaleapp.SendViewOrders.OrderDetailsScreen
 import com.example.parawaleapp.SendViewOrders.PersonOrdersScreen
@@ -70,6 +73,7 @@ import com.example.parawaleapp.printer.BluetoothScreen
 import com.example.parawaleapp.sign_in.GoogleAuthUiclient
 import com.example.parawaleapp.sign_in.SignInViewModel
 import com.example.parawaleapp.sign_in.UserData
+import com.example.parawaleapp.ui.theme.MyAppTheme
 import com.google.android.gms.auth.api.identity.Identity
 import com.google.firebase.FirebaseApp
 import com.phonepe.intent.sdk.api.PhonePe
@@ -173,6 +177,8 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+
+
 @Composable
 fun MainScreen(
     navController2: NavController,
@@ -184,71 +190,98 @@ fun MainScreen(
     val navController = rememberNavController()
     val context = LocalContext.current
 
-    Scaffold(scaffoldState = scaffoldState, drawerContent = {
-        LeftDrawerPanel(scaffoldState = scaffoldState,
-            scope = scope,
-            navController = navController,
-            userData = googleAuthUiClient.getSinedInUser(),
-            signOut = {
-                clearDataFromSharedPreferences(context)
-                scope.launch {
-                    googleAuthUiClient.signOut()
-                    Toast.makeText(context, "Sign out successful", Toast.LENGTH_LONG).show()
-                    navController2.navigate("sign_in")
-                }
-            })
-    }, drawerGesturesEnabled = true, topBar = {
-        NavBar(scaffoldState = scaffoldState, scope = scope, navController = navController)
-    }, bottomBar = { MyBottomNavigation(navController = navController) }) {
-        Box(Modifier.padding(it)) {
-            NavHost(navController = navController, startDestination = Home.route) {
-                composable(Home.route) { HomeScreen(dishData) }
-                composable(Menu.route) { MenuListScreen(dishData) }
-                composable(Scan_Barcode.route) { BarCodeScreen(dishData) }
-                composable(Cart.route) { CartDrawerPanel(navController = navController) }
-                composable(AfterCart.route) {
-                    ConfirmCart(
-                        navController = navController,
-                        userData = googleAuthUiClient.getSinedInUser()
-                    )
-                }
-                composable(ProfileSet.route) {
-                    Profileset(userData = googleAuthUiClient.getSinedInUser())
-                }
-                composable(AddItems.route) {
-                    ManageItem(
-                        userData = googleAuthUiClient.getSinedInUser(), dishData = dishData
-                    )
-                }
-                composable(SettingScreen.route) {
-                    Settings( scope = scope,
-                        navController = navController,
-                        userData = googleAuthUiClient.getSinedInUser(),
-                        scaffoldState = scaffoldState
-                       )
-                }
-                composable(BluetoothScreenRoute.route) { BluetoothScreen() }
-                composable(ViewOrder.route) { ViewOrders(navController = navController) }
-                composable("personOrders/{email}") { backStackEntry ->
-                    val email = backStackEntry.arguments?.getString("email")
-                    PersonOrdersScreen(navController, email)
-                }
-                composable("orderDetails/{email}/{date}/{name}/{orderedItems}") { backStackEntry ->
-                    val email = backStackEntry.arguments?.getString("email")
-                    val date = backStackEntry.arguments?.getString("date")
-                    val name = backStackEntry.arguments?.getString("name")
-                    val orderedItemsJson = backStackEntry.arguments?.getString("orderedItems")
-                    val loggedemail = googleAuthUiClient.getSinedInUser()?.userEmail
-                    OrderDetailsScreen(navController, email, date, name, loggedemail, orderedItemsJson)
-                }
-                composable(PreviousOrders.route) {
-                    PreviousOrders(navController, googleAuthUiClient.getSinedInUser())
-                }
-                composable("PaymentScreen/{totalMrp}/{totalValue}") { backStackEntry ->
-                    val totalMrp = backStackEntry.arguments?.getString("totalMrp")?.toDouble()
-                    val totalValue = backStackEntry.arguments?.getString("totalValue")?.toDouble()
-                    if (totalMrp != null && totalValue != null) {
-                        PaymentScreenLayout(totalMrp, totalValue, googleAuthUiClient.getSinedInUser())
+    var isDarkTheme by remember { mutableStateOf(false) }
+    
+    val systemInDarkTheme = isSystemInDarkTheme()
+    LaunchedEffect(systemInDarkTheme) {
+        isDarkTheme = systemInDarkTheme
+    }
+
+    MyAppTheme(darkTheme = isDarkTheme) {
+        Scaffold(scaffoldState = scaffoldState, drawerContent = {
+            LeftDrawerPanel(scaffoldState = scaffoldState,
+                scope = scope,
+                navController = navController,
+                userData = googleAuthUiClient.getSinedInUser(),
+                signOut = {
+                    clearDataFromSharedPreferences(context)
+                    scope.launch {
+                        googleAuthUiClient.signOut()
+                        Toast.makeText(context, "Sign out successful", Toast.LENGTH_LONG).show()
+                        navController2.navigate("sign_in")
+                    }
+                })
+        }, drawerGesturesEnabled = true, topBar = {
+            NavBar(scaffoldState = scaffoldState, scope = scope, navController = navController, isDarkTheme = isDarkTheme)
+        }, bottomBar = { MyBottomNavigation(navController = navController) }) {
+            Box(Modifier.padding(it)) {
+                NavHost(navController = navController, startDestination = Home.route) {
+                    composable(Home.route) { HomeScreen(DishData = dishData, isDarkTheme = isDarkTheme, onThemeChange = { isDarkTheme = it }) }
+                    composable(Menu.route) { MenuListScreen(dishData) }
+                    composable(Scan_Barcode.route) { BarCodeScreen(dishData) }
+                    composable(Cart.route) { CartDrawerPanel(navController = navController) }
+                    composable(AfterCart.route) {
+                        ConfirmCart(
+                            navController = navController,
+                            userData = googleAuthUiClient.getSinedInUser()
+                        )
+                    }
+                    composable(ProfileSet.route) {
+                        Profileset(userData = googleAuthUiClient.getSinedInUser())
+                    }
+                    composable(AddItems.route) {
+                        ManageItem(
+                            userData = googleAuthUiClient.getSinedInUser(), dishData = dishData
+                        )
+                    }
+                    composable(SettingScreen.route) {
+                        Settings(
+                            scope = scope,
+                            navController = navController,
+                            userData = googleAuthUiClient.getSinedInUser(),
+                            scaffoldState = scaffoldState
+                        )
+                    }
+                    composable(BluetoothScreenRoute.route) { BluetoothScreen() }
+                    composable(ViewOrder.route) { ViewOrders(navController = navController) }
+                    composable(AppLayout.route) {
+                        AppLayoutScreen()
+                    }
+
+                    composable("personOrders/{email}") { backStackEntry ->
+                        val email = backStackEntry.arguments?.getString("email")
+                        PersonOrdersScreen(navController, email)
+                    }
+
+                    composable("orderDetails/{email}/{date}/{name}/{orderedItems}") { backStackEntry ->
+                        val email = backStackEntry.arguments?.getString("email")
+                        val date = backStackEntry.arguments?.getString("date")
+                        val name = backStackEntry.arguments?.getString("name")
+                        val orderedItemsJson = backStackEntry.arguments?.getString("orderedItems")
+                        val loggedemail = googleAuthUiClient.getSinedInUser()?.userEmail
+                        OrderDetailsScreen(
+                            navController,
+                            email,
+                            date,
+                            name,
+                            loggedemail,
+                            orderedItemsJson
+                        )
+                    }
+                    composable(PreviousOrders.route) {
+                        PreviousOrders(navController, googleAuthUiClient.getSinedInUser())
+                    }
+                    composable("PaymentScreen/{totalMrp}/{totalValue}") { backStackEntry ->
+                        val totalMrp = backStackEntry.arguments?.getString("totalMrp")?.toDouble()
+                        val totalValue =
+                            backStackEntry.arguments?.getString("totalValue")?.toDouble()
+                        if (totalMrp != null && totalValue != null) {
+                            PaymentScreenLayout(
+                                totalMrp,
+                                totalValue,
+                                googleAuthUiClient.getSinedInUser()
+                            )
+                        }
                     }
                 }
             }
@@ -265,9 +298,13 @@ fun MyBottomNavigation(navController: NavController) {
     val selectedIndex = rememberSaveable {
         mutableStateOf(0)
     }
-    BottomNavigation {
+    BottomNavigation(
+        backgroundColor = MaterialTheme.colors.primaryVariant,
+        contentColor = MaterialTheme.colors.surface
+    ) {
         destinationList.forEachIndexed { index, destination ->
-            BottomNavigationItem(label = { Text(text = destination.title) }, icon = {
+            BottomNavigationItem(
+                label = { Text(text = destination.title) }, icon = {
                 Icon(
                     painter = painterResource(id = destination.icon),
                     contentDescription = destination.title

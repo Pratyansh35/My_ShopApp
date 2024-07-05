@@ -28,6 +28,8 @@ val SettingsItems = listOf(
         "Payments", "Manage your payment details", R.drawable.edit_account_logo
     ), Slidess(
         "Connect Printer", "Select your bluetooth printing", R.drawable.ic_location
+    ), Slidess(
+        "App Layout", "Change your app layout", R.drawable.ic_location
     )
 )
 

@@ -2,7 +2,6 @@ package com.example.parawaleapp.cartScreen
 
 import android.net.Uri
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -23,6 +22,7 @@ import androidx.compose.material.Divider
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.material.LocalTextStyle
+import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.material.TextField
 import androidx.compose.material.TextFieldDefaults
@@ -58,6 +58,24 @@ import com.example.parawaleapp.database.total
 import com.example.parawaleapp.database.totalcount
 import com.example.parawaleapp.mainScreen.truncateString
 
+fun dishIncrement(Dish: Dishfordb, navController: NavController? = null) {
+    Dish.count++
+    totalcount()
+    navController?.navigate("cart")
+
+}
+
+fun dishDecrement(Dish: Dishfordb, navController: NavController? = null) {
+    Dish.count--
+    totalcount()
+    if (Dish.count <= 0) {
+        cartItems.remove(Dish)
+        countItems()
+    }
+    navController?.navigate("cart")
+
+}
+
 
 @Composable
 fun CartDrawerPanel(navController: NavController? = null) {
@@ -72,7 +90,6 @@ fun CartDrawerPanel(navController: NavController? = null) {
                     .fillMaxWidth()
                     .fillMaxHeight(0.90f)
             ) {
-
                 LazyColumn {
                     items(cartItems) { Dish ->
                         CartItems(Dish, navController)
@@ -88,19 +105,18 @@ fun CartDrawerPanel(navController: NavController? = null) {
                     text = "Total: ₹$total",
                     fontFamily = FontFamily.Cursive,
                     fontWeight = FontWeight.W900,
-                    color = Color(0xFF555A47),
+                    color = MaterialTheme.colors.onBackground,
                     modifier = Modifier
                         .padding(end = 10.dp)
                         .align(Alignment.CenterVertically),
                     fontSize = 20.sp
                 )
 
-
                 Button(
                     onClick = {
                         navController?.navigate("AfterCart")
                     },
-                    colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFFF4CE14)),
+                    colors = ButtonDefaults.buttonColors(backgroundColor = MaterialTheme.colors.primary),
                     shape = RoundedCornerShape(40),
                     modifier = Modifier
                         .padding(10.dp)
@@ -110,10 +126,9 @@ fun CartDrawerPanel(navController: NavController? = null) {
                 ) {
                     Text(
                         text = "Proceed to Checkout",
-                        color = Color.Black,
+                        color = MaterialTheme.colors.onPrimary,
                         fontWeight = FontWeight.Bold
                     )
-
                 }
             }
         }
@@ -136,77 +151,58 @@ fun CartDrawerPanel(navController: NavController? = null) {
                 text = "Your cart is empty",
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color(0xFFC0B445)
+                color = MaterialTheme.colors.secondary
             )
-
         }
     }
-
-}
-
-
-fun DishIncrement(Dish: Dishfordb, navController: NavController? = null) {
-    Dish.count++
-    totalcount()
-    navController?.navigate("cart")
-
-}
-
-fun DishDecrement(Dish: Dishfordb, navController: NavController? = null) {
-    Dish.count--
-    totalcount()
-    if (Dish.count <= 0) {
-        cartItems.remove(Dish)
-        countItems()
-    }
-    navController?.navigate("cart")
-
 }
 
 @Composable
 fun CartItems(Dish: Dishfordb, navController: NavController? = null) {
     val context = LocalContext.current
-    var Dishcount by remember {
-        mutableStateOf(TextFieldValue(Dish.count.toString()))
-    }
+    var Dishcount by remember { mutableStateOf(TextFieldValue(Dish.count.toString())) }
+
     Card {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(148.dp)
-
         ) {
-
             AsyncImage(
                 model = Uri.parse(Dish.imageUrl),
                 contentDescription = "dishImage",
                 modifier = Modifier
                     .height(96.dp)
                     .align(Alignment.CenterVertically)
-
             )
             Column(modifier = Modifier.padding(start = 6.dp, top = 3.dp)) {
                 Text(
-                    text = truncateString(Dish.name, 30), fontSize = 14.sp, fontWeight = FontWeight.Bold
+                    text = truncateString(Dish.name, 30),
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colors.onSurface
                 )
                 Text(
                     text = truncateString(Dish.description, 65),
                     fontSize = 12.sp,
-                    color = Color.Gray,
-
+                    color = MaterialTheme.colors.onSurface.copy(alpha = 0.7f),
                     modifier = Modifier
                         .padding(top = 5.dp)
-                        .fillMaxWidth(1f)
+                        .fillMaxWidth()
                         .height(32.dp)
                 )
-                Row(modifier = Modifier.fillMaxWidth(1f).height((50.dp)), verticalAlignment = Alignment.CenterVertically) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(50.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
                     val isCartIconVisible = Dish.count == 1 || Dish.count == 0
 
                     IconButton(
                         onClick = {
-                            DishDecrement(Dish, navController)
+                            dishDecrement(Dish, navController)
                             saveCartItemsToSharedPreferences(context)
-
                         },
                         Modifier
                             .width(24.dp)
@@ -217,15 +213,15 @@ fun CartItems(Dish: Dishfordb, navController: NavController? = null) {
                             Icon(
                                 painterResource(id = R.drawable.bin),
                                 contentDescription = null,
+                                tint = MaterialTheme.colors.onSurface
                             )
                         } else {
-                            Text(text = "-")
+                            Text(text = "-", color = MaterialTheme.colors.onSurface)
                         }
                     }
                     TextField(
                         value = Dishcount,
                         onValueChange = {
-
                             val userInput = it.text.toIntOrNull()
                             if (it.text.isNotEmpty()) {
                                 userInput?.let { input ->
@@ -241,17 +237,12 @@ fun CartItems(Dish: Dishfordb, navController: NavController? = null) {
                                         cartItems.remove(Dish)
                                         countItems()
                                         saveCartItemsToSharedPreferences(context)
-                                    } else {
-
                                     }
-                                } ?: run {
-
                                 }
                             } else {
                                 Dishcount = it
                                 Dish.count = 0
                                 totalcount()
-
                                 countItems()
                             }
                         },
@@ -265,33 +256,47 @@ fun CartItems(Dish: Dishfordb, navController: NavController? = null) {
                         colors = TextFieldDefaults.textFieldColors(backgroundColor = Color.Transparent),
                         textStyle = LocalTextStyle.current.copy(fontSize = 15.sp),
                         singleLine = true,
-                        )
-
+                    )
                     IconButton(
                         onClick = {
-                            DishIncrement(Dish, navController)
+                            dishIncrement(Dish, navController)
                             saveCartItemsToSharedPreferences(context)
                         },
                         Modifier
                             .width(24.dp)
                             .align(Alignment.CenterVertically)
                     ) {
-                        Text(text = "+")
+                        Text(text = "+", color = MaterialTheme.colors.onSurface)
                     }
                 }
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier
-                        .fillMaxWidth(1f)
+                        .fillMaxWidth()
                         .height(30.dp)
                 ) {
                     Row(modifier = Modifier.fillMaxWidth(.5f)) {
-                        Text(text = Dish.price, color = Color.Gray, fontWeight = FontWeight.Bold,  style = TextStyle( shadow = Shadow(
-                            color = Color.DarkGray, offset = Offset(1.0f, 1.0f), blurRadius = 0f
+                        Text(
+                            text = Dish.price,
+                            color = MaterialTheme.colors.onSurface.copy(alpha = 0.7f),
+                            fontWeight = FontWeight.Bold,
+                            style = TextStyle(
+                                shadow = Shadow(
+                                    color = MaterialTheme.colors.onSurface,
+                                    offset = Offset(1.0f, 1.0f),
+                                    blurRadius = 0f
+                                )
+                            ),
+                            fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
+                            modifier = Modifier.padding(end = 8.dp),
+                            fontSize = 16.sp
                         )
-                        ),fontStyle = androidx.compose.ui.text.font.FontStyle.Italic, modifier = Modifier.padding(end = 8.dp), fontSize = 16.sp)
-
-                        Text(text = Dish.mrp, color = Color.Gray, textDecoration = TextDecoration.LineThrough, fontSize = 12.sp)
+                        Text(
+                            text = Dish.mrp,
+                            color = MaterialTheme.colors.onSurface.copy(alpha = 0.7f),
+                            textDecoration = TextDecoration.LineThrough,
+                            fontSize = 12.sp
+                        )
                         Text(
                             text = " -${"%.2f".format(((Dish.mrp.trimStart('₹').toFloat() - Dish.price.trimStart('₹').toFloat()) / Dish.mrp.trimStart('₹').toFloat()) * 100)}%",
                             style = TextStyle(
@@ -304,25 +309,23 @@ fun CartItems(Dish: Dishfordb, navController: NavController? = null) {
                             ),
                             fontSize = 12.sp
                         )
-
                     }
-
                     Column(
-                        horizontalAlignment = Alignment.End, modifier = Modifier.fillMaxWidth()
-
+                        horizontalAlignment = Alignment.End,
+                        modifier = Modifier.fillMaxWidth()
                     ) {
                         Row {
                             Text(
                                 text = "=",
-                                fontFamily = FontFamily.Cursive, fontWeight = FontWeight.W900,
-                                color = Color(0xFFC0B445),
-
-                                )
-
+                                fontFamily = FontFamily.Cursive,
+                                fontWeight = FontWeight.W900,
+                                color = MaterialTheme.colors.secondary,
+                            )
                             Text(
                                 text = "₹${Dish.count * Dish.price.removePrefix("₹").toDouble()}",
-                                fontFamily = FontFamily.Cursive, fontWeight = FontWeight.Medium,
-                                color = Color(0xFF69615A),
+                                fontFamily = FontFamily.Cursive,
+                                fontWeight = FontWeight.Medium,
+                                color = MaterialTheme.colors.onSurface,
                             )
                         }
                     }
@@ -332,7 +335,7 @@ fun CartItems(Dish: Dishfordb, navController: NavController? = null) {
     }
     Divider(
         modifier = Modifier.padding(start = 8.dp, end = 8.dp),
-        color = Color.LightGray,
+        color = MaterialTheme.colors.onSurface.copy(alpha = 0.2f),
         thickness = 1.dp
     )
 }

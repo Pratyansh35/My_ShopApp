@@ -2,6 +2,7 @@ package com.example.parawaleapp.drawerPanel.leftPanel
 
 import android.util.Log
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -19,6 +20,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Button
 import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.Card
+import androidx.compose.material.MaterialTheme
 import androidx.compose.material.ScaffoldState
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
@@ -56,7 +58,7 @@ fun LeftDrawerPanel(
             .fillMaxSize()
             .scrollable(
                 rememberScrollState(),
-                orientation = androidx.compose.foundation.gestures.Orientation.Vertical
+                orientation = Orientation.Vertical
             )
     ) {
         Card(
@@ -68,25 +70,21 @@ fun LeftDrawerPanel(
                 modifier = Modifier
                     .background(
                         Brush.horizontalGradient(
-                            listOf(Color(0xFF0E0A0B), Color(0xFF707A6D))
+                            listOf(MaterialTheme.colors.primaryVariant, MaterialTheme.colors.secondary)
                         )
                     )
                     .fillMaxWidth(),
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically
-
-
             ) {
                 Log.d(
                     "leftPic",
                     "got img = $img    /n got googlepicc = ${userData?.progilePictureUrl}"
                 )
                 AsyncImage(
-
-                    model = if (img.toString().equals("")) {
+                    model = if (img.toString().isEmpty()) {
                         userData?.progilePictureUrl
                     } else img,
-
                     contentDescription = "userImage",
                     modifier = Modifier
                         .padding(start = 10.dp)
@@ -102,12 +100,12 @@ fun LeftDrawerPanel(
                 ) {
                     if (userData?.userName != null) {
                         Text(
-                            text = if (name == "") {
+                            text = if (name.isEmpty()) {
                                 userData.userName
-                            } else (name),
+                            } else name,
                             fontSize = 25.sp,
                             fontWeight = FontWeight.ExtraBold,
-                            color = Color(0xFFC0B445)
+                            color = MaterialTheme.colors.onPrimary
                         )
                     }
                     if (userData?.userEmail != null) {
@@ -117,11 +115,9 @@ fun LeftDrawerPanel(
                             fontWeight = FontWeight.Bold,
                             fontFamily = FontFamily.SansSerif,
                             textAlign = TextAlign.Center,
-                            color = Color(0xFFC9B9B9)
-
+                            color = MaterialTheme.colors.onSecondary
                         )
                     }
-
                 }
             }
         }
@@ -131,7 +127,7 @@ fun LeftDrawerPanel(
                 .padding(top = 10.dp)
                 .scrollable(
                     rememberScrollState(),
-                    orientation = androidx.compose.foundation.gestures.Orientation.Vertical
+                    orientation = Orientation.Vertical
                 )
         ) {
             items(SlidesItems) { Slidess ->
@@ -157,21 +153,17 @@ fun LeftDrawerPanel(
 
             item {
                 Button(
-                    onClick = {
-                        signOut()
-                    },
-                    colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFFF4CE14)),
+                    onClick = { signOut() },
+                    colors = ButtonDefaults.buttonColors(backgroundColor = MaterialTheme.colors.primary),
                     shape = RoundedCornerShape(40),
                     modifier = Modifier
                         .padding(10.dp)
                         .fillMaxWidth()
                         .height(50.dp)
                 ) {
-                    Text(text = "LOG OUT", color = Color.Black, fontWeight = FontWeight.Bold)
+                    Text(text = "LOG OUT", color = MaterialTheme.colors.onPrimary, fontWeight = FontWeight.Bold)
                 }
             }
         }
-
-
     }
 }

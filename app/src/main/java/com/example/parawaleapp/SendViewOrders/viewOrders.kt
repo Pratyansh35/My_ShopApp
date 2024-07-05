@@ -21,6 +21,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Button
 import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.Card
+import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -118,20 +119,21 @@ fun fetchAllOrders(callback: (List<EmailOrder>) -> Unit) {
 fun ViewOrders(navController: NavController) {
     FetchAllOrdersAndUpdateState()
 
-    // Determine which list to show based on the state
     val orderList = when {
         Pending -> AllOrdersList.filter { order -> order.orders.any { it.orderStatus == "Pending" } }
         Completed -> AllOrdersList.filter { order -> order.orders.any { it.orderStatus == "Completed" } }
         Cancelled -> AllOrdersList.filter { order -> order.orders.any { it.orderStatus == "Cancelled" } }
         else -> AllOrdersList
     }
+
     Column {
         Text(
             text = "Customers Orders",
             modifier = Modifier.fillMaxWidth(),
             textAlign = TextAlign.Center,
             fontSize = 18.sp,
-            fontWeight = FontWeight.Bold, color = Color(0xFF775A65)
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colors.onBackground
         )
         OrderStatusSelectBar()
 
@@ -141,7 +143,8 @@ fun ViewOrders(navController: NavController) {
                 modifier = Modifier
                     .padding(10.dp)
                     .fillMaxSize(),
-                textAlign = TextAlign.Center
+                textAlign = TextAlign.Center,
+                color = MaterialTheme.colors.onBackground
             )
         } else {
             LazyColumn {
@@ -156,13 +159,13 @@ fun ViewOrders(navController: NavController) {
                     ) {
                         Column {
                             Text(
-                                text = "Username: ${order.username}",
+                                text = "name: ${order.username}",
                                 modifier = Modifier
                                     .padding(10.dp)
                                     .fillMaxWidth(),
                                 textAlign = TextAlign.Center,
                                 fontSize = 18.sp,
-                                color = Color.Black
+                                color = MaterialTheme.colors.onSurface
                             )
                             Text(
                                 text = "Email: ${order.email.replace(",", ".")}",
@@ -171,9 +174,11 @@ fun ViewOrders(navController: NavController) {
                                     .fillMaxWidth(),
                                 textAlign = TextAlign.Center,
                                 fontSize = 14.sp,
-                                color = Color.Black
+                                color = MaterialTheme.colors.onSurface
                             )
-                            Row(modifier = Modifier.fillMaxWidth()) {
+                            Row(modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.Center,
+                                verticalAlignment = Alignment.CenterVertically) {
                                 Text(
                                     text = "Contact: ${order.contactno}",
                                     modifier = Modifier
@@ -181,7 +186,7 @@ fun ViewOrders(navController: NavController) {
                                         .weight(1f),
                                     textAlign = TextAlign.Center,
                                     fontSize = 12.sp,
-                                    color = Color.Gray
+                                    color = MaterialTheme.colors.onSurface.copy(alpha = 0.7f)
                                 )
                                 Text(
                                     text = "Total Orders: ${order.orders.size}",
@@ -190,7 +195,7 @@ fun ViewOrders(navController: NavController) {
                                         .weight(1f),
                                     textAlign = TextAlign.Center,
                                     fontSize = 8.sp,
-                                    color = Color.Gray
+                                    color = MaterialTheme.colors.onSurface.copy(alpha = 0.7f)
                                 )
                             }
                         }
@@ -200,8 +205,6 @@ fun ViewOrders(navController: NavController) {
         }
     }
 }
-
-
 
 @Composable
 fun PersonOrdersScreen(navController: NavController, email: String?) {
@@ -226,12 +229,13 @@ fun PersonOrdersScreen(navController: NavController, email: String?) {
             )
     ) {
         Text(
-            text = "Orders for\n ${email?.replace(",", ".")}",
+            text = "Orders from\n ${email?.replace(",", ".")}",
             modifier = Modifier
                 .padding(5.dp, top = 20.dp)
                 .fillMaxWidth(),
             fontSize = 10.sp,
-            textAlign = TextAlign.Center
+            textAlign = TextAlign.Center,
+            color = MaterialTheme.colors.onBackground
         )
         Text(
             text = name,
@@ -239,7 +243,8 @@ fun PersonOrdersScreen(navController: NavController, email: String?) {
                 .padding(5.dp)
                 .fillMaxWidth(),
             fontSize = 20.sp,
-            textAlign = TextAlign.Center
+            textAlign = TextAlign.Center,
+            color = MaterialTheme.colors.onBackground
         )
         if (Pending) {
             Text(
@@ -294,7 +299,7 @@ fun OrderCard(navController: NavController, email: String?, username: String?, o
             }, shape = RoundedCornerShape(10.dp), elevation = 10.dp
     ) {
         Row {
-            Column(modifier = Modifier.weight(1f)) {
+            Column(modifier = Modifier.weight(0.6f)) {
                 Text(
                     text = "Date: ${order.date}",
                     modifier = Modifier
@@ -302,7 +307,7 @@ fun OrderCard(navController: NavController, email: String?, username: String?, o
                         .fillMaxWidth(),
                     textAlign = TextAlign.Center,
                     fontSize = 18.sp,
-                    color = Color.Black
+                    color = MaterialTheme.colors.onSurface
                 )
                 Text(
                     text = "at: ${order.atTime}",
@@ -311,7 +316,7 @@ fun OrderCard(navController: NavController, email: String?, username: String?, o
                         .fillMaxWidth(),
                     textAlign = TextAlign.Center,
                     fontSize = 15.sp,
-                    color = Color.Black
+                    color = MaterialTheme.colors.onSurface
                 )
                 Text(
                     text = "Total Price: ${order.totalmrp}",
@@ -320,15 +325,16 @@ fun OrderCard(navController: NavController, email: String?, username: String?, o
                         .fillMaxWidth(),
                     textAlign = TextAlign.Center,
                     fontSize = 14.sp,
-                    color = Color.Black
+                    color = MaterialTheme.colors.onSurface
                 )
             }
             Column(
                 modifier = Modifier
-                    .weight(.3f)
-                    .align(Alignment.CenterVertically)
+                    .weight(.4f)
+                    .align(Alignment.CenterVertically),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Text(text = "Total items")
+                Text(text = "Total items", color = MaterialTheme.colors.onSurface)
                 Text(
                     text = "${order.orderedItems.size}",
                     modifier = Modifier
@@ -336,7 +342,7 @@ fun OrderCard(navController: NavController, email: String?, username: String?, o
                         .fillMaxWidth(),
                     textAlign = TextAlign.Center,
                     fontSize = 14.sp,
-                    color = Color.Black
+                    color = MaterialTheme.colors.onSurface
                 )
             }
         }

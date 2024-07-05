@@ -1,10 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
+
 <resources>
-    <color name="purple_200">#FFBB86FC</color>
-    <color name="purple_500">#FF6200EE</color>
+    <!-- Light mode colors -->
+    <color name="homeScreenColor">#FF495E57</color>
+    <color name="whiteTextColor">#FFEDEFEE</color>
+    <color name="blackTextColor">#FF000000</color>
+    <color name="YelloButtonColor">#FFF4CE14</color>
+    <color name="LightGreyTextColor">#FF888888</color>
     <color name="purple_700">#FF3700B3</color>
-    <color name="teal_200">#FF03DAC5</color>
-    <color name="teal_700">#FF018786</color>
-    <color name="black">#FF000000</color>
-    <color name="white">#FFFFFFFF</color>
+    <color name="backGround">#FFFFFF</color>
+
+    <!-- Dark mode colors -->
+    <color name="darkHomeScreenColor">#FF1E1E1E</color>
+    <color name="darkWhiteTextColor">#FFAAAAAA</color>
+    <color name="darkBlackTextColor">#FFFFFFFF</color>
+    <color name="darkYelloButtonColor">#FFBB8600</color>
+    <color name="darkLightGreyTextColor">#FF555555</color>
+    <color name="darkBackGround">#FF121212</color>
 </resources>
