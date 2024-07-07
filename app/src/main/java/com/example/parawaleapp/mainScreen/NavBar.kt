@@ -27,7 +27,6 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.parawaleapp.R
 import com.example.parawaleapp.TypewriterText
-import com.example.parawaleapp.database.count
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
@@ -37,7 +36,8 @@ fun NavBar(
     scaffoldState: ScaffoldState? = null,
     scope: CoroutineScope? = null,
     navController: NavController?,
-    isDarkTheme : Boolean
+    isDarkTheme : Boolean,
+    count: Int
 ) {
     val cartIcon = if (isDarkTheme) R.drawable.ic_cart_dark else R.drawable.ic_cart_light
     val menuIcon = if (isDarkTheme) R.drawable.ic_menu_light else R.drawable.ic_menu_dark

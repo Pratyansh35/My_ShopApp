@@ -22,9 +22,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Button
-import androidx.compose.material.ButtonDefaults
+import androidx.compose.material.MaterialTheme
 import androidx.compose.material.OutlinedTextField
-import androidx.compose.material3.Text
+import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -78,7 +78,6 @@ fun AddItemScreen() {
         val imageCount = result.items.size
         imgSize = imageCount
     }.addOnFailureListener { exception ->
-        // Handle failure
         Toast.makeText(context, " error ${exception.message}", Toast.LENGTH_SHORT).show()
         println("Failed to list items in the folder: $exception")
     }
@@ -99,8 +98,10 @@ fun AddItemScreen() {
     ) {
         Text(
             text = "Add Item Screen", style = TextStyle(
-                fontSize = 18.sp, fontWeight = FontWeight.Bold
-            )
+                fontSize = 18.sp, fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colors.onSurface
+
+            ),
         )
         Spacer(modifier = Modifier.height(4.dp))
 
@@ -109,6 +110,7 @@ fun AddItemScreen() {
                 fontSize = 12.sp, fontWeight = FontWeight.Normal, color = Color.Gray
             )
         )
+
         Spacer(modifier = Modifier.height(12.dp))
 
         OutlinedTextField(value = name,
@@ -121,13 +123,13 @@ fun AddItemScreen() {
                 keyboardType = KeyboardType.Text
             )
         )
+
         Spacer(modifier = Modifier.height(4.dp))
 
         OutlinedTextField(value = description,
             onValueChange = { description = it },
             label = { Text(text = "Product Description") },
             modifier = Modifier
-
                 .padding(10.dp),
             maxLines = 4,
             textStyle = TextStyle(fontSize = 12.sp),
@@ -135,6 +137,7 @@ fun AddItemScreen() {
                 keyboardType = KeyboardType.Text
             )
         )
+
         Spacer(modifier = Modifier.height(8.dp))
 
         OutlinedTextField(value = category,
@@ -154,7 +157,7 @@ fun AddItemScreen() {
         OutlinedTextField(
             value = weight,
             onValueChange = { weight = it },
-            label = { androidx.compose.material3.Text(text = "Product weight in grams") },
+            label = { Text(text = "Product weight in grams") },
             modifier = Modifier
                 .align(Alignment.CenterHorizontally)
                 .padding(start = 10.dp, end = 10.dp, top = 4.dp, bottom = 4.dp),
@@ -167,11 +170,11 @@ fun AddItemScreen() {
         Spacer(modifier = Modifier.height(8.dp))
         Row(
             modifier = Modifier
-                .padding(8.dp) // Consistent padding around the Row
-                .height(88.dp) // Slightly increased height for better spacing
+                .padding(8.dp)
+                .height(88.dp)
                 .fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween // Ensures even spacing between elements
+            horizontalArrangement = Arrangement.SpaceBetween
         ) {
             OutlinedTextField(
                 value = Itemmrp,
@@ -179,7 +182,7 @@ fun AddItemScreen() {
                 label = { Text(text = "MRP ₹") },
                 modifier = Modifier
                     .padding(4.dp)
-                    .weight(1f), // Weight ensures equal space for each TextField
+                    .weight(1f),
                 maxLines = 1,
                 textStyle = TextStyle(fontSize = 14.sp), // Slightly increased font size
                 keyboardOptions = KeyboardOptions.Default.copy(
@@ -193,9 +196,9 @@ fun AddItemScreen() {
                 label = { Text(text = "Sell Price ₹") },
                 modifier = Modifier
                     .padding(4.dp)
-                    .weight(1f), // Weight ensures equal space for each TextField
+                    .weight(1f),
                 maxLines = 1,
-                textStyle = TextStyle(fontSize = 14.sp), // Slightly increased font size
+                textStyle = TextStyle(fontSize = 14.sp),
                 keyboardOptions = KeyboardOptions.Default.copy(
                     keyboardType = KeyboardType.Number
                 )
@@ -205,11 +208,11 @@ fun AddItemScreen() {
                 Text(
                     text = " -${"%.2f".format(((Itemmrp.toFloat() - price.toFloat()) / Itemmrp.toFloat()) * 100)}%",
                     style = TextStyle(
-                        fontSize = 14.sp, // Slightly increased font size
-                        fontWeight = FontWeight.Medium, // Medium weight for better readability
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Medium,
                         color = Color.Gray
                     ),
-                    modifier = Modifier.padding(start =4.dp, end = 1.dp) // Consistent padding
+                    modifier = Modifier.padding(start =4.dp, end = 1.dp) 
                 )
             }
         }
@@ -239,7 +242,8 @@ fun AddItemScreen() {
         ) {
             Text(
                 text = "Product Image", style = TextStyle(
-                    fontSize = 16.sp, fontWeight = FontWeight.Bold
+                    fontSize = 16.sp, fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colors.onSurface
                 )
             )
             Spacer(modifier = Modifier.height(8.dp))
@@ -273,7 +277,7 @@ fun AddItemScreen() {
 
                 }
             },
-            colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFFF4CE14)),
+
             shape = RoundedCornerShape(15),
             modifier = Modifier
                 .padding(20.dp)

@@ -2,6 +2,7 @@ import androidx.compose.material.darkColors
 import androidx.compose.material.lightColors
 import androidx.compose.ui.graphics.Color
 
+@Suppress("warnings")
 val LightColors = lightColors(
     primary = Color(0xFFF4CE14),
     primaryVariant = Color(0xFF3700B3),
@@ -16,13 +17,14 @@ val LightColors = lightColors(
 
 val DarkColors = darkColors(
     primary = Color(0xFFBB8600),
-    primaryVariant = Color(0xFF3700B3),
+    primaryVariant = Color(0xFF6C6281),
     secondary = Color(0xFF1E1E1E),
+    secondaryVariant = Color(0xFF282828),
     background = Color(0xFF121212),
     surface = Color(0xFF121212),
     onPrimary = Color(0xFFFFFFFF),
-    onSecondary = Color(0xFFAAAAAA),
+    onSecondary = Color(0xFF282828),
     onBackground = Color(0xFFFFFFFF),
-    onSurface = Color(0xFFFFFFFF),
+    onSurface = Color(0xFFAAAAAA),
 )
 

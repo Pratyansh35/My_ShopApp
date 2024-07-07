@@ -12,6 +12,7 @@ import ProfileSet
 import Scan_Barcode
 import SettingScreen
 import ViewOrder
+import android.content.Context
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -32,8 +33,11 @@ import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.material.rememberScaffoldState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableDoubleStateOf
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -48,6 +52,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.parawaleapp.AppLayout.AppLayoutScreen
 import com.example.parawaleapp.PaymentUpi.PaymentScreenLayout
@@ -72,15 +77,14 @@ import com.example.parawaleapp.mainScreen.NavBar
 import com.example.parawaleapp.printer.BluetoothScreen
 import com.example.parawaleapp.sign_in.GoogleAuthUiclient
 import com.example.parawaleapp.sign_in.SignInViewModel
-import com.example.parawaleapp.sign_in.UserData
 import com.example.parawaleapp.ui.theme.MyAppTheme
 import com.google.android.gms.auth.api.identity.Identity
 import com.google.firebase.FirebaseApp
+import com.google.gson.Gson
 import com.phonepe.intent.sdk.api.PhonePe
 import com.phonepe.intent.sdk.api.models.PhonePeEnvironment
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-
 
 class MainActivity : ComponentActivity() {
     private val googleAuthUiClient by lazy {
@@ -96,7 +100,7 @@ class MainActivity : ComponentActivity() {
             this,
             PhonePeEnvironment.SANDBOX, // Change to RELEASE when moving to production
             "PGTESTPAYUAT",
-            null // Replace with your App ID or pass null if you don't have it
+            null // Replace with your App ID or pass null
         )
         setContent {
             Surface(
@@ -105,10 +109,9 @@ class MainActivity : ComponentActivity() {
 
                 FirebaseApp.initializeApp(this)
                 restoreDataFromSharedPreferences(this)
-                //getCartItemsFromSharedPreferences(this)
                 val navController = rememberNavController()
                 val scope = rememberCoroutineScope()
-                var dishData by remember { mutableStateOf<List<Dishfordb>>(emptyList()) }
+                var dishData by rememberSaveable { mutableStateOf<List<Dishfordb>>(emptyList()) }
 
                 NavHost(navController = navController, startDestination = "sign_in") {
                     composable("sign_in") {
@@ -117,7 +120,6 @@ class MainActivity : ComponentActivity() {
 
                         LaunchedEffect(key1 = Unit) {
                             if (googleAuthUiClient.getSinedInUser() != null) {
-                                // Fetch dish data // edited for item reload after restart
                                 getdishes("Items")?.let { newData ->
                                     dishData = newData
                                 }
@@ -135,15 +137,16 @@ class MainActivity : ComponentActivity() {
                                             )
                                             viewModel.onSignInResult(signInResult)
                                         }
+                                    } else {
+                                        viewModel.stopLoading() // Stop loading when login is cancelled
                                     }
-
                                 })
+
                         LaunchedEffect(key1 = state.isSignInSuccessful) {
                             if (state.isSignInSuccessful) {
                                 Toast.makeText(
                                     applicationContext, "Sign in successful", Toast.LENGTH_SHORT
                                 ).show()
-                                // Fetch dish data // edited for item reload after sign in
                                 getdishes("Items")?.let { newData ->
                                     dishData = newData
                                 }
@@ -152,7 +155,14 @@ class MainActivity : ComponentActivity() {
                             }
                         }
 
+                        DisposableEffect(key1 = navController.currentBackStackEntryAsState().value) {
+                            onDispose {
+                                viewModel.stopLoading() // Stop loading when navigating away
+                            }
+                        }
+
                         SignInScreen(state = state, onSignInClick = {
+                            viewModel.startLoading() // Set loading state to true
                             lifecycleScope.launch {
                                 val signInIntentSender = googleAuthUiClient.signIn()
                                 launcher.launch(
@@ -179,6 +189,9 @@ class MainActivity : ComponentActivity() {
 
 
 
+
+
+
 @Composable
 fun MainScreen(
     navController2: NavController,
@@ -190,8 +203,32 @@ fun MainScreen(
     val navController = rememberNavController()
     val context = LocalContext.current
 
+    val cartItems = remember { mutableStateListOf<Dishfordb>() }
+
+    var allOverTotalPrice by rememberSaveable { mutableDoubleStateOf(0.0) }
+    var allOverTotalMrp by rememberSaveable { mutableDoubleStateOf(0.0) }
+
+    fun updateTotals() {
+        allOverTotalPrice = cartItems.sumOf { it.price.removePrefix("₹").toDouble() * it.count }
+        allOverTotalMrp = cartItems.sumOf { it.mrp.removePrefix("₹").toDouble() * it.count }
+    }
+
+    fun saveCartItemsToSharedPreferences() {
+        val sharedPreferences = context.getSharedPreferences("MyPrefs", Context.MODE_PRIVATE)
+        val editor = sharedPreferences.edit()
+
+        // Convert the cartItems list to a JSON string
+        val gson = Gson()
+        val cartItemsJson = gson.toJson(cartItems)
+
+        // Save the JSON string in SharedPreferences
+        editor.putString("cartItems", cartItemsJson)
+        editor.putString("total", allOverTotalPrice.toString())
+        editor.apply()
+    }
+
     var isDarkTheme by remember { mutableStateOf(false) }
-    
+
     val systemInDarkTheme = isSystemInDarkTheme()
     LaunchedEffect(systemInDarkTheme) {
         isDarkTheme = systemInDarkTheme
@@ -212,18 +249,21 @@ fun MainScreen(
                     }
                 })
         }, drawerGesturesEnabled = true, topBar = {
-            NavBar(scaffoldState = scaffoldState, scope = scope, navController = navController, isDarkTheme = isDarkTheme)
+            NavBar(scaffoldState = scaffoldState, scope = scope, navController = navController, isDarkTheme = isDarkTheme, count = cartItems.size)
         }, bottomBar = { MyBottomNavigation(navController = navController) }) {
             Box(Modifier.padding(it)) {
                 NavHost(navController = navController, startDestination = Home.route) {
-                    composable(Home.route) { HomeScreen(DishData = dishData, isDarkTheme = isDarkTheme, onThemeChange = { isDarkTheme = it }) }
-                    composable(Menu.route) { MenuListScreen(dishData) }
-                    composable(Scan_Barcode.route) { BarCodeScreen(dishData) }
-                    composable(Cart.route) { CartDrawerPanel(navController = navController) }
+                    composable(Home.route) { HomeScreen(DishData = dishData, isDarkTheme = isDarkTheme, onThemeChange = { isDarkTheme = it }, cartItems = cartItems, total = allOverTotalPrice, totalmrp = allOverTotalMrp, updateTotals = ::updateTotals, saveCartItemsToSharedPreferences = ::saveCartItemsToSharedPreferences) }
+                    composable(Menu.route) { MenuListScreen(dishData, cartItems = cartItems, total = allOverTotalPrice, totalmrp = allOverTotalMrp, updateTotals = ::updateTotals, saveCartItemsToSharedPreferences = ::saveCartItemsToSharedPreferences) }
+                    composable(Scan_Barcode.route) { BarCodeScreen(dishData, cartItems = cartItems, total = allOverTotalPrice, totalmrp = allOverTotalMrp, updateTotals = ::updateTotals, saveCartItemsToSharedPreferences = ::saveCartItemsToSharedPreferences) }
+                    composable(Cart.route) { CartDrawerPanel(navController = navController, cartItems = cartItems, allOverTotalPrice = allOverTotalPrice, allOverTotalMrp = allOverTotalMrp, updateTotals = ::updateTotals, saveCartItemsToSharedPreferences = ::saveCartItemsToSharedPreferences) }
                     composable(AfterCart.route) {
                         ConfirmCart(
                             navController = navController,
-                            userData = googleAuthUiClient.getSinedInUser()
+                            userData = googleAuthUiClient.getSinedInUser(),
+                            cartItems = cartItems,
+                            total = allOverTotalPrice,
+                            totalmrp = allOverTotalMrp
                         )
                     }
                     composable(ProfileSet.route) {
@@ -279,7 +319,8 @@ fun MainScreen(
                             PaymentScreenLayout(
                                 totalMrp,
                                 totalValue,
-                                googleAuthUiClient.getSinedInUser()
+                                googleAuthUiClient.getSinedInUser(),
+                                cartItems
                             )
                         }
                     }
@@ -288,6 +329,10 @@ fun MainScreen(
         }
     }
 }
+
+
+
+
 
 
 @Composable

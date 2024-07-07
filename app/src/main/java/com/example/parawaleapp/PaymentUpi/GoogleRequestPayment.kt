@@ -1,28 +1,3 @@
-import android.content.Context
-import android.content.Intent
-import android.net.Uri
-import android.widget.Toast
-import androidx.activity.compose.ManagedActivityResultLauncher
-import androidx.activity.result.ActivityResult
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.width
-import androidx.compose.material.AlertDialog
-import androidx.compose.material.Button
-import androidx.compose.material.OutlinedTextField
-import androidx.compose.material.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import com.example.parawaleapp.PaymentUpi.PaymentScreenLayout
-
-
 //fun payUsingGooglePay(
 //    context: Context,
 //    launcher: ManagedActivityResultLauncher<Intent, ActivityResult>,
@@ -112,8 +87,8 @@ import com.example.parawaleapp.PaymentUpi.PaymentScreenLayout
 //    }
 //}
 
-@Preview(showBackground = true)
-@Composable
-fun PaymentScreenLayoutPreview() {
-    PaymentScreenLayout(totalMrp = 1000.0, totalValue = 900.0, userData = null)
-}
+//@Preview(showBackground = true)
+//@Composable
+//fun PaymentScreenLayoutPreview() {
+//    PaymentScreenLayout(totalMrp = 1000.0, totalValue = 900.0, userData = null)
+//}

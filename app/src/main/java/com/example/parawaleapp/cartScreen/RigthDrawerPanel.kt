@@ -51,34 +51,35 @@ import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.example.parawaleapp.R
 import com.example.parawaleapp.database.Dishfordb
-import com.example.parawaleapp.database.cartItems
-import com.example.parawaleapp.database.countItems
-import com.example.parawaleapp.database.saveCartItemsToSharedPreferences
-import com.example.parawaleapp.database.total
-import com.example.parawaleapp.database.totalcount
 import com.example.parawaleapp.mainScreen.truncateString
 
-fun dishIncrement(Dish: Dishfordb, navController: NavController? = null) {
-    Dish.count++
-    totalcount()
-    navController?.navigate("cart")
-
-}
-
-fun dishDecrement(Dish: Dishfordb, navController: NavController? = null) {
-    Dish.count--
-    totalcount()
-    if (Dish.count <= 0) {
-        cartItems.remove(Dish)
-        countItems()
-    }
-    navController?.navigate("cart")
-
-}
+//fun dishIncrement(Dish: Dishfordb, navController: NavController? = null, cartItems: MutableList<Dishfordb>, total: Double, totalmrp: Double) {
+//    Dish.count++
+//   totalcount(cartItems = cartItems, total = total, totalmrp = totalmrp)
+//    navController?.navigate("cart")
+//}
+//
+//fun dishDecrement(Dish: Dishfordb, navController: NavController? = null, cartItems: MutableList<Dishfordb>, total: Double, totalmrp: Double) {
+//    Dish.count--
+//    totalcount( total = total, cartItems = cartItems, totalmrp = totalmrp)
+//    if (Dish.count <= 0) {
+//        cartItems.remove(Dish)
+//        //countItems()
+//    }
+//    navController?.navigate("cart")
+//
+//}
 
 
 @Composable
-fun CartDrawerPanel(navController: NavController? = null) {
+fun CartDrawerPanel(
+    navController: NavController? = null,
+    cartItems: MutableList<Dishfordb>,
+    allOverTotalPrice: Double,
+    allOverTotalMrp: Double,
+    updateTotals: () -> Unit,
+    saveCartItemsToSharedPreferences: () -> Unit
+) {
     if (cartItems.isNotEmpty()) {
         Column(
             modifier = Modifier
@@ -92,7 +93,7 @@ fun CartDrawerPanel(navController: NavController? = null) {
             ) {
                 LazyColumn {
                     items(cartItems) { Dish ->
-                        CartItems(Dish, navController)
+                        CartItems(Dish, cartItems, updateTotals, saveCartItemsToSharedPreferences)
                     }
                 }
             }
@@ -102,7 +103,7 @@ fun CartDrawerPanel(navController: NavController? = null) {
                 verticalAlignment = Alignment.Bottom
             ) {
                 Text(
-                    text = "Total: ₹$total",
+                    text = "Total: ₹${allOverTotalPrice}",
                     fontFamily = FontFamily.Cursive,
                     fontWeight = FontWeight.W900,
                     color = MaterialTheme.colors.onBackground,
@@ -157,8 +158,14 @@ fun CartDrawerPanel(navController: NavController? = null) {
     }
 }
 
+
 @Composable
-fun CartItems(Dish: Dishfordb, navController: NavController? = null) {
+fun CartItems(
+    Dish: Dishfordb,
+    cartItems: MutableList<Dishfordb>,
+    updateTotals: () -> Unit,
+    saveCartItemsToSharedPreferences: () -> Unit
+) {
     val context = LocalContext.current
     var Dishcount by remember { mutableStateOf(TextFieldValue(Dish.count.toString())) }
 
@@ -201,8 +208,13 @@ fun CartItems(Dish: Dishfordb, navController: NavController? = null) {
 
                     IconButton(
                         onClick = {
-                            dishDecrement(Dish, navController)
-                            saveCartItemsToSharedPreferences(context)
+                            Dish.count--
+                            Dishcount = TextFieldValue(Dish.count.toString())
+                            if (Dish.count <= 0) {
+                                cartItems.remove(Dish)
+                            }
+                            updateTotals()
+                            saveCartItemsToSharedPreferences()
                         },
                         Modifier
                             .width(24.dp)
@@ -228,22 +240,20 @@ fun CartItems(Dish: Dishfordb, navController: NavController? = null) {
                                     if (input > 0) {
                                         Dishcount = it
                                         Dish.count = input
-                                        totalcount()
-                                        saveCartItemsToSharedPreferences(context)
+                                        updateTotals()
+                                        saveCartItemsToSharedPreferences()
                                     } else if (input == 0) {
                                         Dishcount = it
                                         Dish.count = input
-                                        totalcount()
+                                        updateTotals()
                                         cartItems.remove(Dish)
-                                        countItems()
-                                        saveCartItemsToSharedPreferences(context)
+                                        saveCartItemsToSharedPreferences()
                                     }
                                 }
                             } else {
                                 Dishcount = it
                                 Dish.count = 0
-                                totalcount()
-                                countItems()
+                                updateTotals()
                             }
                         },
                         keyboardOptions = KeyboardOptions.Default.copy(
@@ -259,8 +269,10 @@ fun CartItems(Dish: Dishfordb, navController: NavController? = null) {
                     )
                     IconButton(
                         onClick = {
-                            dishIncrement(Dish, navController)
-                            saveCartItemsToSharedPreferences(context)
+                            Dish.count++
+                            Dishcount = TextFieldValue(Dish.count.toString())
+                            updateTotals()
+                            saveCartItemsToSharedPreferences()
                         },
                         Modifier
                             .width(24.dp)
@@ -298,21 +310,22 @@ fun CartItems(Dish: Dishfordb, navController: NavController? = null) {
                             fontSize = 12.sp
                         )
                         Text(
-                            text = " -${"%.2f".format(((Dish.mrp.trimStart('₹').toFloat() - Dish.price.trimStart('₹').toFloat()) / Dish.mrp.trimStart('₹').toFloat()) * 100)}%",
-                            style = TextStyle(
-                                color = Color.Red,
-                                shadow = Shadow(
+                            text = " -${
+                                "%.2f".format(
+                                    ((Dish.mrp.trimStart('₹').toFloat() - Dish.price.trimStart('₹')
+                                        .toFloat()) / Dish.mrp.trimStart('₹').toFloat()) * 100
+                                )
+                            }%", style = TextStyle(
+                                color = Color.Red, shadow = Shadow(
                                     color = Color.DarkGray,
                                     offset = Offset(1.0f, 1.0f),
                                     blurRadius = 3f
                                 )
-                            ),
-                            fontSize = 12.sp
+                            ), fontSize = 12.sp
                         )
                     }
                     Column(
-                        horizontalAlignment = Alignment.End,
-                        modifier = Modifier.fillMaxWidth()
+                        horizontalAlignment = Alignment.End, modifier = Modifier.fillMaxWidth()
                     ) {
                         Row {
                             Text(
@@ -339,3 +352,4 @@ fun CartItems(Dish: Dishfordb, navController: NavController? = null) {
         thickness = 1.dp
     )
 }
+

@@ -12,8 +12,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Button
 import androidx.compose.material.ButtonDefaults
+import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.Divider
 import androidx.compose.material.IconButton
 import androidx.compose.material.OutlinedTextField
@@ -38,6 +40,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import com.example.parawaleapp.sign_in.SignInState
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
@@ -86,19 +89,32 @@ fun SignInScreen(
         mutableStateOf(TextFieldValue(""))
     }
     val context = LocalContext.current
+
     LaunchedEffect(key1 = state.signInError) {
         state.signInError?.let {
             Toast.makeText(context, it, Toast.LENGTH_LONG).show()
-
         }
     }
+
+    if (state.isLoading) {
+        Dialog(onDismissRequest = {}) {
+            Box(
+                modifier = Modifier
+                    .size(100.dp)
+                    .background(Color.White, shape = RoundedCornerShape(8.dp)),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator()
+            }
+        }
+    }
+
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .background(Color(0xFFC5C1B1)),
         contentAlignment = Alignment.Center
     ) {
-
 
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -155,7 +171,6 @@ fun SignInScreen(
                         fontWeight = FontWeight.Bold,
                         fontSize = 14.sp
                     )
-
                 }
                 Button(
                     onClick = {
@@ -170,7 +185,6 @@ fun SignInScreen(
                                 Toast.LENGTH_LONG
                             ).show()
                         }
-
                     }, colors = ButtonDefaults.buttonColors(
                         Color(0xFF4D7467)
                     ), modifier = Modifier.padding(10.dp)
@@ -219,8 +233,6 @@ fun SignInScreen(
                             modifier = Modifier.size(44.dp)
                         )
                     }
-
-
                 }
             }
             Column(Modifier.fillMaxHeight(), verticalArrangement = Arrangement.Bottom) {

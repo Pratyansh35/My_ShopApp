@@ -7,19 +7,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import com.example.parawaleapp.R
 import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
 
 
 //User Info  ImageBitmap.imageResource(R.drawable.mypic4)
 var name by mutableStateOf("")
 var phoneno by mutableStateOf("")
 var img by mutableStateOf<Uri?>(null)
-
-// FOR CART
-var count by mutableStateOf(0)
-var total by mutableStateOf(0.00)
-var totalmrp by mutableStateOf(0.00)
-var cartItems by mutableStateOf(mutableListOf<Dishfordb>())
 
 fun saveDataToSharedPreferences(context: Context) {
     val sharedPreferences = context.getSharedPreferences("MyPrefs", Context.MODE_PRIVATE)
@@ -39,34 +32,33 @@ fun restoreDataFromSharedPreferences(context: Context) {
     img = Uri.parse(imgUriString)
 }
 
-fun saveCartItemsToSharedPreferences(context: Context) {
-    val sharedPreferences = context.getSharedPreferences("MyPrefs", Context.MODE_PRIVATE)
-    val editor = sharedPreferences.edit()
+//fun saveCartItemsToSharedPreferences(context: Context, cartItems: List<Dishfordb>, total: Double) {
+//    val sharedPreferences = context.getSharedPreferences("MyPrefs", Context.MODE_PRIVATE)
+//    val editor = sharedPreferences.edit()
+//
+//    // Convert the cartItems list to a JSON string
+//    val gson = Gson()
+//    val cartItemsJson = gson.toJson(cartItems)
+//
+//    // Save the JSON string in SharedPreferences
+//    editor.putString("cartItems", cartItemsJson)
+//   // editor.putString("count", count.toString())
+//    editor.putString("total", total.toString())
+//    editor.apply()
+//}
 
-    // Convert the cartItems list to a JSON string
-    val gson = Gson()
-    val cartItemsJson = gson.toJson(cartItems)
-
-    // Save the JSON string in SharedPreferences
-    editor.putString("cartItems", cartItemsJson)
-    editor.putString("count", count.toString())
-    editor.putString("total", total.toString())
-    editor.apply()
-}
-
-fun getCartItemsFromSharedPreferences(context: Context) {
-    val sharedPreferences = context.getSharedPreferences("MyPrefs", Context.MODE_PRIVATE)
-
-    // Retrieve the JSON string from SharedPreferences
-    val cartItemsJson = sharedPreferences.getString("cartItems", "")
-
-    count = sharedPreferences.getString("count", "")?.toInt() ?: 0
-    total = sharedPreferences.getString("total", "")?.toDouble() ?: 0.00
-    // Convert the JSON string back to a MutableList<Dishfordb>
-    val gson = Gson()
-    val type = object : TypeToken<MutableList<Dishfordb>>() {}.type
-    cartItems = gson.fromJson(cartItemsJson, type) ?: mutableListOf()
-}
+//fun getCartItemsFromSharedPreferences(context: Context, cartItems: MutableList<Dishfordb>, count: Int, total: Double) {
+//    val sharedPreferences = context.getSharedPreferences("MyPrefs", Context.MODE_PRIVATE)
+//
+//    // Retrieve the JSON string from SharedPreferences
+//    val cartItemsJson = sharedPreferences.getString("cartItems", "")
+//
+//    total = sharedPreferences.getString("total", "")?.toDouble() ?: 0.00
+//    // Convert the JSON string back to a MutableList<Dishfordb>
+//    val gson = Gson()
+//    val type = object : TypeToken<MutableList<Dishfordb>>() {}.type
+//    cartItems = gson.fromJson(cartItemsJson, type) ?: mutableListOf()
+//}
 
 fun clearDataFromSharedPreferences(context: Context) {
     val sharedPreferences = context.getSharedPreferences("MyPrefs", Context.MODE_PRIVATE)
@@ -77,26 +69,6 @@ fun clearDataFromSharedPreferences(context: Context) {
     }
 }
 
-
-fun totalcount() {
-    total = 0.0
-    totalmrp = 0.00
-    for (i in cartItems) {
-        val priceWithoutCurrency = i.price.removePrefix("₹")
-        val mrpWithoutCurrency = i.mrp.removePrefix("₹")
-        val priceAsDouble = priceWithoutCurrency.toDoubleOrNull()
-        val mrpAsDouble = mrpWithoutCurrency.toDoubleOrNull()
-        if (priceAsDouble != null && mrpAsDouble != null) {
-            total += (i.count * priceAsDouble).toInt()
-            totalmrp += (i.count * mrpAsDouble).toInt()
-        }
-    }
-}
-
-
-fun countItems() {
-    count = cartItems.size
-}
 
 
 val Categories = listOf(

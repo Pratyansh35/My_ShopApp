@@ -56,6 +56,7 @@ fun LeftDrawerPanel(
     Column(
         Modifier
             .fillMaxSize()
+            .background(MaterialTheme.colors.background)
             .scrollable(
                 rememberScrollState(),
                 orientation = Orientation.Vertical
@@ -105,7 +106,7 @@ fun LeftDrawerPanel(
                             } else name,
                             fontSize = 25.sp,
                             fontWeight = FontWeight.ExtraBold,
-                            color = MaterialTheme.colors.onPrimary
+                            color = MaterialTheme.colors.onSurface
                         )
                     }
                     if (userData?.userEmail != null) {
@@ -115,7 +116,7 @@ fun LeftDrawerPanel(
                             fontWeight = FontWeight.Bold,
                             fontFamily = FontFamily.SansSerif,
                             textAlign = TextAlign.Center,
-                            color = MaterialTheme.colors.onSecondary
+                            color = MaterialTheme.colors.onBackground
                         )
                     }
                 }

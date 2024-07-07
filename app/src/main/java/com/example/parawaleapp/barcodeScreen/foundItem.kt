@@ -26,15 +26,15 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.example.parawaleapp.database.Dishfordb
-import com.example.parawaleapp.database.cartItems
-import com.example.parawaleapp.database.countItems
-import com.example.parawaleapp.database.saveCartItemsToSharedPreferences
-import com.example.parawaleapp.database.totalcount
 import com.example.parawaleapp.mainScreen.truncateString
 
 @Composable
 fun ItemScreen(
-    dish: Dishfordb, showItemScreen: () -> Unit
+    dish: Dishfordb, showItemScreen: () -> Unit,
+    cartItems: MutableList<Dishfordb>,
+    total: Double,
+    updateTotals: () -> Unit,
+    saveCartItemsToSharedPreferences: () -> Unit
 ) {
     val context = LocalContext.current
 
@@ -106,9 +106,8 @@ fun ItemScreen(
                     cartItems.add(dish)
                 }
                 dish.count++
-                countItems()
-                totalcount()
-                saveCartItemsToSharedPreferences(context)
+                updateTotals()
+                saveCartItemsToSharedPreferences()
                 Toast.makeText(context, "Item added to cart", Toast.LENGTH_SHORT).show()
                 showItemScreen()
             },

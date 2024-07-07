@@ -11,7 +11,7 @@ import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -36,11 +36,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.app.ActivityCompat
 import androidx.navigation.NavController
-import com.example.parawaleapp.SendViewOrders.sendOrders
 import com.example.parawaleapp.database.Dishfordb
-import com.example.parawaleapp.database.cartItems
-import com.example.parawaleapp.database.total
-import com.example.parawaleapp.database.totalmrp
 import com.example.parawaleapp.sign_in.UserData
 import java.io.IOException
 import java.io.OutputStream
@@ -147,13 +143,11 @@ fun ConfirmItems(dish: Dishfordb) {
 var selectedPrinter by mutableStateOf<String>("")
 
 @Composable
-fun ConfirmCart(navController: NavController? = null, userData: UserData?) {
+fun ConfirmCart(navController: NavController? = null, userData: UserData?, cartItems: List<Dishfordb>, totalmrp: Double, total: Double) {
     val context = LocalContext.current
     Column(
         modifier = Modifier
-            .fillMaxWidth()
-            .fillMaxHeight()
-            .padding(10.dp),
+            .fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         LazyColumn(modifier = Modifier.weight(0.8f)) {
@@ -161,7 +155,6 @@ fun ConfirmCart(navController: NavController? = null, userData: UserData?) {
                 Text(
                     text = "Parawale",
                     modifier = Modifier
-                        .padding(10.dp)
                         .fillMaxWidth(),
                     textAlign = TextAlign.Center,
                     fontSize = 45.sp,
@@ -172,7 +165,7 @@ fun ConfirmCart(navController: NavController? = null, userData: UserData?) {
                 Text(
                     text = "Cart Summary",
                     modifier = Modifier
-                        .padding(10.dp)
+                        .padding(4.dp)
                         .fillMaxWidth(),
                     textAlign = TextAlign.Center,
                     fontSize = 20.sp,
@@ -180,19 +173,25 @@ fun ConfirmCart(navController: NavController? = null, userData: UserData?) {
                 )
                 CartLayout()
             }
+            
             items(cartItems) { dish ->
                 ConfirmItems(dish)
             }
         }
         Row(
             modifier = Modifier
-                .padding(10.dp)
-                .fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
+                .fillMaxWidth()
+                .padding(start = 8.dp, end = 8.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(text = "Total MRP: ₹${totalmrp}", modifier = Modifier.padding(10.dp))
-            Row(modifier = Modifier.padding(10.dp)) {
-                Text(text = "Discount on MRP: ")
+            Row {
+                Text(text = "Total MRP: ", fontSize = 14.sp)
+                Text(text = "₹${totalmrp}", fontWeight = FontWeight.Bold)
+            }
+
+            Row() {
+                Text(text = "Discount: ", fontSize = 14.sp)
                 Text(
                     text = "-₹${totalmrp - total}",
                     fontWeight = FontWeight.Bold,
@@ -201,9 +200,8 @@ fun ConfirmCart(navController: NavController? = null, userData: UserData?) {
             }
         }
         Text(
-            text = "Total Amount: ₹$total",
+            text = "Total Amount: ₹${total}",
             modifier = Modifier
-                .padding(10.dp)
                 .fillMaxWidth(),
             textAlign = TextAlign.Center,
             fontSize = 20.sp,
@@ -221,7 +219,7 @@ fun ConfirmCart(navController: NavController? = null, userData: UserData?) {
                     }
 
                     val printData =
-                        formatForPrinting(context, cartItems, totalmrp.toDouble(), total.toDouble())
+                        formatForPrinting(context, cartItems, totalmrp, total)
                     printData(context, selectedPrinter, printData)
                 },
                 colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFFF4CE14)),

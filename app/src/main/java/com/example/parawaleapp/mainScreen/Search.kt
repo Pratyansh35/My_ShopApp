@@ -20,6 +20,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -32,7 +33,7 @@ import com.example.parawaleapp.database.Categories
 import com.example.parawaleapp.database.Dishfordb
 
 @Composable
-fun Search(DishData: List<Dishfordb>) {
+fun Search(DishData: List<Dishfordb>, cartItems: SnapshotStateList<Dishfordb>, total: Double, totalmrp: Double, updateTotals: () -> Unit, saveCartItemsToSharedPreferences: () -> Unit) {
     var searches by remember { mutableStateOf(TextFieldValue("")) }
     var visible by remember { mutableStateOf(true) }
 
@@ -79,7 +80,7 @@ fun Search(DishData: List<Dishfordb>) {
 
             LazyColumn {
                 items(DishData) { Dish ->
-                    MenuDish(Dish)
+                    MenuDish(Dish, cartItems = cartItems, total = total, totalmrp = totalmrp, updateTotals, saveCartItemsToSharedPreferences)
                 }
             }
         } else {
@@ -101,21 +102,21 @@ fun Search(DishData: List<Dishfordb>) {
                     }
                 }
 
-                SearchFilter(filteredDishes.value)
+                SearchFilter(filteredDishes.value, cartItems = cartItems, total = total, totalmrp = totalmrp, updateTotals = updateTotals, saveCartItemsToSharedPreferences = saveCartItemsToSharedPreferences)
             }
         }
     }
 }
 
 @Composable
-fun SearchFilter(filteredDishes: List<Dishfordb>) {
+fun SearchFilter(filteredDishes: List<Dishfordb>, cartItems: SnapshotStateList<Dishfordb>, total: Double, totalmrp: Double, updateTotals: () -> Unit, saveCartItemsToSharedPreferences: () -> Unit) {
     Column {
         Divider(
             modifier = Modifier.padding(8.dp), color = Color.Gray, thickness = 1.dp
         )
         LazyColumn {
             items(filteredDishes) { dish ->
-                MenuDish(dish)
+                MenuDish(dish, cartItems = cartItems, total = total, totalmrp = totalmrp, updateTotals = updateTotals, saveCartItemsToSharedPreferences = saveCartItemsToSharedPreferences)
             }
         }
     }

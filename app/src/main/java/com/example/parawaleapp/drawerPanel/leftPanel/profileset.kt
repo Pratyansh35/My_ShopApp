@@ -170,9 +170,7 @@ fun Profileset(userData: UserData?) {
                     ).show()
                 }
             },
-            colors = androidx.compose.material.ButtonDefaults.buttonColors(
-                backgroundColor = Color(0xFFF4CE14)
-            ),
+
             shape = RoundedCornerShape(40),
             modifier = Modifier
                 .padding(32.dp)

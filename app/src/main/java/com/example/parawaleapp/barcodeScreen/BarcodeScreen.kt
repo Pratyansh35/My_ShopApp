@@ -41,11 +41,25 @@ import java.util.concurrent.Executors
 
 
 @Composable
-fun BarCodeScreen(DishData: List<Dishfordb>) {
+fun BarCodeScreen(
+    DishData: List<Dishfordb>,
+    cartItems: MutableList<Dishfordb>,
+    total: Double,
+    totalmrp: Double,
+    updateTotals: () -> Unit,
+    saveCartItemsToSharedPreferences: () -> Unit
+) {
     var showItemScreen by remember { mutableStateOf(false) }
     var gotDish by remember { mutableStateOf<Dishfordb?>(null) }
     if (showItemScreen && gotDish != null) {
-        ItemScreen(dish = gotDish!!, showItemScreen = { showItemScreen = false })
+        ItemScreen(
+            dish = gotDish!!,
+            showItemScreen = { showItemScreen = false },
+            cartItems = cartItems,
+            total = total,
+            updateTotals = updateTotals,
+            saveCartItemsToSharedPreferences = saveCartItemsToSharedPreferences
+        )
     } else {
         barCodeScreen(showItemScreen = {
             showItemScreen = true
@@ -95,20 +109,20 @@ fun barCodeScreen(showItemScreen: (Dishfordb) -> Unit, DishData: List<Dishfordb>
                                     )
                                     val scanner: BarcodeScanner = BarcodeScanning.getClient()
                                     scanner.process(image).addOnSuccessListener { barcodes ->
-                                            for (barcode in barcodes) {
-                                                val rawValue = barcode.rawValue
-                                                if (rawValue != null) {
-                                                    scannedBarcode.value = rawValue
-                                                }
-                                                Log.e("BarcodeScanner", "Barcode detected: $rawValue")
+                                        for (barcode in barcodes) {
+                                            val rawValue = barcode.rawValue
+                                            if (rawValue != null) {
+                                                scannedBarcode.value = rawValue
                                             }
-                                        }.addOnFailureListener { e ->
-                                            Log.e(
-                                                "BarcodeScanner", "Barcode scanning failed", e
-                                            )
-                                        }.addOnCompleteListener {
-                                            imageProxy.close()
+                                            Log.e("BarcodeScanner", "Barcode detected: $rawValue")
                                         }
+                                    }.addOnFailureListener { e ->
+                                        Log.e(
+                                            "BarcodeScanner", "Barcode scanning failed", e
+                                        )
+                                    }.addOnCompleteListener {
+                                        imageProxy.close()
+                                    }
                                 } else {
                                     imageProxy.close()
                                 }
@@ -173,18 +187,14 @@ fun RequestCameraPermission() {
 
         permissionState.status.shouldShowRationale -> {
             Toast.makeText(
-                context,
-                "Camera permission is needed to scan barcodes",
-                Toast.LENGTH_SHORT
+                context, "Camera permission is needed to scan barcodes", Toast.LENGTH_SHORT
             ).show()
 
         }
 
         !permissionState.status.isGranted -> {
             Toast.makeText(
-                context,
-                "Camera permission denied. Cannot proceed further.",
-                Toast.LENGTH_SHORT
+                context, "Camera permission denied. Cannot proceed further.", Toast.LENGTH_SHORT
             ).show()
         }
     }

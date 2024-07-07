@@ -13,12 +13,25 @@ class SignInViewModel : ViewModel() {
         _state.update {
             it.copy(
                 isSignInSuccessful = result.data != null,
-                signInError = result.errorMessage
+                signInError = result.errorMessage,
+                isLoading = false // Update loading state
             )
         }
     }
 
     fun resetState() {
         _state.update { SignInState() }
+    }
+
+    fun startLoading() {
+        _state.update {
+            it.copy(isLoading = true)
+        }
+    }
+
+    fun stopLoading() {
+        _state.update {
+            it.copy(isLoading = false)
+        }
     }
 }

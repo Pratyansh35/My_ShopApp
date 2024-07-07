@@ -51,13 +51,13 @@ fun ModifyScreen(dish: Dishfordb, showModifyScreen: () -> Unit) {
     var itembarcode by remember { mutableStateOf(dish.barcode) }
     var Itemmrp by remember { mutableStateOf(dish.mrp.trimStart('₹')) }
     val context = LocalContext.current
-    val singlePhotoPickerLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.GetContent(),
-        onResult = { uri ->
-            if (uri != null) {
-                selectImgUri = uri.toString()
-            }
-        })
+    val singlePhotoPickerLauncher =
+        rememberLauncherForActivityResult(contract = ActivityResultContracts.GetContent(),
+            onResult = { uri ->
+                if (uri != null) {
+                    selectImgUri = uri.toString()
+                }
+            })
 
     Column(
         modifier = Modifier
@@ -76,6 +76,7 @@ fun ModifyScreen(dish: Dishfordb, showModifyScreen: () -> Unit) {
                 .clickable {
                     singlePhotoPickerLauncher.launch("image/*")
                 })
+
         OutlinedTextField(value = name,
             onValueChange = { name = it },
             label = { Text(text = "Product Name") },
@@ -116,11 +117,12 @@ fun ModifyScreen(dish: Dishfordb, showModifyScreen: () -> Unit) {
                 keyboardType = KeyboardType.Text
             )
         )
+
         Spacer(modifier = Modifier.height(8.dp))
-        OutlinedTextField(
-            value = weight,
+
+        OutlinedTextField(value = weight,
             onValueChange = { weight = it },
-            label = { androidx.compose.material3.Text(text = "Product weight") },
+            label = { Text(text = "Product weight") },
             modifier = Modifier
                 .align(Alignment.CenterHorizontally)
                 .padding(start = 10.dp, end = 10.dp, top = 4.dp, bottom = 4.dp),
@@ -138,10 +140,9 @@ fun ModifyScreen(dish: Dishfordb, showModifyScreen: () -> Unit) {
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween // Ensures even spacing between elements
         ) {
-            OutlinedTextField(
-                value = Itemmrp,
+            OutlinedTextField(value = Itemmrp,
                 onValueChange = { Itemmrp = it },
-                label = { androidx.compose.material3.Text(text = "Product MRP ₹") },
+                label = { Text(text = "Product MRP ₹") },
                 modifier = Modifier
                     .padding(4.dp)
                     .weight(1f), // Weight ensures equal space for each TextField
@@ -152,29 +153,26 @@ fun ModifyScreen(dish: Dishfordb, showModifyScreen: () -> Unit) {
                 )
             )
 
-            OutlinedTextField(
-                value = price,
+            OutlinedTextField(value = price,
                 onValueChange = { price = it },
-                label = { androidx.compose.material3.Text(text = "Product Price ₹") },
+                label = { Text(text = "Product Price ₹") },
                 modifier = Modifier
                     .padding(4.dp)
-                    .weight(1f), // Weight ensures equal space for each TextField
+                    .weight(1f),
                 maxLines = 1,
-                textStyle = TextStyle(fontSize = 14.sp), // Slightly increased font size
+                textStyle = TextStyle(fontSize = 14.sp),
                 keyboardOptions = KeyboardOptions.Default.copy(
                     keyboardType = KeyboardType.Number
                 )
             )
 
             if (price.text.isNotEmpty() && Itemmrp.isNotEmpty() && price.text.toFloat() < Itemmrp.toFloat()) {
-                androidx.compose.material3.Text(
+                Text(
                     text = " -${"%.2f".format(((Itemmrp.toFloat() - price.text.toFloat()) / Itemmrp.toFloat()) * 100)}%",
                     style = TextStyle(
-                        fontSize = 14.sp, // Slightly increased font size
-                        fontWeight = FontWeight.Medium, // Medium weight for better readability
-                        color = Color.Gray
+                        fontSize = 14.sp, fontWeight = FontWeight.Medium, color = Color.Gray
                     ),
-                    modifier = Modifier.padding(start = 4.dp, end = 1.dp) // Consistent padding
+                    modifier = Modifier.padding(start = 4.dp, end = 1.dp)
                 )
             }
         }
@@ -183,7 +181,7 @@ fun ModifyScreen(dish: Dishfordb, showModifyScreen: () -> Unit) {
 
         OutlinedTextField(value = itembarcode,
             onValueChange = { itembarcode = it },
-            label = { androidx.compose.material3.Text(text = "Product barcode") },
+            label = { Text(text = "Product barcode") },
             modifier = Modifier
                 .align(Alignment.CenterHorizontally)
                 .padding(start = 10.dp, end = 10.dp, top = 4.dp, bottom = 4.dp),
@@ -212,12 +210,13 @@ fun ModifyScreen(dish: Dishfordb, showModifyScreen: () -> Unit) {
                             mrp = "₹$Itemmrp"
                         )
                         // Update the database with the updated Dishfordb object
-                        datareference.child("Items").child(name.text).setValue(updatedDish).addOnSuccessListener {
-                            Toast.makeText(
-                                context, "Item Updated Successfully", Toast.LENGTH_SHORT
-                            ).show()
-                            showModifyScreen()
-                        }.addOnFailureListener { exception ->
+                        datareference.child("Items").child(name.text).setValue(updatedDish)
+                            .addOnSuccessListener {
+                                Toast.makeText(
+                                    context, "Item Updated Successfully", Toast.LENGTH_SHORT
+                                ).show()
+                                showModifyScreen()
+                            }.addOnFailureListener { exception ->
                             Toast.makeText(context, exception.message, Toast.LENGTH_SHORT).show()
                             Log.d("uploadData", "addItemToDatabase: ${exception.message}")
                         }
@@ -230,7 +229,7 @@ fun ModifyScreen(dish: Dishfordb, showModifyScreen: () -> Unit) {
                                         name = name.text,
                                         description = description.text,
                                         weight = weight.text,
-                                        price = '₹' +price.text,
+                                        price = '₹' + price.text,
                                         category = category.text,
                                         imageUrl = imageUrl,
                                         barcode = itembarcode,
