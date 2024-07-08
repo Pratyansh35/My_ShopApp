@@ -29,11 +29,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
 import com.example.parawaleapp.database.Categories
 import com.example.parawaleapp.database.Dishfordb
 
 @Composable
-fun Search(DishData: List<Dishfordb>, cartItems: SnapshotStateList<Dishfordb>, total: Double, totalmrp: Double, updateTotals: () -> Unit, saveCartItemsToSharedPreferences: () -> Unit) {
+fun Search(DishData: List<Dishfordb>, cartItems: SnapshotStateList<Dishfordb>, updateTotals: () -> Unit, saveCartItemsToSharedPreferences: () -> Unit, navController: NavController) {
     var searches by remember { mutableStateOf(TextFieldValue("")) }
     var visible by remember { mutableStateOf(true) }
 
@@ -80,7 +81,7 @@ fun Search(DishData: List<Dishfordb>, cartItems: SnapshotStateList<Dishfordb>, t
 
             LazyColumn {
                 items(DishData) { Dish ->
-                    MenuDish(Dish, cartItems = cartItems, total = total, totalmrp = totalmrp, updateTotals, saveCartItemsToSharedPreferences)
+                    LinearLayoutItems(Dish, cartItems = cartItems, updateTotals, saveCartItemsToSharedPreferences, navController = navController)
                 }
             }
         } else {
@@ -102,21 +103,21 @@ fun Search(DishData: List<Dishfordb>, cartItems: SnapshotStateList<Dishfordb>, t
                     }
                 }
 
-                SearchFilter(filteredDishes.value, cartItems = cartItems, total = total, totalmrp = totalmrp, updateTotals = updateTotals, saveCartItemsToSharedPreferences = saveCartItemsToSharedPreferences)
+                SearchFilter(filteredDishes.value, cartItems = cartItems, updateTotals = updateTotals, saveCartItemsToSharedPreferences = saveCartItemsToSharedPreferences, navController = navController)
             }
         }
     }
 }
 
 @Composable
-fun SearchFilter(filteredDishes: List<Dishfordb>, cartItems: SnapshotStateList<Dishfordb>, total: Double, totalmrp: Double, updateTotals: () -> Unit, saveCartItemsToSharedPreferences: () -> Unit) {
+fun SearchFilter(filteredDishes: List<Dishfordb>, cartItems: SnapshotStateList<Dishfordb>, updateTotals: () -> Unit, saveCartItemsToSharedPreferences: () -> Unit, navController: NavController) {
     Column {
         Divider(
             modifier = Modifier.padding(8.dp), color = Color.Gray, thickness = 1.dp
         )
         LazyColumn {
             items(filteredDishes) { dish ->
-                MenuDish(dish, cartItems = cartItems, total = total, totalmrp = totalmrp, updateTotals = updateTotals, saveCartItemsToSharedPreferences = saveCartItemsToSharedPreferences)
+                LinearLayoutItems(dish, cartItems = cartItems,  updateTotals = updateTotals, saveCartItemsToSharedPreferences = saveCartItemsToSharedPreferences, navController = navController)
             }
         }
     }

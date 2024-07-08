@@ -1,10 +1,16 @@
 package com.example.parawaleapp.database
 
+import android.os.Parcelable
 import android.util.Log
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.tasks.await
+import kotlinx.parcelize.Parcelize
 
+import android.os.Parcel
+
+
+@Parcelize
 data class Dishfordb(
     val name: String = "",
     val price: String = "",
@@ -15,8 +21,23 @@ data class Dishfordb(
     val imageUrl: String,
     val barcode: String,
     val mrp: String
-) {
-    constructor() : this("", "", 0,"", "", "", "", "", "")
+) : Parcelable {constructor() : this("", "", 0,"", "", "", "", "", "")
+
+    override fun describeContents(): Int {
+        return 0
+    }
+
+    override fun writeToParcel(dest: Parcel, flags: Int) {
+        dest.writeString(name)
+        dest.writeString(price)
+        dest.writeInt(count)
+        dest.writeString(weight)
+        dest.writeString(description)
+        dest.writeString(category)
+        dest.writeString(imageUrl)
+        dest.writeString(barcode)
+        dest.writeString(mrp)
+    }
 }
 
 

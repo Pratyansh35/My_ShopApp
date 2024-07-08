@@ -61,13 +61,11 @@ object BluetoothScreenRoute : Destinations {
 
 }
 
-
 object ViewOrder : Destinations {
     override val route = "viewOrders"
     override val icon = R.drawable.ic_menu
     override val title = "View Orders"
 }
-
 
 object PreviousOrders : Destinations {
     override val route = "PreviousOrders"
@@ -78,12 +76,6 @@ object SettingScreen : Destinations {
     override val route = "SettingScreen"
     override val icon = R.drawable.usericon
     override val title = "SettingScreen"
-}
-
-object PaymentScreen : Destinations {
-    override val route = "PaymentScreen"
-    override val icon = R.drawable.usericon
-    override val title = "PaymentScreen"
 }
 
 object AppLayout : Destinations {

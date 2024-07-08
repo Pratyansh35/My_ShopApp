@@ -1,6 +1,5 @@
 package com.example.parawaleapp.PaymentUpi
 
-import Phonepe
 import android.content.Context
 import android.content.Intent
 import androidx.activity.compose.ManagedActivityResultLauncher
@@ -30,6 +29,7 @@ import androidx.compose.material.OutlinedTextField
 import androidx.compose.material.Slider
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
+import androidx.compose.material.TextButton
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.runtime.Composable
@@ -37,9 +37,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontStyle
@@ -48,6 +48,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.parawaleapp.R
 import com.example.parawaleapp.SendViewOrders.sendOrders
 import com.example.parawaleapp.database.Dishfordb
 import com.example.parawaleapp.sign_in.UserData
@@ -58,9 +59,9 @@ fun PaymentScreenLayout(
     totalMrp: Double,
     totalValue: Double,
     userData: UserData?,
-    cartItems: List<Dishfordb>
+    cartItems: SnapshotStateList<Dishfordb>,
+    isDarkTheme: Boolean
 ) {
-
     val merchantId = "PGTESTPAYUAT"
     val saltkey = "099eb0cd-02cf-4e2a-8aca-3e6c6aff0399"
     val merchantTransactionId = UUID.randomUUID().toString()
@@ -80,12 +81,28 @@ fun PaymentScreenLayout(
         if (result.resultCode == android.app.Activity.RESULT_OK) {
             val data: Intent? = result.data
             val response = data?.getStringExtra("response") ?: "nothing"
-            handleUPIResponse(context, response, userData, merchantId, totalMrp, totalValue, selectedAmount) { result ->
+            handleUPIResponse(
+                context,
+                response,
+                userData,
+                merchantId,
+                totalMrp,
+                totalValue,
+                selectedAmount
+            ) { result ->
                 transactionResult = result
                 showDialog = true
             }
         } else {
-            handleUPIResponse(context, "nothing", userData, merchantId, totalMrp, totalValue, selectedAmount) { result ->
+            handleUPIResponse(
+                context,
+                "nothing",
+                userData,
+                merchantId,
+                totalMrp,
+                totalValue,
+                selectedAmount
+            ) { result ->
                 transactionResult = result
                 showDialog = true
             }
@@ -98,23 +115,23 @@ fun PaymentScreenLayout(
             .padding(10.dp), color = MaterialTheme.colors.background
     ) {
         Column(
-            verticalArrangement = Arrangement.Center,
+            verticalArrangement = Arrangement.Top,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
                 text = "Payment Information",
                 fontWeight = FontWeight.Bold,
                 fontSize = 24.sp,
-                modifier = Modifier.padding(bottom = 24.dp)
+                modifier = Modifier.padding(bottom = 18.dp, top = 8.dp)
             )
 
             Card(
                 elevation = 4.dp,
                 shape = RoundedCornerShape(8.dp),
-                modifier = Modifier.padding(bottom = 16.dp)
+                modifier = Modifier.padding(bottom = 8.dp)
             ) {
                 Column(
-                    modifier = Modifier.padding(16.dp),
+                    modifier = Modifier.padding(8.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     Row(
@@ -133,15 +150,24 @@ fun PaymentScreenLayout(
                             textAlign = TextAlign.Center
                         )
                     }
-                    PaymentInfoRow(label = "Your total bill is", value = String.format("%.2f", totalValue))
-                    PaymentInfoRow(label = "You have to pay", value = String.format("%.2f", selectedAmount))
-                    PaymentInfoRow(label = "Remaining Amount", value = String.format("%.2f", totalValue - selectedAmount))
+                    PaymentInfoRow(
+                        label = "Your total bill is",
+                        value = String.format("%.2f", totalValue)
+                    )
+                    PaymentInfoRow(
+                        label = "You have to pay",
+                        value = String.format("%.2f", selectedAmount)
+                    )
+                    PaymentInfoRow(
+                        label = "Remaining Amount",
+                        value = String.format("%.2f", totalValue - selectedAmount)
+                    )
                     Slider(
                         value = selectedPercentage,
                         onValueChange = { selectedPercentage = it },
                         valueRange = 10f..100f,
                         steps = 9,
-                        modifier = Modifier.padding(vertical = 10.dp)
+                        modifier = Modifier.padding(vertical = 4.dp)
                     )
                     Text(
                         text = "Selected: ${selectedPercentage.toInt()}%",
@@ -150,76 +176,109 @@ fun PaymentScreenLayout(
                     )
                 }
             }
-            OutlinedTextField(
-                value = specialCode,
-                onValueChange = { specialCode = it },
-                label = { Text(text = "Have Special Code") },
-                singleLine = true,
-                keyboardOptions = KeyboardOptions.Default.copy(
-                    keyboardType = KeyboardType.Text
+            Row(
+                horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()
+            ) {
+                OutlinedTextField(value = specialCode,
+                    onValueChange = { specialCode = it },
+                    label = { Text(text = "Have Special Code") },
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions.Default.copy(
+                        keyboardType = KeyboardType.Text
+                    )
                 )
-            )
+                TextButton(onClick = {
+                    if (specialCode.replace(" ", "").lowercase().trim() == "parawalespecial") {
+                        selectedPercentage = 0f
+                    } else {
+                        selectedPercentage = 10f
+                    }
+                }, modifier = Modifier
+                    .padding(8.dp)
+                    .align(Alignment.CenterVertically)) {
+                    Text(text = "Apply")
+                }
+            }
+
             Text(
-                text = "Pay ₹${String.format("%.2f", selectedAmount)} using these UPI apps:",
-                color = Color.Black
+                text = if(selectedPercentage == 0f) "You applied Cash on Delivery" else "Pay ₹${String.format("%.2f", selectedAmount)} using these UPI apps:",
+                color = MaterialTheme.colors.onSurface
             )
             Spacer(modifier = Modifier.height(16.dp))
-            Row(
-                horizontalArrangement = Arrangement.SpaceEvenly,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(start = 16.dp, end = 16.dp)
-            ) {
-                UPIIconButton(
-                    specialCode = specialCode,
-                    context = context,
-                    userData = userData,
-                    cartItems = cartItems,
-                    totalMrp = totalMrp,
-                    totalValue = totalValue,
-                    merchantId = merchantId,
-                    selectedAmount = selectedAmount,
-                    launcher = launcher,
-                    iconRes = com.example.parawaleapp.R.drawable.bhimupi,
-                    onClick = { vpa, name, note, merchantTransactionId, transactionUrl ->
-                        payUsingUPI(
-                            context,
-                            launcher,
-                            String.format("%.2f", selectedAmount),
-                            vpa,
-                            name,
-                            note,
-                            merchantTransactionId,
-                            transactionUrl
+            if (selectedPercentage == 0f) {
+                IconButton(onClick = {
+                    sendOrders( context, userData, cartItems, totalMrp, totalValue, System.currentTimeMillis().toString(), merchantId, amountReceived = "0", amountRemaining = totalValue.toString())
+                    cartItems.clear()
+                }) {
+                    Card(
+                        elevation = 4.dp,
+                        shape = RoundedCornerShape(8.dp),
+                        modifier = Modifier.padding(bottom = 16.dp)
+                    ) {
+                        Image(
+                            painter = painterResource(id = if (isDarkTheme) {R.drawable.codlight} else {R.drawable.coddark}),
+                            contentDescription = "Cash on Delivery",
+                            modifier = Modifier.size(48.dp)
                         )
                     }
-                )
-                UPIIconButton(
-                    specialCode = specialCode,
-                    context = context,
-                    userData = userData,
-                    cartItems = cartItems,
-                    totalMrp = totalMrp,
-                    totalValue = totalValue,
-                    merchantId = merchantId,
-                    selectedAmount = selectedAmount,
-                    launcher = launcher,
-                    iconRes = com.example.parawaleapp.R.drawable.phonepeicon,
-                    onClick = { vpa, name, note, merchantTransactionId, transactionUrl ->
-                        Phonepe(
-                            context = context,
-                            amount = selectedAmount,
-                            merchantId = merchantId,
-                            merchantTransactionId = merchantTransactionId,
-                            callbackUrl = "https://webhook.site/374d1a7f-5fd2-438a-840a-761714a04403",
-                            mobileNumber = 7007254934.toString()
-                        )
-                    }
-                )
+                }
             }
+//            Row(
+//                horizontalArrangement = Arrangement.SpaceEvenly,
+//                modifier = Modifier
+//                    .fillMaxWidth()
+//                    .padding(start = 16.dp, end = 16.dp)
+//                    .background(color = MaterialTheme.colors.background)
+//            ) {
+//                UPIIconButton(
+//                    specialCode = specialCode,
+//                    context = context,
+//                    userData = userData,
+//                    cartItems = cartItems,
+//                    totalMrp = totalMrp,
+//                    totalValue = totalValue,
+//                    merchantId = merchantId,
+//                    selectedAmount = selectedAmount,
+//                    launcher = launcher,
+//                    iconRes = com.example.parawaleapp.R.drawable.bhimupi,
+//                    onClick = { vpa, name, note, merchantTransactionId, transactionUrl ->
+//                        payUsingUPI(
+//                            context,
+//                            launcher,
+//                            String.format("%.2f", selectedAmount),
+//                            vpa,
+//                            name,
+//                            note,
+//                            merchantTransactionId,
+//                            transactionUrl
+//                        )
+//                    }
+//                )
+//                UPIIconButton(
+//                    specialCode = specialCode,
+//                    context = context,
+//                    userData = userData,
+//                    cartItems = cartItems,
+//                    totalMrp = totalMrp,
+//                    totalValue = totalValue,
+//                    merchantId = merchantId,
+//                    selectedAmount = selectedAmount,
+//                    launcher = launcher,
+//                    iconRes = com.example.parawaleapp.R.drawable.phonepeicon,
+//                    onClick = { vpa, name, note, merchantTransactionId, transactionUrl ->
+//                        Phonepe(
+//                            context = context,
+//                            amount = selectedAmount,
+//                            merchantId = merchantId,
+//                            merchantTransactionId = merchantTransactionId,
+//                            callbackUrl = "https://webhook.site/374d1a7f-5fd2-438a-840a-761714a04403",
+//                            mobileNumber = 7007254934.toString()
+//                        )
+//                    }
+//                )
+//            }
         }
     }
-
     if (showDialog) {
         TransactionResultDialog(result = transactionResult, onDismiss = { showDialog = false })
     }
@@ -240,7 +299,7 @@ fun UPIIconButton(
     onClick: (vpa: String, name: String, note: String, transactionId: String, transactionUrl: String) -> Unit
 ) {
     IconButton(onClick = {
-        if (specialCode.replace(" ","").lowercase().trim() == "parawalespecial") {
+        if (specialCode.replace(" ", "").lowercase().trim() == "parawalespecial") {
             sendOrders(
                 context,
                 userData,
@@ -278,8 +337,7 @@ fun UPIIconButton(
 
 @Composable
 fun TransactionResultDialog(result: TransactionResult, onDismiss: () -> Unit) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
+    AlertDialog(onDismissRequest = onDismiss,
         title = { Text(text = "Transaction Result") },
         text = {
             Column {
@@ -292,8 +350,7 @@ fun TransactionResultDialog(result: TransactionResult, onDismiss: () -> Unit) {
             Button(onClick = onDismiss) {
                 Text("OK")
             }
-        }
-    )
+        })
 }
 
 data class TransactionResult(val status: String, val transactionId: String, val message: String)
@@ -307,10 +364,7 @@ fun PaymentInfoRow(label: String, value: String) {
     ) {
         Text(text = label, fontWeight = FontWeight.Medium, fontSize = 16.sp)
         OutlinedTextField(
-            value = value,
-            onValueChange = {},
-            readOnly = true,
-            modifier = Modifier.width(150.dp)
+            value = value, onValueChange = {}, readOnly = true, modifier = Modifier.width(150.dp)
         )
     }
 }

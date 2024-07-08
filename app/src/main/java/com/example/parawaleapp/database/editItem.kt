@@ -129,7 +129,7 @@ fun ModifyScreen(dish: Dishfordb, showModifyScreen: () -> Unit) {
             maxLines = 1,
             textStyle = TextStyle(fontSize = 16.sp),
             keyboardOptions = KeyboardOptions.Default.copy(
-                keyboardType = KeyboardType.Number
+                keyboardType = KeyboardType.Text
             )
         )
         Row(

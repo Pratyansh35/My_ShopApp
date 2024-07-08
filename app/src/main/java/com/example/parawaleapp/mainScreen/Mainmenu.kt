@@ -52,9 +52,9 @@ import kotlinx.coroutines.launch
 
 
 @Composable
-fun MenuListScreen(dataUser: List<Dishfordb>, cartItems: SnapshotStateList<Dishfordb>, total: Double, totalmrp: Double, updateTotals: () -> Unit, saveCartItemsToSharedPreferences: () -> Unit) {
+fun MenuListScreen(dataUser: List<Dishfordb>, cartItems: SnapshotStateList<Dishfordb>, updateTotals: () -> Unit, saveCartItemsToSharedPreferences: () -> Unit, navController: NavController) {
     Column {
-        Search(dataUser, cartItems, total, totalmrp, updateTotals, saveCartItemsToSharedPreferences)
+        Search(dataUser, cartItems, updateTotals, saveCartItemsToSharedPreferences, navController)
     }
 }
 

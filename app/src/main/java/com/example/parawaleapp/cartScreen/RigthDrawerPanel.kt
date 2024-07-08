@@ -1,6 +1,7 @@
 package com.example.parawaleapp.cartScreen
 
 import android.net.Uri
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -15,6 +16,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.AlertDialog
 import androidx.compose.material.Button
 import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.Card
@@ -44,6 +46,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.text.intl.Locale
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -53,30 +56,11 @@ import com.example.parawaleapp.R
 import com.example.parawaleapp.database.Dishfordb
 import com.example.parawaleapp.mainScreen.truncateString
 
-//fun dishIncrement(Dish: Dishfordb, navController: NavController? = null, cartItems: MutableList<Dishfordb>, total: Double, totalmrp: Double) {
-//    Dish.count++
-//   totalcount(cartItems = cartItems, total = total, totalmrp = totalmrp)
-//    navController?.navigate("cart")
-//}
-//
-//fun dishDecrement(Dish: Dishfordb, navController: NavController? = null, cartItems: MutableList<Dishfordb>, total: Double, totalmrp: Double) {
-//    Dish.count--
-//    totalcount( total = total, cartItems = cartItems, totalmrp = totalmrp)
-//    if (Dish.count <= 0) {
-//        cartItems.remove(Dish)
-//        //countItems()
-//    }
-//    navController?.navigate("cart")
-//
-//}
-
-
 @Composable
 fun CartDrawerPanel(
     navController: NavController? = null,
     cartItems: MutableList<Dishfordb>,
     allOverTotalPrice: Double,
-    allOverTotalMrp: Double,
     updateTotals: () -> Unit,
     saveCartItemsToSharedPreferences: () -> Unit
 ) {
@@ -92,8 +76,8 @@ fun CartDrawerPanel(
                     .fillMaxHeight(0.90f)
             ) {
                 LazyColumn {
-                    items(cartItems) { Dish ->
-                        CartItems(Dish, cartItems, updateTotals, saveCartItemsToSharedPreferences)
+                    items(cartItems) { dish ->
+                        CartItems(dish, cartItems, updateTotals, saveCartItemsToSharedPreferences)
                     }
                 }
             }
@@ -161,14 +145,14 @@ fun CartDrawerPanel(
 
 @Composable
 fun CartItems(
-    Dish: Dishfordb,
+    dish: Dishfordb,
     cartItems: MutableList<Dishfordb>,
     updateTotals: () -> Unit,
     saveCartItemsToSharedPreferences: () -> Unit
 ) {
-    val context = LocalContext.current
-    var Dishcount by remember { mutableStateOf(TextFieldValue(Dish.count.toString())) }
-
+    var dishcount by remember { mutableStateOf(TextFieldValue(dish.count.toString())) }
+    var context = LocalContext.current
+    var removeConfirm by remember { mutableStateOf(false) }
     Card {
         Row(
             modifier = Modifier
@@ -176,42 +160,64 @@ fun CartItems(
                 .height(148.dp)
         ) {
             AsyncImage(
-                model = Uri.parse(Dish.imageUrl),
+                model = Uri.parse(dish.imageUrl),
                 contentDescription = "dishImage",
                 modifier = Modifier
                     .height(96.dp)
+                    .weight(0.3f)
                     .align(Alignment.CenterVertically)
             )
-            Column(modifier = Modifier.padding(start = 6.dp, top = 3.dp)) {
-                Text(
-                    text = truncateString(Dish.name, 30),
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colors.onSurface
-                )
-                Text(
-                    text = truncateString(Dish.description, 65),
-                    fontSize = 12.sp,
-                    color = MaterialTheme.colors.onSurface.copy(alpha = 0.7f),
-                    modifier = Modifier
-                        .padding(top = 5.dp)
-                        .fillMaxWidth()
-                        .height(32.dp)
-                )
+            Column(modifier = Modifier
+                .padding(start = 6.dp, top = 3.dp)
+                .weight(0.7f)
+                .align(Alignment.CenterVertically)
+            ) {
+                Row(modifier = Modifier.fillMaxWidth()) {
+                    Column(modifier = Modifier.fillMaxWidth(0.8f)) {
+                        Text(
+                            text = truncateString(dish.name, 25),
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colors.onSurface
+                        )
+                        Text(
+                            text = truncateString(dish.description, 55),
+                            fontSize = 12.sp,
+                            color = MaterialTheme.colors.onSurface.copy(alpha = 0.7f),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(32.dp)
+                        )
+                    }
+                    IconButton(
+                        onClick = { removeConfirm = true }, // Show the dialog on click
+                        Modifier
+                            .size(64.dp)
+                            .height(40.dp)
+                            .align(Alignment.CenterVertically)
+                    ) {
+                        Icon(
+                            painterResource(id = R.drawable.removeitem),
+                            contentDescription = "Remove Item", // Add content description
+                            tint = MaterialTheme.colors.onSurface,
+                            modifier = Modifier.size(40.dp)
+                        )
+                    }
+                }
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(50.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    val isCartIconVisible = Dish.count == 1 || Dish.count == 0
+                    val isCartIconVisible = dish.count == 1 || dish.count == 0
 
                     IconButton(
                         onClick = {
-                            Dish.count--
-                            Dishcount = TextFieldValue(Dish.count.toString())
-                            if (Dish.count <= 0) {
-                                cartItems.remove(Dish)
+                            dish.count--
+                            dishcount = TextFieldValue(dish.count.toString())
+                            if (dish.count <= 0) {
+                                cartItems.remove(dish)
                             }
                             updateTotals()
                             saveCartItemsToSharedPreferences()
@@ -232,27 +238,27 @@ fun CartItems(
                         }
                     }
                     TextField(
-                        value = Dishcount,
+                        value = dishcount,
                         onValueChange = {
                             val userInput = it.text.toIntOrNull()
                             if (it.text.isNotEmpty()) {
                                 userInput?.let { input ->
                                     if (input > 0) {
-                                        Dishcount = it
-                                        Dish.count = input
+                                        dishcount = it
+                                        dish.count = input
                                         updateTotals()
                                         saveCartItemsToSharedPreferences()
                                     } else if (input == 0) {
-                                        Dishcount = it
-                                        Dish.count = input
+                                        dishcount = it
+                                        dish.count = input
                                         updateTotals()
-                                        cartItems.remove(Dish)
+                                        cartItems.remove(dish)
                                         saveCartItemsToSharedPreferences()
                                     }
                                 }
                             } else {
-                                Dishcount = it
-                                Dish.count = 0
+                                dishcount = it
+                                dish.count = 0
                                 updateTotals()
                             }
                         },
@@ -269,8 +275,8 @@ fun CartItems(
                     )
                     IconButton(
                         onClick = {
-                            Dish.count++
-                            Dishcount = TextFieldValue(Dish.count.toString())
+                            dish.count++
+                            dishcount = TextFieldValue(dish.count.toString())
                             updateTotals()
                             saveCartItemsToSharedPreferences()
                         },
@@ -289,7 +295,7 @@ fun CartItems(
                 ) {
                     Row(modifier = Modifier.fillMaxWidth(.5f)) {
                         Text(
-                            text = Dish.price,
+                            text = dish.price,
                             color = MaterialTheme.colors.onSurface.copy(alpha = 0.7f),
                             fontWeight = FontWeight.Bold,
                             style = TextStyle(
@@ -304,7 +310,7 @@ fun CartItems(
                             fontSize = 16.sp
                         )
                         Text(
-                            text = Dish.mrp,
+                            text = dish.mrp,
                             color = MaterialTheme.colors.onSurface.copy(alpha = 0.7f),
                             textDecoration = TextDecoration.LineThrough,
                             fontSize = 12.sp
@@ -312,8 +318,8 @@ fun CartItems(
                         Text(
                             text = " -${
                                 "%.2f".format(
-                                    ((Dish.mrp.trimStart('₹').toFloat() - Dish.price.trimStart('₹')
-                                        .toFloat()) / Dish.mrp.trimStart('₹').toFloat()) * 100
+                                    ((dish.mrp.trimStart('₹').toFloat() - dish.price.trimStart('₹')
+                                        .toFloat()) / dish.mrp.trimStart('₹').toFloat()) * 100
                                 )
                             }%", style = TextStyle(
                                 color = Color.Red, shadow = Shadow(
@@ -335,7 +341,7 @@ fun CartItems(
                                 color = MaterialTheme.colors.secondary,
                             )
                             Text(
-                                text = "₹${Dish.count * Dish.price.removePrefix("₹").toDouble()}",
+                                text = "₹${dish.count * dish.price.removePrefix("₹").toDouble()}",
                                 fontFamily = FontFamily.Cursive,
                                 fontWeight = FontWeight.Medium,
                                 color = MaterialTheme.colors.onSurface,
@@ -344,6 +350,30 @@ fun CartItems(
                     }
                 }
             }
+        }
+        if (removeConfirm) {
+            AlertDialog(
+                onDismissRequest = { removeConfirm = false },
+                title = { Text("Confirm Removal") },
+                text = { Text("Are you sure you want to remove \n${dish.name} ?") },
+                confirmButton = {
+                    Button(onClick = {
+                        dish.count = 0
+                        cartItems.remove(dish)
+                        updateTotals()
+                        saveCartItemsToSharedPreferences()
+                        Toast.makeText(context, "Item removed from cart", Toast.LENGTH_SHORT).show()
+                        removeConfirm = false
+                    }) {
+                        Text("Remove")
+                    }
+                },
+                dismissButton = {
+                    Button(onClick = { removeConfirm = false }) {
+                        Text("Cancel")
+                    }
+                }
+            )
         }
     }
     Divider(

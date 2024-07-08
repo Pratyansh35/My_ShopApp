@@ -8,6 +8,7 @@ import Cart
 import Home
 import Login
 import Menu
+import PreviousOrders
 import ProfileSet
 import Scan_Barcode
 import SettingScreen
@@ -37,6 +38,7 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableDoubleStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -72,6 +74,7 @@ import com.example.parawaleapp.drawerPanel.leftPanel.LeftDrawerPanel
 import com.example.parawaleapp.drawerPanel.leftPanel.Profileset
 import com.example.parawaleapp.drawerPanel.leftPanel.Settings
 import com.example.parawaleapp.mainScreen.HomeScreen
+import com.example.parawaleapp.mainScreen.ItemDiscription
 import com.example.parawaleapp.mainScreen.MenuListScreen
 import com.example.parawaleapp.mainScreen.NavBar
 import com.example.parawaleapp.printer.BluetoothScreen
@@ -97,10 +100,8 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         PhonePe.init(
-            this,
-            PhonePeEnvironment.SANDBOX, // Change to RELEASE when moving to production
-            "PGTESTPAYUAT",
-            null // Replace with your App ID or pass null
+            this, PhonePeEnvironment.SANDBOX, // Change to RELEASE when moving to production
+            "PGTESTPAYUAT", null // Replace with your App ID or pass null
         )
         setContent {
             Surface(
@@ -188,10 +189,6 @@ class MainActivity : ComponentActivity() {
 }
 
 
-
-
-
-
 @Composable
 fun MainScreen(
     navController2: NavController,
@@ -233,6 +230,7 @@ fun MainScreen(
     LaunchedEffect(systemInDarkTheme) {
         isDarkTheme = systemInDarkTheme
     }
+    var isGridLayout by rememberSaveable { mutableStateOf(false) }
 
     MyAppTheme(darkTheme = isDarkTheme) {
         Scaffold(scaffoldState = scaffoldState, drawerContent = {
@@ -249,14 +247,57 @@ fun MainScreen(
                     }
                 })
         }, drawerGesturesEnabled = true, topBar = {
-            NavBar(scaffoldState = scaffoldState, scope = scope, navController = navController, isDarkTheme = isDarkTheme, count = cartItems.size)
-        }, bottomBar = { MyBottomNavigation(navController = navController) }) {
+            NavBar(
+                scaffoldState = scaffoldState,
+                scope = scope,
+                navController = navController,
+                isDarkTheme = isDarkTheme,
+                count = cartItems.size
+            )
+        }, bottomBar = { MyBottomNavigation(navController = navController) }) { it ->
             Box(Modifier.padding(it)) {
                 NavHost(navController = navController, startDestination = Home.route) {
-                    composable(Home.route) { HomeScreen(DishData = dishData, isDarkTheme = isDarkTheme, onThemeChange = { isDarkTheme = it }, cartItems = cartItems, total = allOverTotalPrice, totalmrp = allOverTotalMrp, updateTotals = ::updateTotals, saveCartItemsToSharedPreferences = ::saveCartItemsToSharedPreferences) }
-                    composable(Menu.route) { MenuListScreen(dishData, cartItems = cartItems, total = allOverTotalPrice, totalmrp = allOverTotalMrp, updateTotals = ::updateTotals, saveCartItemsToSharedPreferences = ::saveCartItemsToSharedPreferences) }
-                    composable(Scan_Barcode.route) { BarCodeScreen(dishData, cartItems = cartItems, total = allOverTotalPrice, totalmrp = allOverTotalMrp, updateTotals = ::updateTotals, saveCartItemsToSharedPreferences = ::saveCartItemsToSharedPreferences) }
-                    composable(Cart.route) { CartDrawerPanel(navController = navController, cartItems = cartItems, allOverTotalPrice = allOverTotalPrice, allOverTotalMrp = allOverTotalMrp, updateTotals = ::updateTotals, saveCartItemsToSharedPreferences = ::saveCartItemsToSharedPreferences) }
+                    composable(Home.route) {
+                        HomeScreen(
+                            DishData = dishData,
+                            isDarkTheme = isDarkTheme,
+                            onThemeChange = { isDarkTheme = it },
+                            cartItems = cartItems,
+                            updateTotals = ::updateTotals,
+                            saveCartItemsToSharedPreferences = ::saveCartItemsToSharedPreferences,
+                            navController = navController,
+                            isGridLayout = isGridLayout,
+                            onLayoutChange = { isGridLayout = it }
+                        )
+                    }
+                    composable(Menu.route) {
+                        MenuListScreen(
+                            dishData,
+                            cartItems = cartItems,
+                            updateTotals = ::updateTotals,
+                            saveCartItemsToSharedPreferences = ::saveCartItemsToSharedPreferences,
+                            navController = navController
+                        )
+                    }
+                    composable(Scan_Barcode.route) {
+                        BarCodeScreen(
+                            dishData,
+                            cartItems = cartItems,
+                            total = allOverTotalPrice,
+                            totalmrp = allOverTotalMrp,
+                            updateTotals = ::updateTotals,
+                            saveCartItemsToSharedPreferences = ::saveCartItemsToSharedPreferences
+                        )
+                    }
+                    composable(Cart.route) {
+                        CartDrawerPanel(
+                            navController = navController,
+                            cartItems = cartItems,
+                            allOverTotalPrice = allOverTotalPrice,
+                            updateTotals = ::updateTotals,
+                            saveCartItemsToSharedPreferences = ::saveCartItemsToSharedPreferences
+                        )
+                    }
                     composable(AfterCart.route) {
                         ConfirmCart(
                             navController = navController,
@@ -292,7 +333,18 @@ fun MainScreen(
                         val email = backStackEntry.arguments?.getString("email")
                         PersonOrdersScreen(navController, email)
                     }
-
+                    composable("itemDescription/{dish}") { backStackEntry ->
+                        val dishJson = backStackEntry.arguments?.getString("dish")
+                        val item = Gson().fromJson(dishJson, Dishfordb::class.java)
+                        if (item != null) {
+                            ItemDiscription(
+                                item,
+                                cartItems = cartItems,
+                                updateTotals = ::updateTotals,
+                                saveCartItemsToSharedPreferences = ::saveCartItemsToSharedPreferences
+                            )
+                        }
+                    }
                     composable("orderDetails/{email}/{date}/{name}/{orderedItems}") { backStackEntry ->
                         val email = backStackEntry.arguments?.getString("email")
                         val date = backStackEntry.arguments?.getString("date")
@@ -300,12 +352,7 @@ fun MainScreen(
                         val orderedItemsJson = backStackEntry.arguments?.getString("orderedItems")
                         val loggedemail = googleAuthUiClient.getSinedInUser()?.userEmail
                         OrderDetailsScreen(
-                            navController,
-                            email,
-                            date,
-                            name,
-                            loggedemail,
-                            orderedItemsJson
+                            navController, email, date, name, loggedemail, orderedItemsJson
                         )
                     }
                     composable(PreviousOrders.route) {
@@ -320,7 +367,8 @@ fun MainScreen(
                                 totalMrp,
                                 totalValue,
                                 googleAuthUiClient.getSinedInUser(),
-                                cartItems
+                                cartItems,
+                                isDarkTheme
                             )
                         }
                     }
@@ -331,31 +379,26 @@ fun MainScreen(
 }
 
 
-
-
-
-
 @Composable
 fun MyBottomNavigation(navController: NavController) {
     val destinationList = listOf(
         Home, Menu, Scan_Barcode
     )
     val selectedIndex = rememberSaveable {
-        mutableStateOf(0)
+        mutableIntStateOf(0)
     }
     BottomNavigation(
         backgroundColor = MaterialTheme.colors.primaryVariant,
         contentColor = MaterialTheme.colors.surface
     ) {
         destinationList.forEachIndexed { index, destination ->
-            BottomNavigationItem(
-                label = { Text(text = destination.title) }, icon = {
+            BottomNavigationItem(label = { Text(text = destination.title) }, icon = {
                 Icon(
                     painter = painterResource(id = destination.icon),
                     contentDescription = destination.title
                 )
-            }, selected = index == selectedIndex.value, onClick = {
-                selectedIndex.value = index
+            }, selected = index == selectedIndex.intValue, onClick = {
+                selectedIndex.intValue = index
                 navController.navigate(destinationList[index].route) {
                     popUpTo(Login.route)
                     launchSingleTop = true

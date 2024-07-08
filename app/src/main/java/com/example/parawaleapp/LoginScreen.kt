@@ -50,7 +50,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun TypewriterText(
     label: String,
-    padding: Modifier = Modifier.padding(all = 0.dp),
+    modifierPadding: Modifier = Modifier,
     fontsize: Int = 24.sp.value.toInt()
 ) {
     var displayedText by remember { mutableStateOf("") }
@@ -73,7 +73,7 @@ fun TypewriterText(
         fontSize = fontsize.sp,
         color = Color.Red,
         fontFamily = FontFamily.Cursive,
-        modifier = padding
+        modifier = modifierPadding
     )
 }
 
