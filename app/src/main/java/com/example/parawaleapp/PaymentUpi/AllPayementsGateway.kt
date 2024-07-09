@@ -7,6 +7,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.ActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -205,55 +206,37 @@ fun PaymentScreenLayout(
                 color = MaterialTheme.colors.onSurface
             )
             Spacer(modifier = Modifier.height(16.dp))
-            if (selectedPercentage == 0f) {
-                IconButton(onClick = {
-                    sendOrders( context, userData, cartItems, totalMrp, totalValue, System.currentTimeMillis().toString(), merchantId, amountReceived = "0", amountRemaining = totalValue.toString())
-                    cartItems.clear()
-                }) {
-                    Card(
-                        elevation = 4.dp,
-                        shape = RoundedCornerShape(8.dp),
-                        modifier = Modifier.padding(bottom = 16.dp)
-                    ) {
-                        Image(
-                            painter = painterResource(id = if (isDarkTheme) {R.drawable.codlight} else {R.drawable.coddark}),
-                            contentDescription = "Cash on Delivery",
-                            modifier = Modifier.size(48.dp)
+            Row(
+                horizontalArrangement = Arrangement.SpaceEvenly,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 16.dp, end = 16.dp)
+                    .background(color = MaterialTheme.colors.background)
+            ) {
+                UPIIconButton(
+                    specialCode = specialCode,
+                    context = context,
+                    userData = userData,
+                    cartItems = cartItems,
+                    totalMrp = totalMrp,
+                    totalValue = totalValue,
+                    merchantId = merchantId,
+                    selectedAmount = selectedAmount,
+                    launcher = launcher,
+                    iconRes = com.example.parawaleapp.R.drawable.bhimupi,
+                    onClick = { vpa, name, note, merchantTransactionId, transactionUrl ->
+                        payUsingUPI(
+                            context,
+                            launcher,
+                            String.format("%.2f", selectedAmount),
+                            vpa,
+                            name,
+                            note,
+                            merchantTransactionId,
+                            transactionUrl
                         )
                     }
-                }
-            }
-//            Row(
-//                horizontalArrangement = Arrangement.SpaceEvenly,
-//                modifier = Modifier
-//                    .fillMaxWidth()
-//                    .padding(start = 16.dp, end = 16.dp)
-//                    .background(color = MaterialTheme.colors.background)
-//            ) {
-//                UPIIconButton(
-//                    specialCode = specialCode,
-//                    context = context,
-//                    userData = userData,
-//                    cartItems = cartItems,
-//                    totalMrp = totalMrp,
-//                    totalValue = totalValue,
-//                    merchantId = merchantId,
-//                    selectedAmount = selectedAmount,
-//                    launcher = launcher,
-//                    iconRes = com.example.parawaleapp.R.drawable.bhimupi,
-//                    onClick = { vpa, name, note, merchantTransactionId, transactionUrl ->
-//                        payUsingUPI(
-//                            context,
-//                            launcher,
-//                            String.format("%.2f", selectedAmount),
-//                            vpa,
-//                            name,
-//                            note,
-//                            merchantTransactionId,
-//                            transactionUrl
-//                        )
-//                    }
-//                )
+                )
 //                UPIIconButton(
 //                    specialCode = specialCode,
 //                    context = context,
@@ -276,7 +259,25 @@ fun PaymentScreenLayout(
 //                        )
 //                    }
 //                )
-//            }
+                if (selectedPercentage == 0f) {
+                    IconButton(onClick = {
+                        sendOrders( context, userData, cartItems, totalMrp, totalValue, System.currentTimeMillis().toString(), merchantId, amountReceived = "0", amountRemaining = totalValue.toString())
+                        cartItems.clear()
+                    }) {
+                        Card(
+                            elevation = 4.dp,
+                            shape = RoundedCornerShape(8.dp),
+                            modifier = Modifier.padding(bottom = 16.dp)
+                        ) {
+                            Image(
+                                painter = painterResource(id = if (isDarkTheme) {R.drawable.codlight} else {R.drawable.coddark}),
+                                contentDescription = "Cash on Delivery",
+                                modifier = Modifier.size(48.dp)
+                            )
+                        }
+                    }
+                }
+            }
         }
     }
     if (showDialog) {

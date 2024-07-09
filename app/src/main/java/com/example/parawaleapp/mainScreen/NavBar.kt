@@ -62,7 +62,9 @@ fun NavBar(
                 modifier = Modifier.size(24.dp)
             )
         }
-        IconButton(onClick = {}) {
+        IconButton(onClick = {
+            navController?.navigate("Location")
+        }) {
             Image(
                 painter = painterResource(R.drawable.appicon),
                 contentDescription = "Icon",

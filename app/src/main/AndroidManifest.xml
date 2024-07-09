@@ -10,6 +10,8 @@
     <uses-permission android:name="android.permission.BLUETOOTH"/>
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN"/>
     <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
 
     <queries>
         <package android:name="com.google.android.apps.nbu.paisa.user" />
@@ -38,11 +40,13 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
 
-            <meta-data
-                android:name="android.app.lib_name"
-                android:value="" />
+<!--            <meta-data-->
+<!--                android:name="android.app.lib_name"-->
+<!--                android:value="" />-->
+
 
         </activity>
+        <meta-data android:name="com.google.android.geo.API_KEY" android:value="AIzaSyDXijvfPdIz2sX2_XB-uG2SFUgwDSTwvLY"/>
     </application>
 
 </manifest>

@@ -1,5 +1,6 @@
 package com.example.parawaleapp
 
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -46,7 +47,6 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-
 @Composable
 fun TypewriterText(
     label: String,
@@ -67,7 +67,6 @@ fun TypewriterText(
             coroutineScope.cancel()
         }
     }
-
     Text(
         text = displayedText,
         fontSize = fontsize.sp,
@@ -77,22 +76,21 @@ fun TypewriterText(
     )
 }
 
-
 @Composable
 fun SignInScreen(
-    state: SignInState, onSignInClick: () -> Unit
+    state: SignInState,
+    onSignInClick: (String) -> Unit,
+    onGoogleSignInClick: () -> Unit,
+    onVerifyCodeClick: (String) -> Unit
 ) {
-    var username by remember {
-        mutableStateOf(TextFieldValue(""))
-    }
-    var password by remember {
-        mutableStateOf(TextFieldValue(""))
-    }
+    var phoneNumber by remember { mutableStateOf(TextFieldValue("")) }
+    var verificationCode by remember { mutableStateOf(TextFieldValue("")) }
     val context = LocalContext.current
 
     LaunchedEffect(key1 = state.signInError) {
         state.signInError?.let {
             Toast.makeText(context, it, Toast.LENGTH_LONG).show()
+            Log.e("SignInScreen", "Sign-in error: $it")
         }
     }
 
@@ -115,7 +113,6 @@ fun SignInScreen(
             .background(Color(0xFFC5C1B1)),
         contentAlignment = Alignment.Center
     ) {
-
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
@@ -130,7 +127,6 @@ fun SignInScreen(
                 verticalArrangement = Arrangement.Bottom,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-
                 TypewriterText("Parawale!", Modifier.padding(start = 16.dp), 40.sp.value.toInt())
 
                 Text(
@@ -141,57 +137,63 @@ fun SignInScreen(
                     modifier = Modifier.padding(start = 16.dp, bottom = 20.dp)
                 )
                 OutlinedTextField(
-                    value = username,
+                    value = phoneNumber,
                     onValueChange = {
-                        username = it
+                        phoneNumber = it
                     },
-                    label = { Text(text = "Username") },
+                    label = { Text(text = "Phone Number") },
                     modifier = Modifier
                         .padding(10.dp)
                         .navigationBarsPadding(),
                     singleLine = true
                 )
-                OutlinedTextField(
-                    value = password,
-                    onValueChange = {
-                        password = it
-                    },
-                    label = { Text(text = "Password") },
-                    visualTransformation = PasswordVisualTransformation(),
-                    singleLine = true,
-                    modifier = Modifier
-                        .padding(10.dp)
-                        .navigationBarsPadding()
-
-                )
-                TextButton(onClick = { /*TODO*/ }, Modifier.align(Alignment.End)) {
-                    Text(
-                        text = "Forgot Password?",
-                        color = Color(0xFF4D7467),
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 14.sp
-                    )
-                }
                 Button(
                     onClick = {
-                        if (username.text.isNotEmpty() && password.text.isNotEmpty()) {
-                            Toast.makeText(
-                                context, "Welcome to Parawale Kirana Store!", Toast.LENGTH_LONG
-                            ).show()
+                        if (phoneNumber.text.isNotEmpty()) {
+                            onSignInClick(phoneNumber.text)
                         } else {
                             Toast.makeText(
                                 context,
-                                "Invalid credentials." + "Please try again.",
+                                "Please enter a valid phone number.",
                                 Toast.LENGTH_LONG
                             ).show()
                         }
-                    }, colors = ButtonDefaults.buttonColors(
-                        Color(0xFF4D7467)
-                    ), modifier = Modifier.padding(10.dp)
+                    },
+                    colors = ButtonDefaults.buttonColors(Color(0xFF4D7467)),
+                    modifier = Modifier.padding(10.dp)
                 ) {
-                    Text(
-                        text = "Login", color = Color(0xFFEDEFEE)
+                    Text(text = "Sign In", color = Color(0xFFEDEFEE))
+                }
+                // OTP Verification UI
+                if (state.verificationId != null) {
+                    OutlinedTextField(
+                        value = verificationCode,
+                        onValueChange = {
+                            verificationCode = it
+                        },
+                        label = { Text(text = "Verification Code") },
+                        modifier = Modifier
+                            .padding(10.dp)
+                            .navigationBarsPadding(),
+                        singleLine = true
                     )
+                    Button(
+                        onClick = {
+                            if (verificationCode.text.isNotEmpty()) {
+                                onVerifyCodeClick(verificationCode.text)
+                            } else {
+                                Toast.makeText(
+                                    context,
+                                    "Please enter the verification code.",
+                                    Toast.LENGTH_LONG
+                                ).show()
+                            }
+                        },
+                        colors = ButtonDefaults.buttonColors(Color(0xFF4D7467)),
+                        modifier = Modifier.padding(10.dp)
+                    ) {
+                        Text(text = "Verify Code", color = Color(0xFFEDEFEE))
+                    }
                 }
                 Row {
                     Divider(
@@ -226,7 +228,7 @@ fun SignInScreen(
                             .align(Alignment.CenterVertically)
                     )
 
-                    IconButton(onClick = { onSignInClick() }) {
+                    IconButton(onClick = { onGoogleSignInClick() }) {
                         Image(
                             painter = painterResource(id = R.drawable.googleicon),
                             contentDescription = "menuicon",
@@ -249,8 +251,3 @@ fun SignInScreen(
         }
     }
 }
-
-
-
-
-

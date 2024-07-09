@@ -12,6 +12,7 @@ import PreviousOrders
 import ProfileSet
 import Scan_Barcode
 import SettingScreen
+import ShopDistanceScreen
 import ViewOrder
 import android.content.Context
 import android.os.Bundle
@@ -82,12 +83,14 @@ import com.example.parawaleapp.sign_in.GoogleAuthUiclient
 import com.example.parawaleapp.sign_in.SignInViewModel
 import com.example.parawaleapp.ui.theme.MyAppTheme
 import com.google.android.gms.auth.api.identity.Identity
+import com.google.android.gms.maps.model.LatLng
 import com.google.firebase.FirebaseApp
+import com.google.firebase.auth.ktx.auth
+import com.google.firebase.ktx.Firebase
 import com.google.gson.Gson
-import com.phonepe.intent.sdk.api.PhonePe
-import com.phonepe.intent.sdk.api.models.PhonePeEnvironment
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
+
 
 class MainActivity : ComponentActivity() {
     private val googleAuthUiClient by lazy {
@@ -96,20 +99,14 @@ class MainActivity : ComponentActivity() {
             oneTapClient = Identity.getSignInClient(applicationContext)
         )
     }
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        PhonePe.init(
-            this, PhonePeEnvironment.SANDBOX, // Change to RELEASE when moving to production
-            "PGTESTPAYUAT", null // Replace with your App ID or pass null
-        )
+        FirebaseApp.initializeApp(this)
+        restoreDataFromSharedPreferences(this)
         setContent {
             Surface(
                 modifier = Modifier.fillMaxSize(), color = MaterialTheme.colors.background
             ) {
-
-                FirebaseApp.initializeApp(this)
-                restoreDataFromSharedPreferences(this)
                 val navController = rememberNavController()
                 val scope = rememberCoroutineScope()
                 var dishData by rememberSaveable { mutableStateOf<List<Dishfordb>>(emptyList()) }
@@ -120,7 +117,7 @@ class MainActivity : ComponentActivity() {
                         val state by viewModel.state.collectAsStateWithLifecycle()
 
                         LaunchedEffect(key1 = Unit) {
-                            if (googleAuthUiClient.getSinedInUser() != null) {
+                            if (googleAuthUiClient.getSinedInUser() != null || Firebase.auth.currentUser != null) {
                                 getdishes("Items")?.let { newData ->
                                     dishData = newData
                                 }
@@ -162,17 +159,26 @@ class MainActivity : ComponentActivity() {
                             }
                         }
 
-                        SignInScreen(state = state, onSignInClick = {
-                            viewModel.startLoading() // Set loading state to true
-                            lifecycleScope.launch {
-                                val signInIntentSender = googleAuthUiClient.signIn()
-                                launcher.launch(
-                                    IntentSenderRequest.Builder(
-                                        signInIntentSender ?: return@launch
-                                    ).build()
-                                )
+                        SignInScreen(
+                            state = state,
+                            onSignInClick = { phoneNumber ->
+                                viewModel.sendVerificationCode(phoneNumber, this@MainActivity)
+                            },
+                            onGoogleSignInClick = {
+                                viewModel.startLoading()
+                                lifecycleScope.launch {
+                                    val signInIntentSender = googleAuthUiClient.signIn()
+                                    launcher.launch(
+                                        IntentSenderRequest.Builder(
+                                            signInIntentSender ?: return@launch
+                                        ).build()
+                                    )
+                                }
+                            },
+                            onVerifyCodeClick = { verificationCode ->
+                                viewModel.verifyPhoneNumberWithCode(verificationCode)
                             }
-                        })
+                        )
                     }
                     composable("MainScreen") {
                         MainScreen(
@@ -187,7 +193,6 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
-
 
 @Composable
 fun MainScreen(
@@ -214,11 +219,10 @@ fun MainScreen(
         val sharedPreferences = context.getSharedPreferences("MyPrefs", Context.MODE_PRIVATE)
         val editor = sharedPreferences.edit()
 
-        // Convert the cartItems list to a JSON string
+
         val gson = Gson()
         val cartItemsJson = gson.toJson(cartItems)
 
-        // Save the JSON string in SharedPreferences
         editor.putString("cartItems", cartItemsJson)
         editor.putString("total", allOverTotalPrice.toString())
         editor.apply()
@@ -230,6 +234,7 @@ fun MainScreen(
     LaunchedEffect(systemInDarkTheme) {
         isDarkTheme = systemInDarkTheme
     }
+
     var isGridLayout by rememberSaveable { mutableStateOf(false) }
 
     MyAppTheme(darkTheme = isDarkTheme) {
@@ -353,6 +358,11 @@ fun MainScreen(
                         val loggedemail = googleAuthUiClient.getSinedInUser()?.userEmail
                         OrderDetailsScreen(
                             navController, email, date, name, loggedemail, orderedItemsJson
+                        )
+                    }
+                    composable("Location"){
+                        ShopDistanceScreen(
+                            shopLocation = LatLng(  27.099407, 83.271651) // Example shop location (Delhi, India)
                         )
                     }
                     composable(PreviousOrders.route) {
