@@ -147,24 +147,26 @@ fun SignInScreen(
                         .navigationBarsPadding(),
                     singleLine = true
                 )
-                Button(
-                    onClick = {
-                        if (phoneNumber.text.isNotEmpty()) {
-                            onSignInClick(phoneNumber.text)
-                        } else {
-                            Toast.makeText(
-                                context,
-                                "Please enter a valid phone number.",
-                                Toast.LENGTH_LONG
-                            ).show()
-                        }
-                    },
-                    colors = ButtonDefaults.buttonColors(Color(0xFF4D7467)),
-                    modifier = Modifier.padding(10.dp)
-                ) {
-                    Text(text = "Sign In", color = Color(0xFFEDEFEE))
+                if (state.verificationId == null) {
+                    Button(
+                        onClick = {
+                            if (phoneNumber.text.isNotEmpty()) {
+                                onSignInClick(phoneNumber.text)
+                            } else {
+                                Toast.makeText(
+                                    context,
+                                    "Please enter a valid phone number.",
+                                    Toast.LENGTH_LONG
+                                ).show()
+                            }
+                        },
+                        colors = ButtonDefaults.buttonColors(Color(0xFF4D7467)),
+                        modifier = Modifier.padding(10.dp)
+                    ) {
+                        Text(text = "Send OTP", color = Color(0xFFEDEFEE))
+                    }
                 }
-                // OTP Verification UI
+                // OTP Verification
                 if (state.verificationId != null) {
                     OutlinedTextField(
                         value = verificationCode,

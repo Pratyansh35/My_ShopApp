@@ -5,6 +5,14 @@ plugins {
     id 'kotlin-kapt'
 }
 
+def localProperties = new Properties()
+def localPropertiesFile = rootProject.file('local.properties')
+if (localPropertiesFile.exists()) {
+    localPropertiesFile.withInputStream { stream ->
+        localProperties.load(stream)
+    }
+}
+
 android {
     namespace 'com.example.parawaleapp'
     compileSdk 34
@@ -20,6 +28,9 @@ android {
         vectorDrawables {
             useSupportLibrary true
         }
+
+        // Use manifestPlaceholders instead of buildConfigField for API key
+        manifestPlaceholders = [GOOGLE_MAPS_API_KEY: localProperties['GOOGLE_MAPS_API_KEY']]
     }
 
     buildTypes {

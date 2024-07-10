@@ -88,7 +88,8 @@ fun Profileset(userData: UserData?) {
         )
 
         nametemp?.let {
-            OutlinedTextField(value = it,
+            OutlinedTextField(
+                value = it,
                 onValueChange = { nametemp = it },
                 label = { Text(text = "Full name") },
                 modifier = Modifier.padding(10.dp),
@@ -140,30 +141,33 @@ fun Profileset(userData: UserData?) {
                     }
             )
         }
-
-        Button(
-            onClick = {
-                if (nametemp.isNullOrBlank() || phonenotemp.isNullOrBlank()) {
-                    Toast.makeText(context, "Please fill all the fields", Toast.LENGTH_LONG).show()
-                    return@Button
-                } else if (phonenotemp?.length != 10) {
-                    Toast.makeText(context, "Please enter a valid phone no.", Toast.LENGTH_LONG).show()
-                    return@Button
-                } else {
-                    val fullPhoneNumber = "+91$phonenotemp"
-                    verifyPhoneNumber(context, fullPhoneNumber) { id ->
-                        verificationId = id
+        if (verificationId == null) {
+            Button(
+                onClick = {
+                    if (nametemp.isNullOrBlank() || phonenotemp.isNullOrBlank()) {
+                        Toast.makeText(context, "Please fill all the fields", Toast.LENGTH_LONG)
+                            .show()
+                        return@Button
+                    } else if (phonenotemp?.length != 10) {
+                        Toast.makeText(context, "Please enter a valid phone no.", Toast.LENGTH_LONG)
+                            .show()
+                        return@Button
+                    } else {
+                        val fullPhoneNumber = "+91$phonenotemp"
+                        verifyPhoneNumber(context, fullPhoneNumber) { id ->
+                            verificationId = id
+                        }
                     }
-                }
-            },
-            shape = RoundedCornerShape(40),
-            modifier = Modifier
-                .padding(32.dp)
-                .fillMaxWidth()
-                .height(50.dp)
-                .align(Alignment.End)
-        ) {
-            Text(text = "Verify Phone Number", color = Color.Black, fontWeight = FontWeight.Bold)
+                },
+                shape = RoundedCornerShape(40),
+                modifier = Modifier
+                    .padding(32.dp)
+                    .fillMaxWidth()
+                    .height(50.dp)
+                    .align(Alignment.End)
+            ) {
+                Text(text = "Send OTP", color = Color.Black, fontWeight = FontWeight.Bold)
+            }
         }
 
         if (verificationId != null) {
@@ -182,10 +186,14 @@ fun Profileset(userData: UserData?) {
                     .height(50.dp)
                     .align(Alignment.End)
             ) {
-                Text(text = "Update Phone Number", color = Color.Black, fontWeight = FontWeight.Bold)
+                Text(
+                    text = "Update Phone Number",
+                    color = Color.Black,
+                    fontWeight = FontWeight.Bold
+                )
             }
         }
-    }
+        }
 }
 
 
