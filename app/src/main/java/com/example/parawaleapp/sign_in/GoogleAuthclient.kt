@@ -28,20 +28,21 @@ val listofAuthorizedUsersEmails = listOf(
 )
 
 
-class GoogleAuthUiclient(
-    private val context: Context, private val oneTapClient: SignInClient
+class GoogleAuthUiClient(
+    private val context: Context,
+    private val oneTapClient: SignInClient
 ) {
     private val auth = Firebase.auth
 
     suspend fun signIn(): IntentSender? {
-        val result = try {
-            oneTapClient.beginSignIn(buildSignInRequest()).await()
+        return try {
+            val result = oneTapClient.beginSignIn(buildSignInRequest()).await()
+            result?.pendingIntent?.intentSender
         } catch (e: Exception) {
             e.printStackTrace()
             if (e is CancellationException) throw e
             null
         }
-        return result?.pendingIntent?.intentSender
     }
 
     suspend fun signInWithIntent(intent: Intent): SignInResult {
@@ -52,16 +53,15 @@ class GoogleAuthUiclient(
             val user = auth.signInWithCredential(googleCredentials).await().user
             SignInResult(
                 data = user?.run {
-                    displayName?.let {
-                        UserData(
-                            userId = uid,
-                            userName = it,
-                            progilePictureUrl = photoUrl?.toString(),
-                            userEmail = email,
-                            phoneno = phoneNumber
-                        )
-                    }
-                }, errorMessage = null
+                    UserData(
+                        userId = uid,
+                        userName = displayName,
+                        progilePictureUrl = photoUrl?.toString(),
+                        userEmail = email,
+                        phoneno = phoneNumber
+                    )
+                },
+                errorMessage = null
             )
         } catch (e: Exception) {
             e.printStackTrace()
@@ -82,17 +82,15 @@ class GoogleAuthUiclient(
         }
     }
 
-    fun getSinedInUser(): UserData? = auth.currentUser?.run {
-        displayName?.let {
-            UserData(
-                userId = uid,
-                userName = it,
-                progilePictureUrl = photoUrl?.toString(),
-                userEmail = email,
-                phoneno = phoneNumber,
-            )
-        }
-
+    fun getSinedInUser(): UserData? {
+        val user = auth.currentUser ?: return null
+        return UserData(
+            userId = user.uid,
+            userName = user.displayName,
+            progilePictureUrl = user.photoUrl?.toString(),
+            userEmail = user.email,
+            phoneno = user.phoneNumber
+        )
     }
 
     private fun buildSignInRequest(): BeginSignInRequest {
@@ -103,8 +101,6 @@ class GoogleAuthUiclient(
         ).setAutoSelectEnabled(true).build()
     }
 }
-
-
 
 fun verifyPhoneNumber(context: Context, phoneNumber: String, onVerificationIdReceived: (String) -> Unit) {
     val callbacks = object : PhoneAuthProvider.OnVerificationStateChangedCallbacks() {
@@ -145,7 +141,8 @@ fun updatePhoneNumberWithOTP(verificationId: String, otp: String, context: Conte
                 if (task.isSuccessful) {
                     Toast.makeText(context, "Phone number updated successfully", Toast.LENGTH_LONG).show()
                 } else {
-                    Toast.makeText(context, "Phone number update failed: ${task.exception?.message}", Toast.LENGTH_LONG).show()
+                    Toast.makeText(context, "failed: ${task.exception?.message}", Toast.LENGTH_LONG).show()
+                    Log.e("SignInViewModel", "signInWithPhoneAuthCredential: failure", task.exception)
                 }
             }
     } else {

@@ -59,7 +59,7 @@ fun deleteItemLayout(dish: Dishfordb) {
                 }
             }
             AsyncImage(
-                model = Uri.parse(dish.imageUrl),
+                model = Uri.parse(dish.imagesUrl[0]),
                 contentDescription = "dishImage",
             )
         }

@@ -32,7 +32,6 @@ import com.example.parawaleapp.mainScreen.truncateString
 fun ItemScreen(
     dish: Dishfordb, showItemScreen: () -> Unit,
     cartItems: MutableList<Dishfordb>,
-    total: Double,
     updateTotals: () -> Unit,
     saveCartItemsToSharedPreferences: () -> Unit
 ) {
@@ -45,7 +44,7 @@ fun ItemScreen(
             .verticalScroll(rememberScrollState())
     ) {
         AsyncImage(
-            model = Uri.parse(dish.imageUrl),
+            model = Uri.parse(dish.imagesUrl[0]),
             contentDescription = "dishImage",
             modifier = Modifier
                 .padding(start = 10.dp)

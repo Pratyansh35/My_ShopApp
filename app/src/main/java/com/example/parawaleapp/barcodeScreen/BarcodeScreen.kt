@@ -44,8 +44,6 @@ import java.util.concurrent.Executors
 fun BarCodeScreen(
     DishData: List<Dishfordb>,
     cartItems: MutableList<Dishfordb>,
-    total: Double,
-    totalmrp: Double,
     updateTotals: () -> Unit,
     saveCartItemsToSharedPreferences: () -> Unit
 ) {
@@ -56,7 +54,6 @@ fun BarCodeScreen(
             dish = gotDish!!,
             showItemScreen = { showItemScreen = false },
             cartItems = cartItems,
-            total = total,
             updateTotals = updateTotals,
             saveCartItemsToSharedPreferences = saveCartItemsToSharedPreferences
         )

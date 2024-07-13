@@ -9,13 +9,14 @@ import android.os.Vibrator
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -56,7 +57,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.max
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
@@ -217,8 +217,10 @@ fun WeeklySpecial(
                 modifier = Modifier.padding(8.dp)
             )
             IconButton(onClick = { onLayoutChange(!isGridLayout) }) {
-                val iconhori = if (isDarkTheme) R.drawable.horizontalayoutlight else R.drawable.horizontalayoutdark
-                val icongrid =  if (isDarkTheme) R.drawable.gridlayoutlight else R.drawable.gridlayoutdark
+                val iconhori =
+                    if (isDarkTheme) R.drawable.horizontalayoutlight else R.drawable.horizontalayoutdark
+                val icongrid =
+                    if (isDarkTheme) R.drawable.gridlayoutlight else R.drawable.gridlayoutdark
                 val icon = if (isGridLayout) iconhori else icongrid
                 Image(
                     painter = painterResource(id = icon),
@@ -277,7 +279,7 @@ fun GridLayoutItems(
             ) {
                 Image(
                     painter = rememberAsyncImagePainter(
-                        model = ImageRequest.Builder(LocalContext.current).data(dish.imageUrl)
+                        model = ImageRequest.Builder(LocalContext.current).data(dish.imagesUrl[0])
                             .build()
                     ),
                     contentDescription = "Dish Image",
@@ -549,7 +551,7 @@ fun LinearLayoutItems(
                     .align(CenterVertically)
                     .padding(end = 4.dp)
             ) {
-                AsyncImage(model = Uri.parse(dish.imageUrl),
+                AsyncImage(model = Uri.parse(dish.imagesUrl[0]),
                     contentDescription = "dishImage",
                     modifier = Modifier
                         .fillMaxSize()
@@ -580,7 +582,7 @@ fun LinearLayoutItems(
 
 
 @Composable
-fun ItemDiscription(
+fun ItemDescription(
     dish: Dishfordb,
     cartItems: SnapshotStateList<Dishfordb>,
     updateTotals: () -> Unit,
@@ -588,149 +590,143 @@ fun ItemDiscription(
 ) {
     val context = LocalContext.current
     val vibrator = context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
-//    var dishcount by remember { mutableIntStateOf(dish.count) }
     var cartDish = cartItems.find { it.name == dish.name }
     var dishcount by remember {
-        mutableIntStateOf(
-            cartDish?.count ?: 0
-        )
+        mutableIntStateOf(cartDish?.count ?: 0)
     }
-    Column(Modifier.fillMaxSize()) {
 
-        AsyncImage(
-            model = dish.imageUrl,
-            contentDescription = "Product Image",
-            modifier = Modifier
-                .fillMaxWidth()
-                .fillMaxHeight(0.4f)
-        )
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp)
+    ) {
         Column(
             modifier = Modifier
-                .padding(8.dp)
-                .fillMaxWidth()
+                .fillMaxSize()
                 .verticalScroll(rememberScrollState())
+                .padding(bottom = 70.dp) // Add bottom padding to prevent content from being covered by the button
         ) {
-            Text(
-                text = dish.name,
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colors.onSurface,
-                modifier = Modifier.padding(start = 12.dp)
-            )
-            Text(
-                text = dish.description,
-                color = MaterialTheme.colors.onSurface.copy(alpha = 0.6f),
-                modifier = Modifier.padding(top = 4.dp, bottom = 5.dp, start = 12.dp)
-            )
-
-            Text(
-                text = dish.weight,
-                color = MaterialTheme.colors.onSurface.copy(alpha = 0.6f),
-                modifier = Modifier.padding(top = 4.dp, bottom = 5.dp, start = 12.dp)
-            )
-
-            Row {
-                Text(
-                    text = dish.price,
-                    color = MaterialTheme.colors.onSurface.copy(alpha = 0.6f),
-                    fontWeight = FontWeight.Bold,
-                    fontStyle = FontStyle.Italic,
-                    modifier = Modifier.padding(start = 12.dp, end = 8.dp),
-                    fontSize = 20.sp
-                )
-                Text(
-                    text = "MRP ",
-                    color = MaterialTheme.colors.onSurface.copy(alpha = 0.6f),
-                    modifier = Modifier.padding(start = 8.dp),
-                )
-                Text(
-                    text = dish.mrp,
-                    color = MaterialTheme.colors.onSurface.copy(alpha = 0.6f),
-                    textDecoration = TextDecoration.LineThrough,
-                    fontSize = 16.sp
-                )
-                Text(
-                    text = " ${
-                        "%.2f".format(
-                            ((dish.mrp.trimStart('₹').toFloat() - dish.price.trimStart('₹')
-                                .toFloat()) / dish.mrp.trimStart('₹').toFloat()) * 100
-                        )
-                    }% off", color = Color(0xFF449C44), fontSize = 16.sp
-                )
-            }
+            // Image row
             Row(
                 modifier = Modifier
-                    .padding(12.dp)
-                    .fillMaxWidth(),
-                horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.Bottom
+                    .fillMaxWidth()
+                    .horizontalScroll(rememberScrollState())
+                    .padding(bottom = 16.dp)
             ) {
-                Button(
-                    onClick = {
-                        // Find the item in the cart
+                dish.imagesUrl.forEach { uri ->
+                    AsyncImage(
+                        model = uri,
+                        contentDescription = "Selected Image",
+                        modifier = Modifier
+                            .padding(end = 8.dp)
+                            .size(220.dp)
+                            .clip(RoundedCornerShape(10.dp))
+                            .border(1.dp, Color.Gray, RoundedCornerShape(10.dp))
+                    )
+                }
+            }
+            Column(
+                modifier = Modifier
+                    .padding(8.dp)
+                    .fillMaxWidth()
+            ) {
+                Text(
+                    text = dish.name,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colors.onSurface,
+                    modifier = Modifier.padding(start = 12.dp)
+                )
+                Text(
+                    text = dish.description,
+                    color = MaterialTheme.colors.onSurface.copy(alpha = 0.6f),
+                    modifier = Modifier.padding(top = 4.dp, bottom = 5.dp, start = 12.dp)
+                )
 
-                        if (cartDish != null) {
-                            cartDish!!.count++
-                        } else {
-                            val newDish = dish.copy(count = 1)
-                            cartItems.add(newDish)
-                        }
-                        cartDish = cartItems.find { it.name == dish.name }
-                        if (cartDish != null) {
-                            dishcount = cartDish!!.count
-                        }
-                        updateTotals()
-                        saveCartItemsToSharedPreferences()
+                Text(
+                    text = dish.weight,
+                    color = MaterialTheme.colors.onSurface.copy(alpha = 0.6f),
+                    modifier = Modifier.padding(top = 4.dp, bottom = 5.dp, start = 12.dp)
+                )
 
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                            vibrator.vibrate(
-                                VibrationEffect.createOneShot(
-                                    50, VibrationEffect.DEFAULT_AMPLITUDE
-                                )
-                            )
-                        } else {
-                            vibrator.vibrate(50)
-                        }
-
-                        val truncatedString = if (dish.name.length > 8) {
-                            dish.name.substring(0, 8) + "..."
-                        } else {
-                            dish.name
-                        }
-                        Toast.makeText(
-                            context, "Added to Cart: $truncatedString", Toast.LENGTH_SHORT
-                        ).show()
-                    },
-                    colors = ButtonDefaults.buttonColors(backgroundColor = MaterialTheme.colors.primary),
-                    shape = RoundedCornerShape(40),
-                    modifier = Modifier
-                        .padding(10.dp)
-                        .fillMaxWidth()
-                        .height(50.dp)
-                        .align(CenterVertically)
-                ) {
+                Row {
                     Text(
-                        text = if (dishcount == 0) "Add to Cart" else "Add More $dishcount",
-                        color = MaterialTheme.colors.onPrimary,
-                        fontWeight = FontWeight.Bold
+                        text = dish.price,
+                        color = MaterialTheme.colors.onSurface.copy(alpha = 0.6f),
+                        fontWeight = FontWeight.Bold,
+                        fontStyle = FontStyle.Italic,
+                        modifier = Modifier.padding(start = 12.dp, end = 8.dp),
+                        fontSize = 20.sp
+                    )
+                    Text(
+                        text = "MRP ",
+                        color = MaterialTheme.colors.onSurface.copy(alpha = 0.6f),
+                        modifier = Modifier.padding(start = 8.dp),
+                    )
+                    Text(
+                        text = dish.mrp,
+                        color = MaterialTheme.colors.onSurface.copy(alpha = 0.6f),
+                        textDecoration = TextDecoration.LineThrough,
+                        fontSize = 16.sp
+                    )
+                    Text(
+                        text = " ${
+                            "%.2f".format(
+                                ((dish.mrp.trimStart('₹').toFloat() - dish.price.trimStart('₹')
+                                    .toFloat()) / dish.mrp.trimStart('₹').toFloat()) * 100
+                            )
+                        }% off", color = Color(0xFF449C44), fontSize = 16.sp
                     )
                 }
             }
         }
+        Button(
+            onClick = {
+                if (cartDish != null) {
+                    cartDish!!.count++
+                } else {
+                    val newDish = dish.copy(count = 1)
+                    cartItems.add(newDish)
+                }
+                cartDish = cartItems.find { it.name == dish.name }
+                if (cartDish != null) {
+                    dishcount = cartDish!!.count
+                }
+                updateTotals()
+                saveCartItemsToSharedPreferences()
+
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    vibrator.vibrate(
+                        VibrationEffect.createOneShot(
+                            50, VibrationEffect.DEFAULT_AMPLITUDE
+                        )
+                    )
+                } else {
+                    vibrator.vibrate(50)
+                }
+
+                val truncatedString = if (dish.name.length > 8) {
+                    dish.name.substring(0, 8) + "..."
+                } else {
+                    dish.name
+                }
+                Toast.makeText(
+                    context, "Added to Cart: $truncatedString", Toast.LENGTH_SHORT
+                ).show()
+            },
+            colors = ButtonDefaults.buttonColors(backgroundColor = MaterialTheme.colors.primary),
+            shape = RoundedCornerShape(40),
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(10.dp)
+                .fillMaxWidth()
+                .height(50.dp),
+        ) {
+            Text(
+                text = if (dishcount == 0) "Add to Cart" else "Add More $dishcount",
+                color = MaterialTheme.colors.onPrimary,
+                fontWeight = FontWeight.Bold
+            )
+        }
     }
 }
-
-
-//    LazyRow {
-//        items(dish.imageUrl) { imageUrl ->
-//            AsyncImage(
-//                model = Uri.parse(imageUrl),
-//                contentDescription = "dishImage",
-//                modifier = Modifier
-//                    .size(108.dp) // Set a fixed size for the image
-//                    .clip(RoundedCornerShape(20.dp))
-//                    .align(CenterVertically)
-//                    .padding(end = 8.dp)
-//            )
-//        }
-//    }

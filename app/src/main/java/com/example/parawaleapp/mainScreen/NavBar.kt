@@ -3,7 +3,6 @@ package com.example.parawaleapp.mainScreen
 import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -26,7 +25,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.parawaleapp.R
-import com.example.parawaleapp.TypewriterText
+import com.example.parawaleapp.sign_in.TypewriterText
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 

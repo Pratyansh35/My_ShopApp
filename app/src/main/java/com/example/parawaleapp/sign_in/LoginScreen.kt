@@ -1,5 +1,6 @@
-package com.example.parawaleapp
+package com.example.parawaleapp.sign_in
 
+import android.app.Activity
 import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.Image
@@ -8,12 +9,16 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.Button
 import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.CircularProgressIndicator
@@ -21,7 +26,6 @@ import androidx.compose.material.Divider
 import androidx.compose.material.IconButton
 import androidx.compose.material.OutlinedTextField
 import androidx.compose.material.Text
-import androidx.compose.material.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -37,12 +41,12 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
-import com.example.parawaleapp.sign_in.SignInState
+import com.example.parawaleapp.R
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -79,13 +83,13 @@ fun TypewriterText(
 @Composable
 fun SignInScreen(
     state: SignInState,
-    onSignInClick: (String) -> Unit,
+    onSignInClick: (Activity, String) -> Unit,
     onGoogleSignInClick: () -> Unit,
     onVerifyCodeClick: (String) -> Unit
 ) {
     var phoneNumber by remember { mutableStateOf(TextFieldValue("")) }
     var verificationCode by remember { mutableStateOf(TextFieldValue("")) }
-    val context = LocalContext.current
+    val context = LocalContext.current as Activity
 
     LaunchedEffect(key1 = state.signInError) {
         state.signInError?.let {
@@ -136,36 +140,10 @@ fun SignInScreen(
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.padding(start = 16.dp, bottom = 20.dp)
                 )
-                OutlinedTextField(
-                    value = phoneNumber,
-                    onValueChange = {
-                        phoneNumber = it
-                    },
-                    label = { Text(text = "Phone Number") },
-                    modifier = Modifier
-                        .padding(10.dp)
-                        .navigationBarsPadding(),
-                    singleLine = true
-                )
-                if (state.verificationId == null) {
-                    Button(
-                        onClick = {
-                            if (phoneNumber.text.isNotEmpty()) {
-                                onSignInClick(phoneNumber.text)
-                            } else {
-                                Toast.makeText(
-                                    context,
-                                    "Please enter a valid phone number.",
-                                    Toast.LENGTH_LONG
-                                ).show()
-                            }
-                        },
-                        colors = ButtonDefaults.buttonColors(Color(0xFF4D7467)),
-                        modifier = Modifier.padding(10.dp)
-                    ) {
-                        Text(text = "Send OTP", color = Color(0xFFEDEFEE))
-                    }
-                }
+
+                // Display phone number input if not linked
+               
+
                 // OTP Verification
                 if (state.verificationId != null) {
                     OutlinedTextField(
@@ -197,6 +175,41 @@ fun SignInScreen(
                         Text(text = "Verify Code", color = Color(0xFFEDEFEE))
                     }
                 }
+
+                if (!state.isSignInSuccessful) {
+                    OutlinedTextField(
+                        value = phoneNumber,
+                        onValueChange = {
+                            phoneNumber = it
+                        },
+                        label = { Text(text = "Phone Number") },
+                        modifier = Modifier
+                            .padding(10.dp)
+                            .navigationBarsPadding(),
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number)
+                    )
+                    if (state.verificationId == null) {
+                        Button(
+                            onClick = {
+                                if (phoneNumber.text.isNotEmpty()) {
+                                    onSignInClick(context, phoneNumber.text)
+                                } else {
+                                    Toast.makeText(
+                                        context,
+                                        "Please enter a valid phone number.",
+                                        Toast.LENGTH_LONG
+                                    ).show()
+                                }
+                            },
+                            colors = ButtonDefaults.buttonColors(Color(0xFF4D7467)),
+                            modifier = Modifier.padding(10.dp)
+                        ) {
+                            Text(text = "Send OTP", color = Color(0xFFEDEFEE))
+                        }
+                    }
+                }
+
                 Row {
                     Divider(
                         modifier = Modifier
@@ -253,3 +266,6 @@ fun SignInScreen(
         }
     }
 }
+
+
+

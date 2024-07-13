@@ -16,6 +16,8 @@
       "email": "pratyansh35@gmail.com",
       "merchantCode": "BCR2DN4TWX57P5DJ",
       "category": "Grocery",
+      "panelimage": "https://firebasestorage.googleapis.com/v0/b/myparawale-app.appspot.com/o/Images%2Fparawale1.jpg?alt=media&token=836888a7-2481-4c07-8e70-d00a69ae710a",
+      "logo":"https://firebasestorage.googleapis.com/v0/b/myparawale-app.appspot.com/o/Images%2FparawaleIcon.png?alt=media&token=7fe032ef-1200-41f5-92a5-4ac4ea21522a",
       "items": {
         "Ashirvaad Aata": {
           "barcode": "8901234567890",
@@ -293,6 +295,8 @@
       "email": "abcmedices01@gmail.com",
       "merchantCode": "XYS2DN4TWX57P5DJ",
       "category": "Pharmacy",
+      "panelimage": "https://firebasestorage.googleapis.com/v0/b/myparawale-app.appspot.com/o/Images%2Fparawale1.jpg?alt=media&token=836888a7-2481-4c07-8e70-d00a69ae710a",
+      "logo":"https://firebasestorage.googleapis.com/v0/b/myparawale-app.appspot.com/o/Images%2FparawaleIcon.png?alt=media&token=7fe032ef-1200-41f5-92a5-4ac4ea21522a",
       "items": {
         "Dettol Handwash": {
           "barcode": "8901396311506",

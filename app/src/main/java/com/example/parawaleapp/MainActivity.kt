@@ -75,11 +75,12 @@ import com.example.parawaleapp.drawerPanel.leftPanel.LeftDrawerPanel
 import com.example.parawaleapp.drawerPanel.leftPanel.Profileset
 import com.example.parawaleapp.drawerPanel.leftPanel.Settings
 import com.example.parawaleapp.mainScreen.HomeScreen
-import com.example.parawaleapp.mainScreen.ItemDiscription
+import com.example.parawaleapp.mainScreen.ItemDescription
 import com.example.parawaleapp.mainScreen.MenuListScreen
 import com.example.parawaleapp.mainScreen.NavBar
 import com.example.parawaleapp.printer.BluetoothScreen
-import com.example.parawaleapp.sign_in.GoogleAuthUiclient
+import com.example.parawaleapp.sign_in.GoogleAuthUiClient
+import com.example.parawaleapp.sign_in.SignInScreen
 import com.example.parawaleapp.sign_in.SignInViewModel
 import com.example.parawaleapp.ui.theme.MyAppTheme
 import com.google.android.gms.auth.api.identity.Identity
@@ -94,7 +95,7 @@ import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
     private val googleAuthUiClient by lazy {
-        GoogleAuthUiclient(
+        GoogleAuthUiClient(
             context = applicationContext,
             oneTapClient = Identity.getSignInClient(applicationContext)
         )
@@ -141,7 +142,7 @@ class MainActivity : ComponentActivity() {
                                 })
 
                         LaunchedEffect(key1 = state.isSignInSuccessful) {
-                            if (state.isSignInSuccessful) {
+                            if (state.isSignInSuccessful && state.isPhoneNumberLinked) {
                                 Toast.makeText(
                                     applicationContext, "Sign in successful", Toast.LENGTH_SHORT
                                 ).show()
@@ -161,9 +162,7 @@ class MainActivity : ComponentActivity() {
 
                         SignInScreen(
                             state = state,
-                            onSignInClick = { phoneNumber ->
-                                viewModel.sendVerificationCode(phoneNumber, this@MainActivity)
-                            },
+                            onSignInClick = { activity, phoneNumber -> viewModel.sendVerificationCode(activity, phoneNumber) },
                             onGoogleSignInClick = {
                                 viewModel.startLoading()
                                 lifecycleScope.launch {
@@ -179,6 +178,7 @@ class MainActivity : ComponentActivity() {
                                 viewModel.verifyPhoneNumberWithCode(verificationCode)
                             }
                         )
+
                     }
                     composable("MainScreen") {
                         MainScreen(
@@ -194,10 +194,11 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+
 @Composable
 fun MainScreen(
     navController2: NavController,
-    googleAuthUiClient: GoogleAuthUiclient,
+    googleAuthUiClient: GoogleAuthUiClient,
     scope: CoroutineScope,
     dishData: List<Dishfordb>
 ) {
@@ -288,8 +289,6 @@ fun MainScreen(
                         BarCodeScreen(
                             dishData,
                             cartItems = cartItems,
-                            total = allOverTotalPrice,
-                            totalmrp = allOverTotalMrp,
                             updateTotals = ::updateTotals,
                             saveCartItemsToSharedPreferences = ::saveCartItemsToSharedPreferences
                         )
@@ -342,7 +341,7 @@ fun MainScreen(
                         val dishJson = backStackEntry.arguments?.getString("dish")
                         val item = Gson().fromJson(dishJson, Dishfordb::class.java)
                         if (item != null) {
-                            ItemDiscription(
+                            ItemDescription(
                                 item,
                                 cartItems = cartItems,
                                 updateTotals = ::updateTotals,

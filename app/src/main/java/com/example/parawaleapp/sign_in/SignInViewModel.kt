@@ -1,9 +1,19 @@
 package com.example.parawaleapp.sign_in
 
+import android.app.Activity
+import android.content.Context
+import android.content.Intent
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.activity.result.ActivityResultLauncher
 import androidx.lifecycle.ViewModel
+import com.example.parawaleapp.R
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.firebase.FirebaseException
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.auth.PhoneAuthCredential
 import com.google.firebase.auth.PhoneAuthOptions
 import com.google.firebase.auth.PhoneAuthProvider
@@ -16,6 +26,27 @@ import java.util.concurrent.TimeUnit
 class SignInViewModel : ViewModel() {
     private val _state = MutableStateFlow(SignInState())
     val state: StateFlow<SignInState> = _state
+
+
+    fun onSignInResult(result: SignInResult) {
+        if (result.data != null) {
+            val userData = result.data
+            val isPhoneNumberLinked = !userData.phoneno.isNullOrEmpty()
+            _state.value = _state.value.copy(
+                isSignInSuccessful = true,
+                userData = userData,
+                isPhoneNumberVerificationVisible = !isPhoneNumberLinked,
+                isPhoneNumberLinked = isPhoneNumberLinked,
+                isLoading = false
+            )
+        } else {
+            _state.value = _state.value.copy(
+                signInError = result.errorMessage,
+                isLoading = false
+            )
+        }
+    }
+
 
     val phoneAuthCallbacks = object : PhoneAuthProvider.OnVerificationStateChangedCallbacks() {
         override fun onVerificationCompleted(credential: PhoneAuthCredential) {
@@ -41,23 +72,12 @@ class SignInViewModel : ViewModel() {
         Log.d("SignInViewModel", "startLoading")
         _state.value = _state.value.copy(isLoading = true)
     }
-
     fun stopLoading() {
-        Log.d("SignInViewModel", "stopLoading")
         _state.value = _state.value.copy(isLoading = false)
     }
 
     fun resetState() {
-        Log.d("SignInViewModel", "resetState")
         _state.value = SignInState()
-    }
-
-    fun onSignInResult(result: SignInResult) {
-        Log.d("SignInViewModel", "onSignInResult: $result")
-        _state.value = _state.value.copy(
-            isSignInSuccessful = result.data != null,
-            signInError = result.errorMessage
-        )
     }
 
     private fun signInWithPhoneAuthCredential(credential: PhoneAuthCredential) {
@@ -65,8 +85,18 @@ class SignInViewModel : ViewModel() {
         Firebase.auth.signInWithCredential(credential)
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
+                    val user = task.result?.user
+                    val userData = user?.let {
+                        UserData(
+                            userId = it.uid,
+                            userName = it.displayName,
+                            userEmail = it.email,
+                            progilePictureUrl = it.photoUrl?.toString(),
+                            phoneno = it.phoneNumber
+                        )
+                    }
                     Log.d("SignInViewModel", "signInWithPhoneAuthCredential: success")
-                    _state.value = _state.value.copy(isSignInSuccessful = true)
+                    onSignInResult(SignInResult(data = userData, errorMessage = null))
                 } else {
                     Log.e("SignInViewModel", "signInWithPhoneAuthCredential: failure", task.exception)
                     _state.value = _state.value.copy(signInError = task.exception?.message)
@@ -82,13 +112,12 @@ class SignInViewModel : ViewModel() {
             val credential = PhoneAuthProvider.getCredential(verificationId, code)
             signInWithPhoneAuthCredential(credential)
         } else {
-            _state.value = _state.value.copy(signInError = "Verification ID is null")
+            _state.value = _state.value.copy(signInError = "Verification ID not found.")
         }
     }
-
-    fun sendVerificationCode(phoneNumber: String, activity: ComponentActivity) {
+    fun sendVerificationCode(activity: Activity, phoneNumber: String) {
+        Log.d("SignInViewModel", "sendOtp: phoneNumber=$phoneNumber")
         startLoading()
-        Log.d("SignInViewModel", "sendVerificationCode: phoneNumber=$phoneNumber")
         val options = PhoneAuthOptions.newBuilder(Firebase.auth)
             .setPhoneNumber("+91$phoneNumber")
             .setTimeout(60L, TimeUnit.SECONDS)
@@ -98,3 +127,6 @@ class SignInViewModel : ViewModel() {
         PhoneAuthProvider.verifyPhoneNumber(options)
     }
 }
+
+
+

@@ -50,6 +50,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -88,7 +89,7 @@ fun CartDrawerPanel(
                 }
             }
             Row(
-                Modifier.fillMaxWidth(),
+                Modifier.fillMaxWidth().padding(10.dp),
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.Bottom
             ) {
@@ -98,9 +99,9 @@ fun CartDrawerPanel(
                     fontWeight = FontWeight.W900,
                     color = MaterialTheme.colors.onBackground,
                     modifier = Modifier
-                        .padding(end = 10.dp)
+                        .padding(end = 8.dp)
                         .align(Alignment.CenterVertically),
-                    fontSize = 20.sp
+                    fontSize = 16.sp
                 )
 
                 Button(
@@ -110,7 +111,6 @@ fun CartDrawerPanel(
                     colors = ButtonDefaults.buttonColors(backgroundColor = MaterialTheme.colors.primary),
                     shape = RoundedCornerShape(40),
                     modifier = Modifier
-                        .padding(10.dp)
                         .fillMaxWidth()
                         .height(50.dp)
                         .align(Alignment.CenterVertically)
@@ -178,7 +178,7 @@ fun CartItems(
             ) {
                 Image(
                     painter = rememberAsyncImagePainter(
-                        model = ImageRequest.Builder(LocalContext.current).data(dish.imageUrl)
+                        model = ImageRequest.Builder(LocalContext.current).data(dish.imagesUrl[0])
                             .build()
                     ),
                     contentDescription = "Dish Image",
@@ -324,11 +324,10 @@ fun CartItems(
                     }
                 }
                 Row(
-                    modifier = Modifier.fillMaxWidth().height(50.dp),
+                    modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically
 
                 ) {
-
                     Text(
                         text = "${dish.price}",
                         color = MaterialTheme.colors.onSurface,
@@ -351,8 +350,8 @@ fun CartItems(
                         fontWeight = FontWeight.Medium,
                         color = MaterialTheme.colors.onSurface,
                         modifier = Modifier
-                            .padding(start = 4.dp),
-
+                            .padding(start = 4.dp, end = 8.dp).fillMaxWidth(),
+                        textAlign = TextAlign.End
                     )
                 }
             }
