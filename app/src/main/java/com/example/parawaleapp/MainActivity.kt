@@ -349,15 +349,21 @@ fun MainScreen(
                             )
                         }
                     }
-                    composable("orderDetails/{email}/{date}/{name}/{orderedItems}") { backStackEntry ->
+                    composable("orderDetails/{email}/{date}/{name}/{orderedItems}/{timeStamp}") { backStackEntry ->
                         val email = backStackEntry.arguments?.getString("email")
                         val date = backStackEntry.arguments?.getString("date")
                         val name = backStackEntry.arguments?.getString("name")
                         val orderedItemsJson = backStackEntry.arguments?.getString("orderedItems")
+                        val orderTimeStamp = backStackEntry.arguments?.getString("timeStamp")
                         val loggedemail = googleAuthUiClient.getSinedInUser()?.userEmail
-                        OrderDetailsScreen(
-                            navController, email, date, name, loggedemail, orderedItemsJson
-                        )
+
+                        if (orderedItemsJson != null && orderTimeStamp != null) {
+
+                                OrderDetailsScreen(
+                                    navController = navController , email = email, date = date, name = name, loggedUser = loggedemail, orderedItemsJson = orderedItemsJson, timeStamp = orderTimeStamp
+                                )
+
+                        }
                     }
                     composable("Location"){
                         ShopDistanceScreen(

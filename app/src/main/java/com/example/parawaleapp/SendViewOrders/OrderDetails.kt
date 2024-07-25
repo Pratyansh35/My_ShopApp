@@ -1,5 +1,7 @@
 package com.example.parawaleapp.SendViewOrders
 
+import android.content.Context
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -11,10 +13,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.AlertDialog
 import androidx.compose.material.Button
 import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -23,20 +26,62 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavController
+import com.example.parawaleapp.Notifications.OrderStatusNotification
 import com.example.parawaleapp.cartScreen.CartLayout
 import com.example.parawaleapp.cartScreen.ConfirmItems
 import com.example.parawaleapp.cartScreen.formatForPrinting
 import com.example.parawaleapp.cartScreen.printData
 import com.example.parawaleapp.cartScreen.selectedPrinter
 import com.example.parawaleapp.database.Dishfordb
+import com.example.parawaleapp.database.datareference
 import com.google.gson.Gson
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.io.OutputStreamWriter
+import java.net.HttpURLConnection
+import java.net.URL
+import androidx.compose.ui.platform.LocalLifecycleOwner
+import kotlinx.coroutines.tasks.await
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.RequestBody.Companion.toRequestBody
+import okhttp3.logging.HttpLoggingInterceptor
+
+fun updateOrderStatus(
+    context: Context,
+    userEmail: String?,
+    transactionId: String,
+    newStatus: String,
+    onSuccess: () -> Unit
+) {
+    userEmail?.let {
+        val userEmailFormatted = it.replace(".", ",")
+        val orderStatusRef =
+            datareference.child("OnlineOrders").child(userEmailFormatted).child("orders")
+                .child(transactionId).child("Order Status")
+
+        orderStatusRef.setValue(newStatus).addOnSuccessListener {
+                Toast.makeText(context, "Order Status Updated Successfully", Toast.LENGTH_SHORT)
+                    .show()
+                onSuccess()
+            }.addOnFailureListener { exception ->
+                Toast.makeText(context, exception.message, Toast.LENGTH_SHORT).show()
+                Log.d("booking", "updateOrderStatus: ${exception.message}")
+            }
+    }
+}
+
 
 @Composable
 fun OrderDetailsScreen(
     navController: NavController,
     email: String?,
     date: String?,
+    timeStamp: String,
     name: String?,
     loggedUser: String?,
     orderedItemsJson: String?
@@ -45,7 +90,8 @@ fun OrderDetailsScreen(
     val order = Gson().fromJson(orderedItemsJson, Array<Dishfordb>::class.java).toList()
     val totalMRP = order.sumOf { it.count * it.mrp.removePrefix("₹").toDouble() }
     val totalPrice = order.sumOf { it.count * it.price.removePrefix("₹").toDouble() }
-
+    var showChangeStatusDialog by remember { mutableStateOf(false) }
+    var statusToChange by remember { mutableStateOf("") }
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -56,45 +102,65 @@ fun OrderDetailsScreen(
 
         LazyColumn(modifier = Modifier.weight(0.8f)) {
             item {
-                Row() {
+                Row {
                     Button(
-                        onClick = {},
+                        onClick = {
+                            statusToChange = "Cancelled"
+                            showChangeStatusDialog = true
+                        },
                         colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFFE01313)),
                         shape = RoundedCornerShape(40),
                         modifier = Modifier
-                            .padding(2.dp)
                             .fillMaxWidth()
-                            .height(40.dp)
                             .weight(1f)
                     ) {
-                        Text(text = "Cancel Order", color = Color.Black, fontWeight = FontWeight.Bold, fontSize = 8.sp, textAlign = TextAlign.Center )
+                        Text(
+                            text = "Cancel Order",
+                            color = Color.Black,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 8.sp,
+                            textAlign = TextAlign.Center
+                        )
                     }
                     Button(
-                        onClick = {},
+                        onClick = {
+                            statusToChange = "Completed"
+                            showChangeStatusDialog = true
+                        },
                         colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFF3DF414)),
                         shape = RoundedCornerShape(40),
                         modifier = Modifier
-                            .padding(2.dp)
                             .fillMaxWidth()
-                            .height(40.dp)
                             .weight(1f)
                     ) {
-                        Text(text = "Mark as Completed", color = Color.Black, fontWeight = FontWeight.Bold, fontSize = 8.sp, textAlign = TextAlign.Center )
+                        Text(
+                            text = "Mark as Completed",
+                            color = Color.Black,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 8.sp,
+                            textAlign = TextAlign.Center
+                        )
                     }
                     Button(
-                        onClick = {},
+                        onClick = {
+                            statusToChange = "Pending"
+                            showChangeStatusDialog = true
+                        },
                         colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFFDBC70D)),
                         shape = RoundedCornerShape(40),
                         modifier = Modifier
-                            .padding(2.dp)
                             .fillMaxWidth()
-                            .height(40.dp)
                             .weight(1f)
                     ) {
-                        Text(text = "Move to Pending", color = Color.Black, fontWeight = FontWeight.Bold, fontSize = 8.sp, textAlign = TextAlign.Center )
+                        Text(
+                            text = "Move to Pending",
+                            color = Color.Black,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 8.sp,
+                            textAlign = TextAlign.Center
+                        )
                     }
                 }
-
 
                 Text(
                     text = "${email?.replace(",", ".")}",
@@ -192,7 +258,125 @@ fun OrderDetailsScreen(
             ) {
                 Text(text = "Print Bill", color = Color.Black, fontWeight = FontWeight.Bold)
             }
-
+            if (showChangeStatusDialog) {
+                ChangeStatusDialog("Pending",
+                    statusToChange,
+                    email,
+                    date ?: "",
+                    timeStamp,
+                    timeStamp,
+                    onDismiss = { showChangeStatusDialog = false })
+            }
         }
     }
 }
+
+
+@Composable
+fun ChangeStatusDialog(
+    oldStatus: String,
+    status: String,
+    email: String?,
+    date: String,
+    time: String,
+    transactionId: String,
+    onDismiss: () -> Unit
+) {
+    val context = LocalContext.current
+    val lifecycleOwner = LocalLifecycleOwner.current
+    var showNotification by remember { mutableStateOf(false) }
+
+    if (showNotification) {
+        OrderStatusNotification("Order Update", "Your order status is now $status")
+        showNotification = false // Reset the state after showing the notification
+    }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(text = "Are you sure you want to mark this as $status?") },
+        text = {
+            Column {
+                Text(text = "Transaction ID: $transactionId")
+                Text(text = "This will be marked from $oldStatus as $status")
+            }
+        },
+        dismissButton = {
+            Button(onClick = onDismiss) {
+                Text("No")
+            }
+        },
+        confirmButton = {
+            Button(onClick = {
+                onDismiss()
+                updateOrderStatus(context, email, transactionId, status) {
+                    showNotification = true
+                }
+                lifecycleOwner.lifecycleScope.launch {
+                    sendNotificationToUser(email, "Order Update", "Your order is now $status")
+                }
+            }) {
+                Text("OK")
+            }
+        }
+    )
+}
+
+
+suspend fun sendNotificationToUser(email: String?, title: String, message: String) {
+    email?.let {
+        val formattedEmail = it.replace(".", ",")
+        val tokenRef = datareference.child("UsersToken").child(formattedEmail).child("/deviceToken")
+
+        try {
+            val snapshot = tokenRef.get().await()
+            val token = snapshot.getValue(String::class.java)
+            Log.e("NotificationKey", "tokenRef: $token")
+            if (token != null) {
+                sendNotification(token, title, message)
+            }
+        } catch (e: Exception) {
+            println("Error retrieving device token: ${e.message}")
+        }
+    }
+}
+
+suspend fun sendNotification(token: String, title: String, message: String) {
+    withContext(Dispatchers.IO) {
+        try {
+            // Create the JSON payload
+            val notification = mapOf(
+                "token" to token,
+                "title" to title,
+                "message" to message
+            )
+            val jsonNotification = Gson().toJson(notification)
+
+            // Create the request body
+            val requestBody = jsonNotification.toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull())
+
+            // Create an OkHttp client with logging
+            val logging = HttpLoggingInterceptor().apply { level = HttpLoggingInterceptor.Level.BODY }
+            val client = OkHttpClient.Builder().addInterceptor(logging).build()
+
+            // Build the request
+            val request = Request.Builder()
+                .url("https://us-central1-myparawale-app.cloudfunctions.net/sendNotification")
+                .post(requestBody)
+                .addHeader("Content-Type", "application/json")
+                .build()
+
+            // Execute the request
+            client.newCall(request).execute().use { response ->
+                if (!response.isSuccessful) {
+                    println("Failed to send notification, response code: ${response.code}, error: ${response.body?.string()}")
+                } else {
+                    println("Notification sent successfully")
+                }
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            println("Exception occurred: ${e.message}")
+        }
+    }
+}
+

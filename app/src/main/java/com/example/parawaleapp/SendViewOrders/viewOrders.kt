@@ -37,6 +37,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.example.parawaleapp.PaymentUpi.TransactionResult
 import com.example.parawaleapp.cartScreen.CartLayout
 import com.example.parawaleapp.cartScreen.ConfirmItems
 import com.example.parawaleapp.cartScreen.formatForPrinting
@@ -60,10 +61,14 @@ data class EmailOrder(
 data class OrdersFromEmails(
     val date: String,
     val atTime: String,
+    val transactionId: String,
     val totalprice: Double = 0.0,
     val totalmrp: Double = 0.0,
     val orderedItems: List<Dishfordb> = emptyList(),
-    val orderStatus: String
+    val orderStatus: String,
+    val merchantCode : String,
+    val amountReceived: String,
+    val amountRemaining: String
 )
 
 var AllOrdersList by mutableStateOf<List<EmailOrder>>(emptyList())
@@ -96,7 +101,9 @@ fun fetchAllOrders(callback: (List<EmailOrder>) -> Unit) {
                 val date = DateFormat.format(Date(orderTimestamp))
                 val TimeFormat = SimpleDateFormat("hh:mm a", Locale.getDefault())
                 val atTime = TimeFormat.format(Date(orderTimestamp))
-
+                val totalAmountRecieved = orderSnapshot.child("Amount received").getValue(String::class.java) ?: "0"
+                val totalAmountRemaining = orderSnapshot.child("Amount remaining").getValue(String::class.java) ?: "0"
+                val merchantCode = orderSnapshot.child("Merchant Code").getValue(String::class.java) ?: ""
                 val totalMrp = orderSnapshot.child("totalMrp").getValue(Double::class.java) ?: 0.0
                 val total = orderSnapshot.child("total").getValue(Double::class.java) ?: 0.0
                 val orderStatus =
@@ -104,7 +111,7 @@ fun fetchAllOrders(callback: (List<EmailOrder>) -> Unit) {
                 val items = orderSnapshot.child("items").children.mapNotNull {
                     it.getValue(Dishfordb::class.java)
                 }
-                orders.add(OrdersFromEmails(date, atTime, totalMrp, total, items, orderStatus))
+                orders.add(OrdersFromEmails(date, atTime,orderTimestamp.toString() ,totalMrp, total, items, orderStatus, merchantCode, totalAmountRecieved, totalAmountRemaining))
             }
             allOrders.add(EmailOrder(email, username, contactno, orders))
         }
@@ -294,7 +301,7 @@ fun OrderCard(navController: NavController, email: String?, username: String?, o
             .clickable {
                 val orderedItemsJson = Uri.encode(Gson().toJson(order.orderedItems))
                 navController.navigate(
-                    "orderDetails/${Uri.encode(email)}/${Uri.encode(order.date)}/$username/$orderedItemsJson"
+                    "orderDetails/${Uri.encode(email)}/${Uri.encode(order.date)}/$username/$orderedItemsJson/${order.transactionId}"
                 )
             }, shape = RoundedCornerShape(10.dp), elevation = 10.dp
     ) {

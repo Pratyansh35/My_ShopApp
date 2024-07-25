@@ -261,7 +261,7 @@ fun PaymentScreenLayout(
 //                )
                 if (selectedPercentage == 0f) {
                     IconButton(onClick = {
-                        sendOrders( context, userData, cartItems, totalMrp, totalValue, System.currentTimeMillis().toString(), merchantId, amountReceived = "0", amountRemaining = totalValue.toString())
+                        sendOrders(context =  context, userData = userData,cartItems = cartItems, totalMrp =  totalMrp, totalValue =  totalValue, transactionId = System.currentTimeMillis().toString(), merchantCode =  merchantId, amountReceived = "0", amountRemaining = totalValue.toString())
                         cartItems.clear()
                     }) {
                         Card(

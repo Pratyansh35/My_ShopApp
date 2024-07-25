@@ -9,6 +9,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.result.ActivityResultLauncher
 import androidx.lifecycle.ViewModel
 import com.example.parawaleapp.R
+import com.example.parawaleapp.database.datareference
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.firebase.FirebaseException
@@ -18,7 +19,9 @@ import com.google.firebase.auth.PhoneAuthCredential
 import com.google.firebase.auth.PhoneAuthOptions
 import com.google.firebase.auth.PhoneAuthProvider
 import com.google.firebase.auth.ktx.auth
+import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.ktx.Firebase
+import com.google.firebase.messaging.ktx.messaging
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import java.util.concurrent.TimeUnit
@@ -39,6 +42,13 @@ class SignInViewModel : ViewModel() {
                 isPhoneNumberLinked = isPhoneNumberLinked,
                 isLoading = false
             )
+
+            Firebase.messaging.token.addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    val token = task.result
+                    storeDeviceToken(userData.userEmail, token)
+                }
+            }
         } else {
             _state.value = _state.value.copy(
                 signInError = result.errorMessage,
@@ -46,7 +56,14 @@ class SignInViewModel : ViewModel() {
             )
         }
     }
-
+    private fun storeDeviceToken(email: String?, token: String) {
+        if (email != null) {
+            val formattedEmail = email.replace(".", ",")
+            val tokenRef =
+                datareference.child("UsersToken").child(formattedEmail).child("/deviceToken")
+            tokenRef.setValue(token)
+        }
+    }
 
     val phoneAuthCallbacks = object : PhoneAuthProvider.OnVerificationStateChangedCallbacks() {
         override fun onVerificationCompleted(credential: PhoneAuthCredential) {

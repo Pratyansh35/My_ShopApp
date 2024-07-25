@@ -44,6 +44,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.CenterVertically
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shadow
@@ -288,7 +289,9 @@ fun GridLayoutItems(
                         .fillMaxSize()
                         .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp))
                 )
-                Text(
+                if (discountPercentage > 0)
+                {
+                    Text(
                     text = "${discountPercentage.toInt()}% off",
                     color = Color.White,
                     fontWeight = FontWeight.Bold,
@@ -298,7 +301,8 @@ fun GridLayoutItems(
                         .background(Color.Red)
                         .padding(2.dp)
                         .clip(RoundedCornerShape(4.dp))
-                )
+                    )
+                }
             }
             Column(
                 modifier = Modifier
@@ -558,9 +562,11 @@ fun LinearLayoutItems(
                         .clickable {
                             val dishJson = gson.toJson(dish)
                             navController.navigate("itemDescription/${Uri.encode(dishJson)}")
-                        })
+                        },
+                    )
+                if (discountPercentage > 0){
                 Text(
-                    text = "${"%.2f".format(discountPercentage)}% off",
+                    text = "${"%.1f".format(discountPercentage)}% off",
                     color = Color.White,
                     fontWeight = FontWeight.Bold,
                     fontSize = 5.sp,
@@ -570,6 +576,7 @@ fun LinearLayoutItems(
                         .padding(1.dp)
                         .clip(RoundedCornerShape(50.dp))
                 )
+                    }
             }
         }
     }

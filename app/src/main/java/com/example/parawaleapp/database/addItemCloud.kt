@@ -10,6 +10,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -23,13 +24,16 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.AlertDialog
 import androidx.compose.material.Button
 import androidx.compose.material.Card
+import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.Icon
 import androidx.compose.material.LinearProgressIndicator
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.OutlinedTextField
 import androidx.compose.material.Text
+import androidx.compose.material.TextButton
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.runtime.Composable
@@ -95,13 +99,15 @@ fun AddItemScreen() {
     var category by remember { mutableStateOf("") }
     var weight by remember { mutableStateOf("") }
     var images by remember { mutableStateOf<List<Uri>>(emptyList()) }
-    var imgSize by remember { mutableIntStateOf(0) }
     var itembarcode by remember { mutableStateOf("") }
     var itemmrp by remember { mutableStateOf("") }
     var totalCount by remember { mutableStateOf("") }
     var suggestions by remember { mutableStateOf<List<Dishfordb>>(emptyList()) }
     val focusManager = LocalFocusManager.current
     var uploadProgress by remember { mutableStateOf(0f) }
+    var showLoading by remember { mutableStateOf(false) }
+    var showErrorDialog by remember { mutableStateOf(false) }
+    var showSuccessDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(name) {
         if (name.isNotEmpty()) {
@@ -139,7 +145,7 @@ fun AddItemScreen() {
             Spacer(modifier = Modifier.height(4.dp))
 
             Text(
-                text = "Add ${imgSize + 1}th Item", style = TextStyle(
+                text = "Add Item", style = TextStyle(
                     fontSize = 12.sp, fontWeight = FontWeight.Normal, color = Color.Gray
                 )
             )
@@ -356,8 +362,10 @@ fun AddItemScreen() {
                         if (itembarcode.isEmpty()) {
                             itembarcode = name
                         }
+                        showLoading = true // Show loading indicator
+
                         uploadImagesAndAddItemToDatabase(name,
-                            "₹$price",
+                            price,
                             description,
                             weight,
                             category,
@@ -366,8 +374,10 @@ fun AddItemScreen() {
                             itembarcode,
                             itemmrp,
                             totalCount,
-                            uploadProgress = { progress -> uploadProgress = progress })
-
+                            uploadProgress = { progress -> uploadProgress = progress },
+                            onSuccess = { showSuccessDialog = true },
+                            onFailure = { showErrorDialog = true }
+                        )
                     }
                 }, shape = RoundedCornerShape(15), modifier = Modifier
                     .padding(20.dp)
@@ -376,14 +386,50 @@ fun AddItemScreen() {
                 Text(text = "Add to Database")
             }
 
-            if (uploadProgress > 0f) {
-                LinearProgressIndicator(
-                    progress = uploadProgress, modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(8.dp)
-                )
+            if (showLoading) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(Color.Black.copy(alpha = 0.5f))
+                        .padding(20.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(color = MaterialTheme.colors.primary)
+                }
             }
         }
+    }
+
+    // Success dialog
+    if (showSuccessDialog) {
+        AlertDialog(
+            onDismissRequest = { showSuccessDialog = false },
+            title = { Text(text = "Success") },
+            text = { Text(text = "Item has been successfully uploaded") },
+            confirmButton = {
+                TextButton(
+                    onClick = { showSuccessDialog = false }
+                ) {
+                    Text("OK")
+                }
+            }
+        )
+    }
+
+
+    if (showErrorDialog) {
+        AlertDialog(
+            onDismissRequest = { showErrorDialog = false },
+            title = { Text(text = "Error") },
+            text = { Text(text = "Failed to upload item. Please try again.") },
+            confirmButton = {
+                TextButton(
+                    onClick = { showErrorDialog = false }
+                ) {
+                    Text("OK")
+                }
+            }
+        )
     }
 }
 
@@ -398,7 +444,9 @@ private fun uploadImagesAndAddItemToDatabase(
     itembarcode: String,
     itemmrp: String,
     totalCount: String,
-    uploadProgress: (Float) -> Unit
+    uploadProgress: (Float) -> Unit,
+    onSuccess: () -> Unit,
+    onFailure: () -> Unit
 ) {
     val storage = FirebaseStorage.getInstance()
     val storageRef = storage.reference
@@ -411,105 +459,49 @@ private fun uploadImagesAndAddItemToDatabase(
             async {
                 val fileName = "$name$index"
                 val imageRef = storageRef.child("Images/$fileName")
-                val uploadTask = imageRef.putFile(uri).await()
+                val uploadTask = imageRef.putFile(uri)
+
+                uploadTask.addOnProgressListener { taskSnapshot ->
+                    val progress = (100.0 * taskSnapshot.bytesTransferred) / taskSnapshot.totalByteCount
+                    uploadProgress(progress.toFloat() / 100)
+                }.await()
 
                 imageRef.downloadUrl.await().toString()
             }
         }
 
         try {
-            // Awaiting the results of all async tasks
             imageUrls.addAll(deferredResults.awaitAll())
 
             withContext(Dispatchers.Main) {
                 if (imageUrls.size == images.size) {
                     val item = mapOf(
                         "name" to name,
-                        "₹price" to price,
+                        "price" to "₹$price",
                         "description" to description,
                         "weight" to weight,
                         "category" to category,
                         "imagesUrl" to imageUrls,
                         "barcode" to itembarcode,
-                        "₹mrp" to itemmrp,
+                        "mrp" to "₹$itemmrp",
                         "totalcount" to totalCount
                     )
 
                     datareference.child("Items").child(name).setValue(item)
                         .addOnSuccessListener {
-                            Toast.makeText(context, "Item added successfully", Toast.LENGTH_SHORT)
-                                .show()
+                            onSuccess()
                         }
                         .addOnFailureListener { e ->
-                            Toast.makeText(
-                                context,
-                                "Error adding item: ${e.message}",
-                                Toast.LENGTH_SHORT
-                            ).show()
+                            onFailure()
                         }
                 } else {
-                    Toast.makeText(context, "Error uploading images", Toast.LENGTH_SHORT).show()
+                    onFailure() // Image upload error
                 }
             }
         } catch (e: Exception) {
             withContext(Dispatchers.Main) {
-                Toast.makeText(context, "Error uploading images: ${e.message}", Toast.LENGTH_SHORT)
-                    .show()
+                onFailure() // Exception during upload
             }
         }
     }
 }
-
-
-//fun addItemToDatabase(
-//    name: String,
-//    price: String,
-//    description: String,
-//    weight: String,
-//    category: String,
-//    image: Uri?,
-//    context: Context,
-//    barcode: String,
-//    mrp: String
-//) {
-//    getImgUrl(image, context, name) { imgUrl ->
-//        val dish = imgUrl?.let {
-//            Dishfordb(
-//                name,
-//                price,
-//                0,
-//                weight,
-//                description,
-//                category,
-//                it,
-//                barcode,
-//                mrp
-//            )
-//        }
-//        datareference.child("Items").child(name).setValue(dish).addOnSuccessListener {
-//            Toast.makeText(context, "Item Added Successfully", Toast.LENGTH_SHORT).show()
-//        }.addOnFailureListener { exception ->
-//            Toast.makeText(context, exception.message, Toast.LENGTH_SHORT).show()
-//            Log.d("uploadData", "addItemToDatabase: ${exception.message}")
-//        }
-//    }
-//}
-//
-//fun getImgUrl(image: Uri?, context: Context, name: String, callback: (String?) -> Unit) {
-//    image?.let { uri ->
-//        val imageRef = storageReference.child(name)
-//        imageRef.putFile(uri).addOnSuccessListener { _ ->
-//            Toast.makeText(context, "Item Added Successfully", Toast.LENGTH_SHORT).show()
-//            imageRef.downloadUrl.addOnSuccessListener { imgUrl ->
-//                callback(imgUrl.toString())
-//            }.addOnFailureListener { exception ->
-//                Toast.makeText(context, exception.message, Toast.LENGTH_SHORT).show()
-//                callback(null)
-//            }
-//        }.addOnFailureListener { exception ->
-//            Toast.makeText(context, exception.message, Toast.LENGTH_SHORT).show()
-//            Log.d("uploadData", "addItemToDatabase: ${exception.message}")
-//            callback(null)
-//        }
-//    } ?: callback(null)
-//}

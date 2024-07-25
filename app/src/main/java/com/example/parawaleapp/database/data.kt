@@ -97,10 +97,10 @@ val SlidesItems = listOf(
         "Wishlist", "see items added to wishlist", R.drawable.wishheart
     ), Slidess(
         "Orders", "see your previous orders", R.drawable.order_cardboard
+    ),
+    Slidess(
+        "Notifications", "see all notifications", R.drawable.ic_notification
     )
-//    , Slidess(
-//        "Manage Account", "edit your account details", R.drawable.edit_account_logo
-//    )
     , Slidess(
         "Settings", "Notification, Language", R.drawable.setting
     ), Slidess(
@@ -108,9 +108,7 @@ val SlidesItems = listOf(
     ), Slidess(
         "Add Items", "Add items to database", R.drawable.additemcloud
     )
-//    , Slidess(
-//        "Connect Printer", "Select your bluetooth printing", R.drawable.ic_location
-//    )
+
 
 
 )

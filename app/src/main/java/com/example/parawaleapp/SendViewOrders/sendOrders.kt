@@ -14,11 +14,11 @@ fun sendOrders(
     userData: UserData?,
     cartItems: List<Dishfordb>,
     totalMrp: Double,
-    total: Double,
+    totalValue: Double,
     transactionId: String,
     merchantCode: String,
     amountReceived: String,
-    amountRemaining: String
+    amountRemaining: String,
 ) {
     if (userData == null) {
         Toast.makeText(context, "Please Sign In", Toast.LENGTH_SHORT).show()
@@ -31,11 +31,10 @@ fun sendOrders(
 
     val username = userData.userName
     val useremail = userData.userEmail?.replace(".", ",") // Replace '.' with ',' to avoid issues in Firebase keys
-    val orderTimestamp = System.currentTimeMillis().toString()
 
     val orderDetails = mapOf(
         "totalMrp" to totalMrp,
-        "total" to total,
+        "total" to totalValue,
         "items" to cartItems,
         "Order Status" to "Pending",
         "Transaction ID" to transactionId,
@@ -47,10 +46,9 @@ fun sendOrders(
     useremail?.let {
         val userRef = datareference.child("OnlineOrders").child(it)
 
-        // Save the username at the user level
         userRef.child("username").setValue(username)
         userRef.child("contactno").setValue(phoneno)
-        userRef.child("orders").child(orderTimestamp).setValue(orderDetails)
+        userRef.child("orders").child(transactionId).setValue(orderDetails)
             .addOnSuccessListener {
                 Toast.makeText(context, "Order Placed Successfully", Toast.LENGTH_SHORT).show()
             }
