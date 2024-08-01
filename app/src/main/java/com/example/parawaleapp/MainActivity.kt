@@ -16,6 +16,7 @@ import ShopDistanceScreen
 import ViewOrder
 import android.content.Context
 import android.os.Bundle
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -35,7 +36,6 @@ import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.material.rememberScaffoldState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableDoubleStateOf
@@ -55,9 +55,9 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.parawaleapp.AppLayout.AppLayoutScreen
+import com.example.parawaleapp.Notifications.createNotificationChannel
 import com.example.parawaleapp.PaymentUpi.PaymentScreenLayout
 import com.example.parawaleapp.SendViewOrders.OrderDetailsScreen
 import com.example.parawaleapp.SendViewOrders.PersonOrdersScreen
@@ -69,8 +69,9 @@ import com.example.parawaleapp.cartScreen.PreviousOrders
 import com.example.parawaleapp.database.Dishfordb
 import com.example.parawaleapp.database.ManageItem
 import com.example.parawaleapp.database.clearDataFromSharedPreferences
+import com.example.parawaleapp.database.getUserFromSharedPreferences
 import com.example.parawaleapp.database.getdishes
-import com.example.parawaleapp.database.restoreDataFromSharedPreferences
+import com.example.parawaleapp.database.saveUserToSharedPreferences
 import com.example.parawaleapp.drawerPanel.leftPanel.LeftDrawerPanel
 import com.example.parawaleapp.drawerPanel.leftPanel.Profileset
 import com.example.parawaleapp.drawerPanel.leftPanel.Settings
@@ -86,8 +87,6 @@ import com.example.parawaleapp.ui.theme.MyAppTheme
 import com.google.android.gms.auth.api.identity.Identity
 import com.google.android.gms.maps.model.LatLng
 import com.google.firebase.FirebaseApp
-import com.google.firebase.auth.ktx.auth
-import com.google.firebase.ktx.Firebase
 import com.google.gson.Gson
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
@@ -100,69 +99,104 @@ class MainActivity : ComponentActivity() {
             oneTapClient = Identity.getSignInClient(applicationContext)
         )
     }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         FirebaseApp.initializeApp(this)
-        restoreDataFromSharedPreferences(this)
+        createNotificationChannel(this)
+
         setContent {
             Surface(
-                modifier = Modifier.fillMaxSize(), color = MaterialTheme.colors.background
+                modifier = Modifier.fillMaxSize(),
+                color = MaterialTheme.colors.background
             ) {
                 val navController = rememberNavController()
-                val scope = rememberCoroutineScope()
                 var dishData by rememberSaveable { mutableStateOf<List<Dishfordb>>(emptyList()) }
+                val context = LocalContext.current
+                val userData = getUserFromSharedPreferences(context)
+                if (userData == null) {
+                    Log.d("SavingUser", "No user data found in SharedPreferences")
+                } else {
+                    Log.d("SavingUser", "User data loaded: $userData")
+                }
 
-                NavHost(navController = navController, startDestination = "sign_in") {
+                // Update userState and navigate based on savedUser
+                val userState = remember { mutableStateOf(userData) }
+
+                LaunchedEffect(key1 = Unit) {
+                    if (userState.value != null) {
+                        getdishes("Items")?.let { newData -> dishData = newData }
+                        Toast.makeText(
+                            applicationContext,
+                            "Welcome back, ${userState.value?.userName}",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                        Log.d("MainActivity", "Navigating to MainScreen")
+                        navController.navigate("MainScreen") {
+                            popUpTo("sign_in") { inclusive = true }
+                        }
+                    } else {
+                        Log.d("MainActivity", "User not signed in, navigating to sign_in screen")
+                    }
+                }
+
+                NavHost(
+                    navController = navController,
+                    startDestination = if (userState.value != null) "MainScreen" else "sign_in"
+                ) {
                     composable("sign_in") {
                         val viewModel = viewModel<SignInViewModel>()
                         val state by viewModel.state.collectAsStateWithLifecycle()
 
-                        LaunchedEffect(key1 = Unit) {
-                            if (googleAuthUiClient.getSinedInUser() != null || Firebase.auth.currentUser != null) {
-                                getdishes("Items")?.let { newData ->
-                                    dishData = newData
-                                }
-                                navController.navigate("MainScreen")
-                            }
-                        }
-
-                        val launcher =
-                            rememberLauncherForActivityResult(contract = ActivityResultContracts.StartIntentSenderForResult(),
-                                onResult = { result ->
-                                    if (result.resultCode == RESULT_OK) {
-                                        lifecycleScope.launch {
-                                            val signInResult = googleAuthUiClient.signInWithIntent(
-                                                intent = result.data ?: return@launch
-                                            )
-                                            viewModel.onSignInResult(signInResult)
-                                        }
-                                    } else {
-                                        viewModel.stopLoading() // Stop loading when login is cancelled
-                                    }
-                                })
-
                         LaunchedEffect(key1 = state.isSignInSuccessful) {
                             if (state.isSignInSuccessful && state.isPhoneNumberLinked) {
                                 Toast.makeText(
-                                    applicationContext, "Sign in successful", Toast.LENGTH_SHORT
+                                    applicationContext,
+                                    "Sign in successful",
+                                    Toast.LENGTH_SHORT
                                 ).show()
-                                getdishes("Items")?.let { newData ->
-                                    dishData = newData
+                                saveUserToSharedPreferences(context, state.userData)
+                                getdishes("Items")?.let { newData -> dishData = newData }
+                                navController.navigate("MainScreen") {
+                                    popUpTo("sign_in") { inclusive = true }
                                 }
-                                navController.navigate("MainScreen")
                                 viewModel.resetState()
                             }
                         }
 
-                        DisposableEffect(key1 = navController.currentBackStackEntryAsState().value) {
-                            onDispose {
-                                viewModel.stopLoading() // Stop loading when navigating away
+                        val launcher = rememberLauncherForActivityResult(
+                            contract = ActivityResultContracts.StartIntentSenderForResult()
+                        ) { result ->
+                            if (result.resultCode == RESULT_OK) {
+                                lifecycleScope.launch {
+                                    val signInResult = googleAuthUiClient.signInWithIntent(
+                                        result.data ?: return@launch
+                                    )
+                                    viewModel.onSignInResult(signInResult)
+
+                                    // Check if phone number needs to be linked
+                                    val userData = signInResult.data
+                                    if (userData?.phoneno.isNullOrEmpty()) {
+                                        viewModel.startLoading()
+                                        viewModel.sendVerificationCode(
+                                            this@MainActivity,
+                                            userData?.userEmail ?: ""
+                                        )
+                                    }
+                                }
+                            } else {
+                                viewModel.stopLoading() // Stop loading when login is cancelled
                             }
                         }
 
                         SignInScreen(
                             state = state,
-                            onSignInClick = { activity, phoneNumber -> viewModel.sendVerificationCode(activity, phoneNumber) },
+                            onSignInClick = { activity, phoneNumber ->
+                                viewModel.sendVerificationCode(
+                                    activity,
+                                    phoneNumber
+                                )
+                            },
                             onGoogleSignInClick = {
                                 viewModel.startLoading()
                                 lifecycleScope.launch {
@@ -176,16 +210,18 @@ class MainActivity : ComponentActivity() {
                             },
                             onVerifyCodeClick = { verificationCode ->
                                 viewModel.verifyPhoneNumberWithCode(verificationCode)
+                            },
+                            onSendVerificationCodeClick = { phoneNumber ->
+                                viewModel.sendVerificationCode(this@MainActivity, phoneNumber)
                             }
                         )
-
                     }
                     composable("MainScreen") {
                         MainScreen(
                             navController,
                             googleAuthUiClient = googleAuthUiClient,
-                            scope = scope,
-                            dishData
+                            dishData = dishData,
+                            scope = rememberCoroutineScope()
                         )
                     }
                 }
@@ -193,6 +229,9 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
+
+
+
 
 
 @Composable
@@ -243,7 +282,7 @@ fun MainScreen(
             LeftDrawerPanel(scaffoldState = scaffoldState,
                 scope = scope,
                 navController = navController,
-                userData = googleAuthUiClient.getSinedInUser(),
+                userData = googleAuthUiClient.getSignedInUser(),
                 signOut = {
                     clearDataFromSharedPreferences(context)
                     scope.launch {
@@ -305,25 +344,25 @@ fun MainScreen(
                     composable(AfterCart.route) {
                         ConfirmCart(
                             navController = navController,
-                            userData = googleAuthUiClient.getSinedInUser(),
+                            userData = googleAuthUiClient.getSignedInUser(),
                             cartItems = cartItems,
                             total = allOverTotalPrice,
                             totalmrp = allOverTotalMrp
                         )
                     }
                     composable(ProfileSet.route) {
-                        Profileset(userData = googleAuthUiClient.getSinedInUser())
+                        Profileset(userData = googleAuthUiClient.getSignedInUser())
                     }
                     composable(AddItems.route) {
                         ManageItem(
-                            userData = googleAuthUiClient.getSinedInUser(), dishData = dishData
+                            userData = googleAuthUiClient.getSignedInUser(), dishData = dishData
                         )
                     }
                     composable(SettingScreen.route) {
                         Settings(
                             scope = scope,
                             navController = navController,
-                            userData = googleAuthUiClient.getSinedInUser(),
+                            userData = googleAuthUiClient.getSignedInUser(),
                             scaffoldState = scaffoldState
                         )
                     }
@@ -355,7 +394,7 @@ fun MainScreen(
                         val name = backStackEntry.arguments?.getString("name")
                         val orderedItemsJson = backStackEntry.arguments?.getString("orderedItems")
                         val orderTimeStamp = backStackEntry.arguments?.getString("timeStamp")
-                        val loggedemail = googleAuthUiClient.getSinedInUser()?.userEmail
+                        val loggedemail = googleAuthUiClient.getSignedInUser()?.userEmail
 
                         if (orderedItemsJson != null && orderTimeStamp != null) {
 
@@ -371,7 +410,7 @@ fun MainScreen(
                         )
                     }
                     composable(PreviousOrders.route) {
-                        PreviousOrders(navController, googleAuthUiClient.getSinedInUser())
+                        PreviousOrders(navController, googleAuthUiClient.getSignedInUser())
                     }
                     composable("PaymentScreen/{totalMrp}/{totalValue}") { backStackEntry ->
                         val totalMrp = backStackEntry.arguments?.getString("totalMrp")?.toDouble()
@@ -381,7 +420,7 @@ fun MainScreen(
                             PaymentScreenLayout(
                                 totalMrp,
                                 totalValue,
-                                googleAuthUiClient.getSinedInUser(),
+                                googleAuthUiClient.getSignedInUser(),
                                 cartItems,
                                 isDarkTheme
                             )

@@ -77,9 +77,7 @@ fun LeftDrawerPanel(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 AsyncImage(
-                    model = if (img.toString().isEmpty()) {
-                        userData?.progilePictureUrl
-                    } else img,
+                    model = userData?.profilePictureUrl,
                     contentDescription = "userImage",
                     modifier = Modifier
                         .padding(start = 10.dp)

@@ -2,11 +2,13 @@ package com.example.parawaleapp.mainScreen
 
 
 import android.content.Context
+import android.content.Intent
 import android.net.Uri
 import android.os.Build
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.widget.Toast
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -22,8 +24,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -35,6 +40,7 @@ import androidx.compose.material.IconButton
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
@@ -44,7 +50,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.CenterVertically
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shadow
@@ -55,6 +60,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -67,6 +73,8 @@ import com.example.parawaleapp.R
 import com.example.parawaleapp.database.Dishfordb
 import com.example.parawaleapp.ui.theme.MyAppTheme
 import com.google.gson.Gson
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.yield
 
 @Composable
 fun HomeScreen(
@@ -86,7 +94,7 @@ fun HomeScreen(
         ) {
             item {
                 Column {
-                    UpperPanel()
+                    SlidingPanels()
                     WeeklySpecial(
                         isDarkTheme = isDarkTheme,
                         onThemeChange = onThemeChange,
@@ -138,13 +146,63 @@ fun HomeScreen(
 }
 
 
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+fun SlidingPanels() {
+    val pagerState = rememberPagerState(initialPage = 0, initialPageOffsetFraction = 0f, pageCount = { 2 })
+    val context = LocalContext.current
+
+    // Auto-scroll logic
+    LaunchedEffect(Unit) {
+        while (true) {
+            yield()
+            delay(6000) // Delay between page transitions
+            val nextPage = (pagerState.currentPage + 1) % pagerState.pageCount
+            pagerState.animateScrollToPage(nextPage)
+        }
+    }
+
+    Box(modifier = Modifier.fillMaxSize()) {
+        HorizontalPager(
+            state = pagerState,
+            modifier = Modifier.fillMaxSize()
+        ) { page ->
+            when (page) {
+                0 -> UpperPanel()
+                1 -> UpperPanel2()
+            }
+        }
+
+        // Page indicators
+        Row(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(4.dp)
+        ) {
+            repeat(pagerState.pageCount) { page ->
+                Box(
+                    modifier = Modifier
+                        .padding(horizontal = 4.dp)
+                        .size(width = 16.dp, height = 8.dp)
+                        .background(
+                            color = if (pagerState.currentPage == page) MaterialTheme.colors.primary else Color.Gray,
+                            shape = RoundedCornerShape(4.dp)
+                        )
+                )
+            }
+        }
+    }
+}
+
 @Composable
 fun UpperPanel() {
     val context = LocalContext.current
     Column(
         modifier = Modifier
+            .height(300.dp)
+            .fillMaxSize()
             .background(MaterialTheme.colors.secondary)
-            .padding(start = 12.dp, end = 12.dp, top = 16.dp, bottom = 16.dp)
+            .padding(16.dp)
     ) {
         Text(
             text = stringResource(id = R.string.title),
@@ -191,6 +249,97 @@ fun UpperPanel() {
         }
     }
 }
+
+@Composable
+fun UpperPanel2() {
+    val context = LocalContext.current
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .height(300.dp)
+            .background(MaterialTheme.colors.secondary)
+            .padding(16.dp)
+    ) {
+        Text(
+            text = "क्यों ना बढ़े हमभी" ,
+            fontSize = 34.sp,
+            fontWeight = FontWeight.Bold,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.fillMaxWidth(),
+            color = MaterialTheme.colors.primary
+        )
+        Spacer(modifier = Modifier.height(4.dp))
+        Text(
+            text = "Get Your Own App",
+            fontSize = 28.sp,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.fillMaxWidth(),
+            fontWeight = FontWeight.Medium,
+            color = Color.White
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+        BulletPoint(text = "Make your business online")
+        BulletPoint(text = "Easy delivery with Map live tracking")
+        BulletPoint(text = "Barcode system")
+        Row {
+            Column {
+                BulletPoint(text = "Easy billing via Bluetooth")
+                BulletPoint(text = "All backend data handling")
+            }
+            Column (modifier = Modifier.fillMaxWidth()
+
+            ){
+                Button(
+                    onClick = {
+                        // open dialer and dial number 7007254934
+                        val intent = Intent(Intent.ACTION_DIAL)
+                        intent.data = Uri.parse("tel:7007254934")
+                        context.startActivity(intent)
+                    },
+                    shape = RoundedCornerShape(20.dp),
+                    modifier = Modifier
+                        .align(Alignment.End),
+
+                    colors = ButtonDefaults.buttonColors(backgroundColor = MaterialTheme.colors.primary)
+                ) {
+                    Text(
+                        text = "Contact",
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colors.onPrimary
+                    )
+                }
+            }
+        }
+        BulletPoint(text = "and Many more features")
+
+    }
+}
+
+@Composable
+fun BulletPoint(text: String) {
+    Row(
+        verticalAlignment = CenterVertically,
+        modifier = Modifier.padding(bottom = 2.dp)
+    ) {
+        Text(
+            text = "\u2022", // Unicode for bullet point
+            fontSize = 14.sp,
+            color = MaterialTheme.colors.onSurface
+        )
+        Spacer(modifier = Modifier.width(8.dp))
+        Text(
+            text = text,
+            fontSize = 14.sp,
+            fontWeight = FontWeight.Medium,
+            color = MaterialTheme.colors.onSurface
+        )
+    }
+}
+
+
+
 
 @Composable
 fun WeeklySpecial(

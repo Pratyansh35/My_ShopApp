@@ -44,6 +44,7 @@ import java.io.OutputStreamWriter
 import java.net.HttpURLConnection
 import java.net.URL
 import androidx.compose.ui.platform.LocalLifecycleOwner
+import com.example.parawaleapp.Notifications.sendNotificationToUser
 import kotlinx.coroutines.tasks.await
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.OkHttpClient
@@ -322,61 +323,4 @@ fun ChangeStatusDialog(
 }
 
 
-suspend fun sendNotificationToUser(email: String?, title: String, message: String) {
-    email?.let {
-        val formattedEmail = it.replace(".", ",")
-        val tokenRef = datareference.child("UsersToken").child(formattedEmail).child("/deviceToken")
-
-        try {
-            val snapshot = tokenRef.get().await()
-            val token = snapshot.getValue(String::class.java)
-            Log.e("NotificationKey", "tokenRef: $token")
-            if (token != null) {
-                sendNotification(token, title, message)
-            }
-        } catch (e: Exception) {
-            println("Error retrieving device token: ${e.message}")
-        }
-    }
-}
-
-suspend fun sendNotification(token: String, title: String, message: String) {
-    withContext(Dispatchers.IO) {
-        try {
-            // Create the JSON payload
-            val notification = mapOf(
-                "token" to token,
-                "title" to title,
-                "message" to message
-            )
-            val jsonNotification = Gson().toJson(notification)
-
-            // Create the request body
-            val requestBody = jsonNotification.toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull())
-
-            // Create an OkHttp client with logging
-            val logging = HttpLoggingInterceptor().apply { level = HttpLoggingInterceptor.Level.BODY }
-            val client = OkHttpClient.Builder().addInterceptor(logging).build()
-
-            // Build the request
-            val request = Request.Builder()
-                .url("https://us-central1-myparawale-app.cloudfunctions.net/sendNotification")
-                .post(requestBody)
-                .addHeader("Content-Type", "application/json")
-                .build()
-
-            // Execute the request
-            client.newCall(request).execute().use { response ->
-                if (!response.isSuccessful) {
-                    println("Failed to send notification, response code: ${response.code}, error: ${response.body?.string()}")
-                } else {
-                    println("Notification sent successfully")
-                }
-            }
-        } catch (e: Exception) {
-            e.printStackTrace()
-            println("Exception occurred: ${e.message}")
-        }
-    }
-}
 

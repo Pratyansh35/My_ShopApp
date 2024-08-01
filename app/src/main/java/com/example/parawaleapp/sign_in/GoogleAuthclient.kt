@@ -7,6 +7,7 @@ import android.content.IntentSender
 import android.util.Log
 import android.widget.Toast
 import com.example.parawaleapp.R
+import com.example.parawaleapp.database.saveUserToSharedPreferences
 import com.google.android.gms.auth.api.identity.BeginSignInRequest
 import com.google.android.gms.auth.api.identity.BeginSignInRequest.GoogleIdTokenRequestOptions
 import com.google.android.gms.auth.api.identity.SignInClient
@@ -26,7 +27,6 @@ val listofAuthorizedUsersEmails = listOf(
     "bp20010327@gmail.com",
     "pratyansh35@gmail.com"
 )
-
 
 class GoogleAuthUiClient(
     private val context: Context,
@@ -51,24 +51,23 @@ class GoogleAuthUiClient(
         val googleCredentials = GoogleAuthProvider.getCredential(googleIdToken, null)
         return try {
             val user = auth.signInWithCredential(googleCredentials).await().user
-            SignInResult(
-                data = user?.run {
-                    UserData(
-                        userId = uid,
-                        userName = displayName,
-                        progilePictureUrl = photoUrl?.toString(),
-                        userEmail = email,
-                        phoneno = phoneNumber
-                    )
-                },
-                errorMessage = null
-            )
+            val userData = user?.let {
+                UserData(
+                    userId = it.uid,
+                    userName = it.displayName,
+                    profilePictureUrl = it.photoUrl?.toString(),
+                    userEmail = it.email,
+                    phoneno = it.phoneNumber
+                )
+            }
+            saveUserToSharedPreferences(context, userData)
+            Log.d("GoogleAuthUiClient", "UserData: $userData") // Log user data
+            SignInResult(data = userData, errorMessage = null, isGoogleSignIn = true)
         } catch (e: Exception) {
             e.printStackTrace()
             if (e is CancellationException) throw e
-            SignInResult(
-                data = null, errorMessage = e.message
-            )
+            Log.e("GoogleAuthUiClient", "Sign-in failed: ${e.message}")
+            SignInResult(data = null, errorMessage = e.message)
         }
     }
 
@@ -82,27 +81,36 @@ class GoogleAuthUiClient(
         }
     }
 
-    fun getSinedInUser(): UserData? {
+    fun getSignedInUser(): UserData? {
         val user = auth.currentUser ?: return null
         return UserData(
             userId = user.uid,
             userName = user.displayName,
-            progilePictureUrl = user.photoUrl?.toString(),
+            profilePictureUrl = user.photoUrl?.toString(),
             userEmail = user.email,
             phoneno = user.phoneNumber
         )
     }
 
     private fun buildSignInRequest(): BeginSignInRequest {
-        return BeginSignInRequest.Builder().setGoogleIdTokenRequestOptions(
-            GoogleIdTokenRequestOptions.Builder().setSupported(true)
-                .setFilterByAuthorizedAccounts(false)
-                .setServerClientId(context.getString(R.string.Web_clientId)).build()
-        ).setAutoSelectEnabled(true).build()
+        return BeginSignInRequest.Builder()
+            .setGoogleIdTokenRequestOptions(
+                GoogleIdTokenRequestOptions.Builder()
+                    .setSupported(true)
+                    .setFilterByAuthorizedAccounts(false)
+                    .setServerClientId(context.getString(R.string.Web_clientId))
+                    .build()
+            )
+            .setAutoSelectEnabled(true)
+            .build()
     }
 }
 
-fun verifyPhoneNumber(context: Context, phoneNumber: String, onVerificationIdReceived: (String) -> Unit) {
+fun verifyPhoneNumber(
+    context: Context,
+    phoneNumber: String,
+    onVerificationIdReceived: (String) -> Unit
+) {
     val callbacks = object : PhoneAuthProvider.OnVerificationStateChangedCallbacks() {
         override fun onVerificationCompleted(credential: PhoneAuthCredential) {
             // Handle verification completion if needed
@@ -129,8 +137,11 @@ fun verifyPhoneNumber(context: Context, phoneNumber: String, onVerificationIdRec
     )
 }
 
-
-fun updatePhoneNumberWithOTP(verificationId: String, otp: String, context: Context) {
+fun updatePhoneNumberWithOTP(
+    verificationId: String,
+    otp: String,
+    context: Context
+) {
     val currentUser = FirebaseAuth.getInstance().currentUser
 
     if (currentUser != null) {
@@ -141,12 +152,11 @@ fun updatePhoneNumberWithOTP(verificationId: String, otp: String, context: Conte
                 if (task.isSuccessful) {
                     Toast.makeText(context, "Phone number updated successfully", Toast.LENGTH_LONG).show()
                 } else {
-                    Toast.makeText(context, "failed: ${task.exception?.message}", Toast.LENGTH_LONG).show()
-                    Log.e("SignInViewModel", "signInWithPhoneAuthCredential: failure", task.exception)
+                    Toast.makeText(context, "Update failed: ${task.exception?.message}", Toast.LENGTH_LONG).show()
+                    Log.e("GoogleAuthUiClient", "updatePhoneNumberWithOTP: failure", task.exception)
                 }
             }
     } else {
-        Toast.makeText(context, "User is null", Toast.LENGTH_LONG).show()
+        Toast.makeText(context, "No user is currently signed in", Toast.LENGTH_LONG).show()
     }
 }
-

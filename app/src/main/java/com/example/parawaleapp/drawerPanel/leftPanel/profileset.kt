@@ -45,7 +45,7 @@ fun Profileset(userData: UserData?) {
     val context = LocalContext.current
     var nametemp by remember { mutableStateOf(userData?.userName) }
     var phonenotemp by remember { mutableStateOf(userData?.phoneno) }
-    var selectImgUri by remember { mutableStateOf(userData?.progilePictureUrl) }
+    var selectImgUri by remember { mutableStateOf(userData?.profilePictureUrl) }
     var verificationId by remember { mutableStateOf<String?>(null) }
     var otpCode by remember { mutableStateOf("") }
 
@@ -128,7 +128,7 @@ fun Profileset(userData: UserData?) {
                 fontWeight = FontWeight.Bold
             )
             AsyncImage(
-                model = if (img.toString().isEmpty()) userData?.progilePictureUrl else img!!,
+                model = if (img.toString().isEmpty()) userData?.profilePictureUrl else img!!,
                 contentDescription = "userImage",
                 modifier = Modifier
                     .padding(start = 10.dp)

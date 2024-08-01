@@ -1,72 +1,122 @@
 package com.example.parawaleapp.Notifications
 
+import android.util.Log
+import com.example.parawaleapp.database.datareference
+import com.google.gson.Gson
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.withContext
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.RequestBody.Companion.toRequestBody
+import okhttp3.logging.HttpLoggingInterceptor
+
+
+import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
+import android.os.Build
 import androidx.core.app.NotificationCompat
 import com.example.parawaleapp.R
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
-import retrofit2.http.Body
-import retrofit2.http.POST
 
-
-data class notificationState(
-    val isEnteringToken: Boolean = true,
-    val remoteToken: String = "",
-    val messageText: String = ""
-)
-
-data class SendNotificationDTo(
-    val to: String?,
-    val notification: NotificationBody
-)
-
-data class NotificationBody(
-    val title: String,
-    val body: String
-)
-
-interface FCMapi {
-
-    @POST("/send")
-    suspend fun sendNotification(@Body body: SendNotificationDTo)
-
-    @POST("/broadcast")
-    suspend fun broadcast(@Body body: SendNotificationDTo)
+fun createNotificationChannel(context: Context) {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        val channelId = "HIGH_PRIORITY_CHANNEL"
+        val channelName = "High Priority Notifications"
+        val importance = NotificationManager.IMPORTANCE_HIGH
+        val channel = NotificationChannel(channelId, channelName, importance).apply {
+            description = "This channel is used for high priority notifications."
+        }
+        val notificationManager: NotificationManager =
+            context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        notificationManager.createNotificationChannel(channel)
+    }
 }
 
-class MyFirebaseMessagingService : FirebaseMessagingService()  {
+class MyFirebaseMessagingService : FirebaseMessagingService() {
 
     override fun onMessageReceived(remoteMessage: RemoteMessage) {
-        remoteMessage.notification?.let {
-            sendNotification(it.title, it.body)
-        }
+        super.onMessageReceived(remoteMessage)
+        val title = remoteMessage.notification?.title ?: "Notification"
+        val message = remoteMessage.notification?.body ?: "You have a new message."
+
+        // Show notification
+        showNotification(title, message)
     }
 
-    override fun onNewToken(token: String) {
-        super.onNewToken(token)
-        // Handle the new token, for example, send it to your server
-        sendRegistrationToServer(token)
-    }
-
-    private fun sendRegistrationToServer(token: String) {
-         val datareference = FirebaseDatabase.getInstance().getReference("Tokens")
-         datareference.child(FirebaseAuth.getInstance().currentUser?.uid ?: "UnknownUser").setValue(token)
-    }
-
-    private fun sendNotification(title: String?, body: String?) {
+    private fun showNotification(title: String, message: String) {
+        val channelId = "HIGH_PRIORITY_CHANNEL"
         val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        val notificationId = (System.currentTimeMillis() % 10000).toInt()
 
-        val notificationBuilder = NotificationCompat.Builder(this, "ORDER_STATUS_CHANNEL")
-            .setSmallIcon(R.drawable.ic_notification)
+        val notificationBuilder = NotificationCompat.Builder(this, channelId)
             .setContentTitle(title)
-            .setContentText(body)
+            .setContentText(message)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setSmallIcon(R.drawable.ic_notification)
             .setAutoCancel(true)
 
-        notificationManager.notify(notificationId, notificationBuilder.build())
+        notificationManager.notify(0, notificationBuilder.build())
+    }
+}
+
+
+suspend fun sendNotificationToUser(email: String?, title: String, message: String) {
+    email?.let {
+        val formattedEmail = it.replace(".", ",")
+        val tokenRef = datareference.child("UsersToken").child(formattedEmail).child("/deviceToken")
+
+        try {
+            val snapshot = tokenRef.get().await()
+            val token = snapshot.getValue(String::class.java)
+            Log.e("NotificationKey", "tokenRef: $token")
+            if (token != null) {
+                sendNotification(token, title, message)
+            }
+        } catch (e: Exception) {
+            println("Error retrieving device token: ${e.message}")
+        }
+    }
+}
+
+suspend fun sendNotification(token: String, title: String, message: String) {
+    withContext(Dispatchers.IO) {
+        try {
+            // Create the JSON payload
+            val notification = mapOf(
+                "token" to token,
+                "title" to title,
+                "message" to message
+            )
+            val jsonNotification = Gson().toJson(notification)
+
+            // Create the request body
+            val requestBody = jsonNotification.toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull())
+
+            // Create an OkHttp client with logging
+            val logging = HttpLoggingInterceptor().apply { level = HttpLoggingInterceptor.Level.BODY }
+            val client = OkHttpClient.Builder().addInterceptor(logging).build()
+
+            // Build the request
+            val request = Request.Builder()
+                .url("https://us-central1-myparawale-app.cloudfunctions.net/sendNotification")
+                .post(requestBody)
+                .addHeader("Content-Type", "application/json")
+                .build()
+
+            // Execute the request
+            client.newCall(request).execute().use { response ->
+                if (!response.isSuccessful) {
+                    println("Failed to send notification, response code: ${response.code}, error: ${response.body?.string()}")
+                } else {
+                    println("Notification sent successfully")
+                }
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            println("Exception occurred: ${e.message}")
+        }
     }
 }

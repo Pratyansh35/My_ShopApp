@@ -3,10 +3,16 @@ package com.example.parawaleapp.SendViewOrders
 import android.content.Context
 import android.util.Log
 import android.widget.Toast
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.lifecycle.lifecycleScope
+import com.example.parawaleapp.Notifications.sendNotificationToUser
 import com.example.parawaleapp.database.Dishfordb
 import com.example.parawaleapp.database.datareference
 import com.example.parawaleapp.database.phoneno
 import com.example.parawaleapp.sign_in.UserData
+import kotlinx.coroutines.launch
+
 
 
 fun sendOrders(
@@ -20,6 +26,8 @@ fun sendOrders(
     amountReceived: String,
     amountRemaining: String,
 ) {
+    //val lifecycleOwner = LocalLifecycleOwner.current
+    val merchantEmail = "pratyansh35@gmail.com"
     if (userData == null) {
         Toast.makeText(context, "Please Sign In", Toast.LENGTH_SHORT).show()
         return
@@ -51,6 +59,9 @@ fun sendOrders(
         userRef.child("orders").child(transactionId).setValue(orderDetails)
             .addOnSuccessListener {
                 Toast.makeText(context, "Order Placed Successfully", Toast.LENGTH_SHORT).show()
+//                lifecycleOwner.lifecycleScope.launch {
+//                    sendNotificationToUser(merchantEmail, "New Order", " ")
+//                }
             }
             .addOnFailureListener { exception ->
                 Toast.makeText(context, exception.message, Toast.LENGTH_SHORT).show()

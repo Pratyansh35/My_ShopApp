@@ -2,10 +2,12 @@ package com.example.parawaleapp.database
 
 import android.content.Context
 import android.net.Uri
+import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import com.example.parawaleapp.R
+import com.example.parawaleapp.sign_in.UserData
 import com.google.gson.Gson
 
 
@@ -14,54 +16,46 @@ var name by mutableStateOf("")
 var phoneno by mutableStateOf("")
 var img by mutableStateOf<Uri?>(null)
 
-fun saveDataToSharedPreferences(context: Context) {
-    val sharedPreferences = context.getSharedPreferences("MyPrefs", Context.MODE_PRIVATE)
-    with(sharedPreferences.edit()) {
-        putString("name", name)
-        putString("phoneno", phoneno)
-        putString("img", img.toString())
-        apply()
-    }
-}
 
-fun restoreDataFromSharedPreferences(context: Context) {
-    val sharedPreferences = context.getSharedPreferences("MyPrefs", Context.MODE_PRIVATE)
+
+fun saveUserToSharedPreferences(context: Context, userData: UserData?) {
+    if (userData == null) {
+        Log.d("SavingUser", "No user data to save.")
+        return
+    }
+
+    val sharedPreferences = context.getSharedPreferences("user_prefs", Context.MODE_PRIVATE)
+    val editor = sharedPreferences.edit()
+    val gson = Gson()
+    val userDataJson = gson.toJson(userData)
+    editor.putString("user_data", userDataJson)
+    editor.putString("name", name)
+        editor.putString("phoneno", phoneno)
+        editor.putString("img", img.toString())
+    editor.apply()
+
+    Log.d("SavingUser", "Saved user data to SharedPreferences: $userDataJson")
+}
+fun getUserFromSharedPreferences(context: Context): UserData? {
+    val sharedPreferences = context.getSharedPreferences("user_prefs", Context.MODE_PRIVATE)
+    val gson = Gson()
+    val userDataJson = sharedPreferences.getString("user_data", null)
+
+    if (userDataJson.isNullOrEmpty()) {
+        Log.d("SavingUser", "No user data found in SharedPreferences")
+        return null
+    }
     name = sharedPreferences.getString("name", "") ?: ""
     phoneno = sharedPreferences.getString("phoneno", "") ?: ""
     val imgUriString = sharedPreferences.getString("img", "")
     img = Uri.parse(imgUriString)
+    return gson.fromJson(userDataJson, UserData::class.java).also {
+        Log.d("SavingUser", "Retrieved user data: $it   name: $name    phone: $phoneno    img:  $img")
+    }
 }
 
-//fun saveCartItemsToSharedPreferences(context: Context, cartItems: List<Dishfordb>, total: Double) {
-//    val sharedPreferences = context.getSharedPreferences("MyPrefs", Context.MODE_PRIVATE)
-//    val editor = sharedPreferences.edit()
-//
-//    // Convert the cartItems list to a JSON string
-//    val gson = Gson()
-//    val cartItemsJson = gson.toJson(cartItems)
-//
-//    // Save the JSON string in SharedPreferences
-//    editor.putString("cartItems", cartItemsJson)
-//   // editor.putString("count", count.toString())
-//    editor.putString("total", total.toString())
-//    editor.apply()
-//}
-
-//fun getCartItemsFromSharedPreferences(context: Context, cartItems: MutableList<Dishfordb>, count: Int, total: Double) {
-//    val sharedPreferences = context.getSharedPreferences("MyPrefs", Context.MODE_PRIVATE)
-//
-//    // Retrieve the JSON string from SharedPreferences
-//    val cartItemsJson = sharedPreferences.getString("cartItems", "")
-//
-//    total = sharedPreferences.getString("total", "")?.toDouble() ?: 0.00
-//    // Convert the JSON string back to a MutableList<Dishfordb>
-//    val gson = Gson()
-//    val type = object : TypeToken<MutableList<Dishfordb>>() {}.type
-//    cartItems = gson.fromJson(cartItemsJson, type) ?: mutableListOf()
-//}
-
 fun clearDataFromSharedPreferences(context: Context) {
-    val sharedPreferences = context.getSharedPreferences("MyPrefs", Context.MODE_PRIVATE)
+    val sharedPreferences = context.getSharedPreferences("user_prefs", Context.MODE_PRIVATE)
     with(sharedPreferences.edit()) {
         clear()
         apply()
