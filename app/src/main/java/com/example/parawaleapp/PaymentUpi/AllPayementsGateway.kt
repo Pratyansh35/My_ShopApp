@@ -49,10 +49,17 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.lifecycleScope
+import com.example.parawaleapp.Notifications.sendNotificationToUser
 import com.example.parawaleapp.R
 import com.example.parawaleapp.SendViewOrders.sendOrders
 import com.example.parawaleapp.database.Dishfordb
+import com.example.parawaleapp.sign_in.PhoneNumberLinkingDialog
+import com.example.parawaleapp.sign_in.SignInState
 import com.example.parawaleapp.sign_in.UserData
+import kotlinx.coroutines.launch
 import java.util.UUID
 
 @Composable
@@ -61,13 +68,12 @@ fun PaymentScreenLayout(
     totalValue: Double,
     userData: UserData?,
     cartItems: SnapshotStateList<Dishfordb>,
-    isDarkTheme: Boolean
+    isDarkTheme: Boolean,
+    state: SignInState,
+    onVerifyCodeClick: (String) -> Unit = {},
+    onSendVerificationCodeClick: (String) -> Unit
 ) {
     val merchantId = "PGTESTPAYUAT"
-    val saltkey = "099eb0cd-02cf-4e2a-8aca-3e6c6aff0399"
-    val merchantTransactionId = UUID.randomUUID().toString()
-    val apiEndPoint = "/pg/v1/pay"
-
     val context = LocalContext.current
     var specialCode by remember { mutableStateOf("") }
     var selectedPercentage by remember { mutableStateOf(10f) }
@@ -75,6 +81,22 @@ fun PaymentScreenLayout(
 
     var showDialog by remember { mutableStateOf(false) }
     var transactionResult by remember { mutableStateOf(TransactionResult("", "", "")) }
+    var showPhoneLinkDialog by remember { mutableStateOf(false) }
+
+    val lifecycleOwner = LocalLifecycleOwner.current
+
+    if (showPhoneLinkDialog) {
+        PhoneNumberLinkingDialog(
+            state = state,
+            onDismissRequest = { showPhoneLinkDialog = false },
+            onSendVerificationCodeClick = { phoneNumber ->
+                onSendVerificationCodeClick(phoneNumber)
+            },
+            onVerifyCodeClick = { otp ->
+                onVerifyCodeClick(otp)
+            }
+        )
+    }
 
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult()
@@ -177,10 +199,13 @@ fun PaymentScreenLayout(
                     )
                 }
             }
+
             Row(
-                horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()
+                horizontalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier.fillMaxWidth()
             ) {
-                OutlinedTextField(value = specialCode,
+                OutlinedTextField(
+                    value = specialCode,
                     onValueChange = { specialCode = it },
                     label = { Text(text = "Have Special Code") },
                     singleLine = true,
@@ -188,21 +213,24 @@ fun PaymentScreenLayout(
                         keyboardType = KeyboardType.Text
                     )
                 )
-                TextButton(onClick = {
-                    if (specialCode.replace(" ", "").lowercase().trim() == "parawalespecial") {
-                        selectedPercentage = 0f
-                    } else {
-                        selectedPercentage = 10f
-                    }
-                }, modifier = Modifier
-                    .padding(8.dp)
-                    .align(Alignment.CenterVertically)) {
+                TextButton(
+                    onClick = {
+                        if (specialCode.replace(" ", "").lowercase().trim() == "parawalespecial") {
+                            selectedPercentage = 0f
+                        } else {
+                            selectedPercentage = 10f
+                        }
+                    },
+                    modifier = Modifier
+                        .padding(8.dp)
+                        .align(Alignment.CenterVertically)
+                ) {
                     Text(text = "Apply")
                 }
             }
 
             Text(
-                text = if(selectedPercentage == 0f) "You applied Cash on Delivery" else "Pay ₹${String.format("%.2f", selectedAmount)} using these UPI apps:",
+                text = if (selectedPercentage == 0f) "You applied Cash on Delivery" else "Pay ₹${String.format("%.2f", selectedAmount)} using these UPI apps:",
                 color = MaterialTheme.colors.onSurface
             )
             Spacer(modifier = Modifier.height(16.dp))
@@ -221,9 +249,7 @@ fun PaymentScreenLayout(
                     totalMrp = totalMrp,
                     totalValue = totalValue,
                     merchantId = merchantId,
-                    selectedAmount = selectedAmount,
-                    launcher = launcher,
-                    iconRes = com.example.parawaleapp.R.drawable.bhimupi,
+                    iconRes = R.drawable.bhimupi,
                     onClick = { vpa, name, note, merchantTransactionId, transactionUrl ->
                         payUsingUPI(
                             context,
@@ -235,33 +261,30 @@ fun PaymentScreenLayout(
                             merchantTransactionId,
                             transactionUrl
                         )
-                    }
+                    },
+                    onPhoneLinkRequired = { showPhoneLinkDialog = true }
                 )
-//                UPIIconButton(
-//                    specialCode = specialCode,
-//                    context = context,
-//                    userData = userData,
-//                    cartItems = cartItems,
-//                    totalMrp = totalMrp,
-//                    totalValue = totalValue,
-//                    merchantId = merchantId,
-//                    selectedAmount = selectedAmount,
-//                    launcher = launcher,
-//                    iconRes = com.example.parawaleapp.R.drawable.phonepeicon,
-//                    onClick = { vpa, name, note, merchantTransactionId, transactionUrl ->
-//                        Phonepe(
-//                            context = context,
-//                            amount = selectedAmount,
-//                            merchantId = merchantId,
-//                            merchantTransactionId = merchantTransactionId,
-//                            callbackUrl = "https://webhook.site/374d1a7f-5fd2-438a-840a-761714a04403",
-//                            mobileNumber = 7007254934.toString()
-//                        )
-//                    }
-//                )
+
                 if (selectedPercentage == 0f) {
                     IconButton(onClick = {
-                        sendOrders(context =  context, userData = userData,cartItems = cartItems, totalMrp =  totalMrp, totalValue =  totalValue, transactionId = System.currentTimeMillis().toString(), merchantCode =  merchantId, amountReceived = "0", amountRemaining = totalValue.toString())
+                        sendOrders(
+                            context = context,
+                            userData = userData,
+                            cartItems = cartItems,
+                            totalMrp = totalMrp,
+                            totalValue = totalValue,
+                            transactionId = System.currentTimeMillis().toString(),
+                            merchantCode = merchantId,
+                            amountReceived = "0",
+                            amountRemaining = totalValue.toString(),
+                            onPhoneLinkRequired = { showPhoneLinkDialog = true },
+                            onSuccessSendNotification = { merchantEmail ->
+                                lifecycleOwner.lifecycleScope.launch {
+                                    sendNotificationTOMerchant(merchantEmail, userData?.userPhoneNumber.toString())
+                                }
+                            }
+
+                        )
                         cartItems.clear()
                     }) {
                         Card(
@@ -270,7 +293,7 @@ fun PaymentScreenLayout(
                             modifier = Modifier.padding(bottom = 16.dp)
                         ) {
                             Image(
-                                painter = painterResource(id = if (isDarkTheme) {R.drawable.codlight} else {R.drawable.coddark}),
+                                painter = painterResource(id = if (isDarkTheme) { R.drawable.codlight } else { R.drawable.coddark }),
                                 contentDescription = "Cash on Delivery",
                                 modifier = Modifier.size(48.dp)
                             )
@@ -280,9 +303,22 @@ fun PaymentScreenLayout(
             }
         }
     }
+
     if (showDialog) {
         TransactionResultDialog(result = transactionResult, onDismiss = { showDialog = false })
     }
+
+//    if (showPhoneLinkDialog) {
+//        PhoneNumberLinkingDialog(onDismiss = { showPhoneLinkDialog = false }) { phoneNumber ->
+//            // Handle phone number linking
+//            showPhoneLinkDialog = false
+//            // After linking, you may want to retry the order submission
+//        }
+//    }
+}
+
+suspend fun sendNotificationTOMerchant(merchantEmail: String, client:String ){
+        sendNotificationToUser(merchantEmail, "New Order from $client", "You have a new order from $client. Please check Customers Orders for more details.")
 }
 
 @Composable
@@ -294,11 +330,12 @@ fun UPIIconButton(
     totalMrp: Double,
     totalValue: Double,
     merchantId: String,
-    selectedAmount: Double,
-    launcher: ManagedActivityResultLauncher<Intent, ActivityResult>,
     iconRes: Int,
-    onClick: (vpa: String, name: String, note: String, transactionId: String, transactionUrl: String) -> Unit
+    onClick: (vpa: String, name: String, note: String, transactionId: String, transactionUrl: String) -> Unit,
+    onPhoneLinkRequired: () -> Unit,
+    lifecycleOwner: LifecycleOwner = LocalLifecycleOwner.current
 ) {
+
     IconButton(onClick = {
         if (specialCode.replace(" ", "").lowercase().trim() == "parawalespecial") {
             sendOrders(
@@ -310,7 +347,13 @@ fun UPIIconButton(
                 System.currentTimeMillis().toString(),
                 merchantId,
                 amountReceived = "0",
-                amountRemaining = totalValue.toString()
+                amountRemaining = totalValue.toString(),
+                onPhoneLinkRequired = onPhoneLinkRequired,
+                onSuccessSendNotification = { merchantEmail ->
+                    lifecycleOwner.lifecycleScope.launch {
+                        sendNotificationTOMerchant(merchantEmail, userData?.userPhoneNumber.toString())
+                    }
+                }
             )
         } else {
             onClick(

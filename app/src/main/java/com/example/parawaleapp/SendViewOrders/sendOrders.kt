@@ -5,6 +5,7 @@ import android.util.Log
 import android.widget.Toast
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import com.example.parawaleapp.Notifications.sendNotificationToUser
 import com.example.parawaleapp.database.Dishfordb
@@ -25,8 +26,9 @@ fun sendOrders(
     merchantCode: String,
     amountReceived: String,
     amountRemaining: String,
+    onPhoneLinkRequired: () -> Unit,
+    onSuccessSendNotification: (String) -> Unit
 ) {
-    //val lifecycleOwner = LocalLifecycleOwner.current
     val merchantEmail = "pratyansh35@gmail.com"
     if (userData == null) {
         Toast.makeText(context, "Please Sign In", Toast.LENGTH_SHORT).show()
@@ -36,6 +38,11 @@ fun sendOrders(
         Toast.makeText(context, "Cart is Empty", Toast.LENGTH_SHORT).show()
         return
     }
+//    if (userData.userPhoneNumber.isNullOrEmpty()) {
+//        // Show linking dialog
+//        onPhoneLinkRequired()
+//        return
+//    }
 
     val username = userData.userName
     val useremail = userData.userEmail?.replace(".", ",") // Replace '.' with ',' to avoid issues in Firebase keys
@@ -55,13 +62,11 @@ fun sendOrders(
         val userRef = datareference.child("OnlineOrders").child(it)
 
         userRef.child("username").setValue(username)
-        userRef.child("contactno").setValue(phoneno)
+        userRef.child("contactno").setValue(userData.userPhoneNumber)
         userRef.child("orders").child(transactionId).setValue(orderDetails)
             .addOnSuccessListener {
                 Toast.makeText(context, "Order Placed Successfully", Toast.LENGTH_SHORT).show()
-//                lifecycleOwner.lifecycleScope.launch {
-//                    sendNotificationToUser(merchantEmail, "New Order", " ")
-//                }
+                onSuccessSendNotification(merchantEmail)
             }
             .addOnFailureListener { exception ->
                 Toast.makeText(context, exception.message, Toast.LENGTH_SHORT).show()

@@ -82,6 +82,7 @@ import com.example.parawaleapp.mainScreen.NavBar
 import com.example.parawaleapp.printer.BluetoothScreen
 import com.example.parawaleapp.sign_in.GoogleAuthUiClient
 import com.example.parawaleapp.sign_in.SignInScreen
+import com.example.parawaleapp.sign_in.SignInState
 import com.example.parawaleapp.sign_in.SignInViewModel
 import com.example.parawaleapp.ui.theme.MyAppTheme
 import com.google.android.gms.auth.api.identity.Identity
@@ -90,7 +91,6 @@ import com.google.firebase.FirebaseApp
 import com.google.gson.Gson
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-
 
 class MainActivity : ComponentActivity() {
     private val googleAuthUiClient by lazy {
@@ -104,213 +104,189 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         FirebaseApp.initializeApp(this)
         createNotificationChannel(this)
-
         setContent {
-            Surface(
-                modifier = Modifier.fillMaxSize(),
-                color = MaterialTheme.colors.background
+            MyApp()
+        }
+    }
+
+    @Composable
+    fun MyApp() {
+        Surface(
+            modifier = Modifier.fillMaxSize(), color = MaterialTheme.colors.background
+        ) {
+            var isDarkTheme by rememberSaveable { mutableStateOf(false) }
+            var dishData by rememberSaveable { mutableStateOf<List<Dishfordb>>(emptyList()) }
+            val navController = rememberNavController()
+            val context = LocalContext.current
+
+            val userData = getUserFromSharedPreferences(context)
+            val userState = remember { mutableStateOf(userData) }
+
+            LaunchedEffect(key1 = userState.value) {
+                if (userState.value != null) {
+                    dishData = getdishes("Items").orEmpty()
+                    Toast.makeText(
+                        applicationContext,
+                        "Welcome back, ${userState.value?.userName}",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    navController.navigate("MainScreen") {
+                        popUpTo("sign_in") { inclusive = true }
+                    }
+                }
+            }
+
+            NavHost(
+                navController = navController,
+                startDestination = if (userState.value != null) "MainScreen" else "sign_in"
             ) {
-                val navController = rememberNavController()
-                var dishData by rememberSaveable { mutableStateOf<List<Dishfordb>>(emptyList()) }
-                val context = LocalContext.current
-                val userData = getUserFromSharedPreferences(context)
-                if (userData == null) {
-                    Log.d("SavingUser", "No user data found in SharedPreferences")
-                } else {
-                    Log.d("SavingUser", "User data loaded: $userData")
-                }
-
-                // Update userState and navigate based on savedUser
-                val userState = remember { mutableStateOf(userData) }
-
-                LaunchedEffect(key1 = Unit) {
-                    if (userState.value != null) {
-                        getdishes("Items")?.let { newData -> dishData = newData }
-                        Toast.makeText(
-                            applicationContext,
-                            "Welcome back, ${userState.value?.userName}",
-                            Toast.LENGTH_SHORT
-                        ).show()
-                        Log.d("MainActivity", "Navigating to MainScreen")
-                        navController.navigate("MainScreen") {
-                            popUpTo("sign_in") { inclusive = true }
+                composable("sign_in") { SignIn(navController, dishData, onDishDataChange = { dishData = it }) }
+                composable("MainScreen") {
+                    val viewModel = viewModel<SignInViewModel>()
+                    val state by viewModel.state.collectAsStateWithLifecycle()
+                    MainScreen(
+                        navController,
+                        googleAuthUiClient = googleAuthUiClient,
+                        dishData = dishData,
+                        isDarkTheme = { isDarkTheme = it },
+                        isDark = isDarkTheme,
+                        state = state,
+                        onVerifyCodeClick = { verificationCode ->
+                            viewModel.verifyPhoneNumberWithCode(verificationCode)
+                        },
+                        onSendVerificationCodeClick = { phoneNumber ->
+                            viewModel.sendVerificationCode(this@MainActivity, phoneNumber)
                         }
-                    } else {
-                        Log.d("MainActivity", "User not signed in, navigating to sign_in screen")
-                    }
-                }
-
-                NavHost(
-                    navController = navController,
-                    startDestination = if (userState.value != null) "MainScreen" else "sign_in"
-                ) {
-                    composable("sign_in") {
-                        val viewModel = viewModel<SignInViewModel>()
-                        val state by viewModel.state.collectAsStateWithLifecycle()
-
-                        LaunchedEffect(key1 = state.isSignInSuccessful) {
-                            if (state.isSignInSuccessful && state.isPhoneNumberLinked) {
-                                Toast.makeText(
-                                    applicationContext,
-                                    "Sign in successful",
-                                    Toast.LENGTH_SHORT
-                                ).show()
-                                saveUserToSharedPreferences(context, state.userData)
-                                getdishes("Items")?.let { newData -> dishData = newData }
-                                navController.navigate("MainScreen") {
-                                    popUpTo("sign_in") { inclusive = true }
-                                }
-                                viewModel.resetState()
-                            }
-                        }
-
-                        val launcher = rememberLauncherForActivityResult(
-                            contract = ActivityResultContracts.StartIntentSenderForResult()
-                        ) { result ->
-                            if (result.resultCode == RESULT_OK) {
-                                lifecycleScope.launch {
-                                    val signInResult = googleAuthUiClient.signInWithIntent(
-                                        result.data ?: return@launch
-                                    )
-                                    viewModel.onSignInResult(signInResult)
-
-                                    // Check if phone number needs to be linked
-                                    val userData = signInResult.data
-                                    if (userData?.phoneno.isNullOrEmpty()) {
-                                        viewModel.startLoading()
-                                        viewModel.sendVerificationCode(
-                                            this@MainActivity,
-                                            userData?.userEmail ?: ""
-                                        )
-                                    }
-                                }
-                            } else {
-                                viewModel.stopLoading() // Stop loading when login is cancelled
-                            }
-                        }
-
-                        SignInScreen(
-                            state = state,
-                            onSignInClick = { activity, phoneNumber ->
-                                viewModel.sendVerificationCode(
-                                    activity,
-                                    phoneNumber
-                                )
-                            },
-                            onGoogleSignInClick = {
-                                viewModel.startLoading()
-                                lifecycleScope.launch {
-                                    val signInIntentSender = googleAuthUiClient.signIn()
-                                    launcher.launch(
-                                        IntentSenderRequest.Builder(
-                                            signInIntentSender ?: return@launch
-                                        ).build()
-                                    )
-                                }
-                            },
-                            onVerifyCodeClick = { verificationCode ->
-                                viewModel.verifyPhoneNumberWithCode(verificationCode)
-                            },
-                            onSendVerificationCodeClick = { phoneNumber ->
-                                viewModel.sendVerificationCode(this@MainActivity, phoneNumber)
-                            }
-                        )
-                    }
-                    composable("MainScreen") {
-                        MainScreen(
-                            navController,
-                            googleAuthUiClient = googleAuthUiClient,
-                            dishData = dishData,
-                            scope = rememberCoroutineScope()
-                        )
-                    }
+                    )
                 }
             }
         }
     }
+
+    @Composable
+    fun SignIn(navController: NavController, dishData: List<Dishfordb>, onDishDataChange: (List<Dishfordb>) -> Unit) {
+        val viewModel = viewModel<SignInViewModel>()
+        val state by viewModel.state.collectAsStateWithLifecycle()
+        val context = LocalContext.current
+        LaunchedEffect(key1 = state.isSignInSuccessful) {
+            if (state.isSignInSuccessful) {
+                Toast.makeText(
+                    applicationContext, "Sign in successful", Toast.LENGTH_SHORT
+                ).show()
+                getdishes("Items")?.let { newData ->
+                    onDishDataChange(newData)
+                }
+                saveUserToSharedPreferences(context, state.userData)
+                navController.navigate("MainScreen") {
+                    popUpTo("sign_in") { inclusive = true }
+                }
+                viewModel.resetState()
+            }
+        }
+
+        val launcher = rememberLauncherForActivityResult(
+            contract = ActivityResultContracts.StartIntentSenderForResult()
+        ) { result ->
+            if (result.resultCode == RESULT_OK) {
+                lifecycleScope.launch {
+                    val signInResult = googleAuthUiClient.signInWithIntent(
+                        result.data ?: return@launch
+                    )
+                    viewModel.onSignInResult(signInResult)
+                }
+            } else {
+                viewModel.stopLoading()
+            }
+        }
+
+        SignInScreen(state = state, onSignInClick = { activity, phoneNumber ->
+            viewModel.sendVerificationCode(activity, phoneNumber)
+        }, onGoogleSignInClick = {
+            viewModel.startLoading()
+            lifecycleScope.launch {
+                val signInIntentSender = googleAuthUiClient.signIn()
+                launcher.launch(
+                    IntentSenderRequest.Builder(
+                        signInIntentSender ?: return@launch
+                    ).build()
+                )
+            }
+        }, onVerifyCodeClick = { verificationCode ->
+            viewModel.verifyPhoneNumberWithCode(verificationCode)
+        })
+    }
 }
-
-
-
-
 
 @Composable
 fun MainScreen(
-    navController2: NavController,
+    navController: NavController,
     googleAuthUiClient: GoogleAuthUiClient,
-    scope: CoroutineScope,
-    dishData: List<Dishfordb>
+    dishData: List<Dishfordb>,
+    isDarkTheme: (Boolean) -> Unit,
+    isDark: Boolean,
+    state: SignInState,
+    onVerifyCodeClick: (String) -> Unit,
+    onSendVerificationCodeClick: (String) -> Unit
 ) {
     val scaffoldState = rememberScaffoldState()
-    val navController = rememberNavController()
+    val innerNavController = rememberNavController()
     val context = LocalContext.current
-
+    val scope = rememberCoroutineScope()
     val cartItems = remember { mutableStateListOf<Dishfordb>() }
-
-    var allOverTotalPrice by rememberSaveable { mutableDoubleStateOf(0.0) }
-    var allOverTotalMrp by rememberSaveable { mutableDoubleStateOf(0.0) }
+    var allOverTotalPrice by rememberSaveable { mutableStateOf(0.0) }
+    var allOverTotalMrp by rememberSaveable { mutableStateOf(0.0) }
+    var isGridLayout by rememberSaveable { mutableStateOf(false) }
 
     fun updateTotals() {
         allOverTotalPrice = cartItems.sumOf { it.price.removePrefix("₹").toDouble() * it.count }
         allOverTotalMrp = cartItems.sumOf { it.mrp.removePrefix("₹").toDouble() * it.count }
     }
-
-    fun saveCartItemsToSharedPreferences() {
-        val sharedPreferences = context.getSharedPreferences("MyPrefs", Context.MODE_PRIVATE)
-        val editor = sharedPreferences.edit()
-
-
-        val gson = Gson()
-        val cartItemsJson = gson.toJson(cartItems)
-
-        editor.putString("cartItems", cartItemsJson)
-        editor.putString("total", allOverTotalPrice.toString())
-        editor.apply()
-    }
-
-    var isDarkTheme by remember { mutableStateOf(false) }
-
     val systemInDarkTheme = isSystemInDarkTheme()
     LaunchedEffect(systemInDarkTheme) {
-        isDarkTheme = systemInDarkTheme
+        isDarkTheme(systemInDarkTheme)
     }
 
-    var isGridLayout by rememberSaveable { mutableStateOf(false) }
-
-    MyAppTheme(darkTheme = isDarkTheme) {
-        Scaffold(scaffoldState = scaffoldState, drawerContent = {
-            LeftDrawerPanel(scaffoldState = scaffoldState,
-                scope = scope,
-                navController = navController,
-                userData = googleAuthUiClient.getSignedInUser(),
-                signOut = {
-                    clearDataFromSharedPreferences(context)
-                    scope.launch {
-                        googleAuthUiClient.signOut()
-                        Toast.makeText(context, "Sign out successful", Toast.LENGTH_LONG).show()
-                        navController2.navigate("sign_in")
+    MyAppTheme(darkTheme = isDark) {
+        Scaffold(
+            scaffoldState = scaffoldState,
+            drawerContent = {
+                LeftDrawerPanel(
+                    scaffoldState = scaffoldState,
+                    scope = scope,
+                    navController = innerNavController,
+                    userData = googleAuthUiClient.getSignedInUser(),
+                    signOut = {
+                        clearDataFromSharedPreferences(context)
+                        scope.launch {
+                            googleAuthUiClient.signOut()
+                            Toast.makeText(context, "Sign out successful", Toast.LENGTH_LONG).show()
+                            navController.navigate("sign_in")
+                        }
                     }
-                })
-        }, drawerGesturesEnabled = true, topBar = {
-            NavBar(
-                scaffoldState = scaffoldState,
-                scope = scope,
-                navController = navController,
-                isDarkTheme = isDarkTheme,
-                count = cartItems.size
-            )
-        }, bottomBar = { MyBottomNavigation(navController = navController) }) { it ->
-            Box(Modifier.padding(it)) {
-                NavHost(navController = navController, startDestination = Home.route) {
+                )
+            },
+            drawerGesturesEnabled = true,
+            topBar = {
+                NavBar(
+                    scaffoldState = scaffoldState,
+                    scope = scope,
+                    navController = innerNavController,
+                    isDarkTheme = isDark,
+                    count = cartItems.size
+                )
+            },
+            bottomBar = { MyBottomNavigation(navController = innerNavController) }
+        ) { paddingValues ->
+            Box(Modifier.padding(paddingValues)) {
+                NavHost(navController = innerNavController, startDestination = Home.route) {
                     composable(Home.route) {
                         HomeScreen(
                             DishData = dishData,
-                            isDarkTheme = isDarkTheme,
-                            onThemeChange = { isDarkTheme = it },
+                            isDarkTheme = isDark,
+                            onThemeChange = { isDarkTheme(it) },
                             cartItems = cartItems,
                             updateTotals = ::updateTotals,
-                            saveCartItemsToSharedPreferences = ::saveCartItemsToSharedPreferences,
-                            navController = navController,
+                            navController = innerNavController,
                             isGridLayout = isGridLayout,
                             onLayoutChange = { isGridLayout = it }
                         )
@@ -320,30 +296,27 @@ fun MainScreen(
                             dishData,
                             cartItems = cartItems,
                             updateTotals = ::updateTotals,
-                            saveCartItemsToSharedPreferences = ::saveCartItemsToSharedPreferences,
-                            navController = navController
+                            navController = innerNavController
                         )
                     }
                     composable(Scan_Barcode.route) {
                         BarCodeScreen(
                             dishData,
                             cartItems = cartItems,
-                            updateTotals = ::updateTotals,
-                            saveCartItemsToSharedPreferences = ::saveCartItemsToSharedPreferences
+                            updateTotals = ::updateTotals
                         )
                     }
                     composable(Cart.route) {
                         CartDrawerPanel(
-                            navController = navController,
+                            navController = innerNavController,
                             cartItems = cartItems,
                             allOverTotalPrice = allOverTotalPrice,
-                            updateTotals = ::updateTotals,
-                            saveCartItemsToSharedPreferences = ::saveCartItemsToSharedPreferences
+                            updateTotals = ::updateTotals
                         )
                     }
                     composable(AfterCart.route) {
                         ConfirmCart(
-                            navController = navController,
+                            navController = innerNavController,
                             userData = googleAuthUiClient.getSignedInUser(),
                             cartItems = cartItems,
                             total = allOverTotalPrice,
@@ -361,52 +334,23 @@ fun MainScreen(
                     composable(SettingScreen.route) {
                         Settings(
                             scope = scope,
-                            navController = navController,
+                            navController = innerNavController,
                             userData = googleAuthUiClient.getSignedInUser(),
                             scaffoldState = scaffoldState
                         )
                     }
                     composable(BluetoothScreenRoute.route) { BluetoothScreen() }
-                    composable(ViewOrder.route) { ViewOrders(navController = navController) }
-                    composable(AppLayout.route) {
-                        AppLayoutScreen()
-                    }
+                    composable(ViewOrder.route) { ViewOrders(navController = innerNavController) }
+                    composable(AppLayout.route) { AppLayoutScreen() }
 
-                    composable("personOrders/{email}") { backStackEntry ->
-                        val email = backStackEntry.arguments?.getString("email")
-                        PersonOrdersScreen(navController, email)
-                    }
-                    composable("itemDescription/{dish}") { backStackEntry ->
-                        val dishJson = backStackEntry.arguments?.getString("dish")
-                        val item = Gson().fromJson(dishJson, Dishfordb::class.java)
-                        if (item != null) {
-                            ItemDescription(
-                                item,
-                                cartItems = cartItems,
-                                updateTotals = ::updateTotals,
-                                saveCartItemsToSharedPreferences = ::saveCartItemsToSharedPreferences
-                            )
-                        }
-                    }
-                    composable("orderDetails/{email}/{date}/{name}/{orderedItems}/{timeStamp}") { backStackEntry ->
-                        val email = backStackEntry.arguments?.getString("email")
-                        val date = backStackEntry.arguments?.getString("date")
-                        val name = backStackEntry.arguments?.getString("name")
-                        val orderedItemsJson = backStackEntry.arguments?.getString("orderedItems")
-                        val orderTimeStamp = backStackEntry.arguments?.getString("timeStamp")
-                        val loggedemail = googleAuthUiClient.getSignedInUser()?.userEmail
 
-                        if (orderedItemsJson != null && orderTimeStamp != null) {
 
-                                OrderDetailsScreen(
-                                    navController = navController , email = email, date = date, name = name, loggedUser = loggedemail, orderedItemsJson = orderedItemsJson, timeStamp = orderTimeStamp
-                                )
-
-                        }
-                    }
-                    composable("Location"){
+                    composable("Location") {
                         ShopDistanceScreen(
-                            shopLocation = LatLng(  27.099407, 83.271651) // Example shop location (Delhi, India)
+                            shopLocation = LatLng(
+                                27.099407,
+                                83.271651
+                            ) // Example shop location (Delhi, India)
                         )
                     }
                     composable(PreviousOrders.route) {
@@ -422,10 +366,52 @@ fun MainScreen(
                                 totalValue,
                                 googleAuthUiClient.getSignedInUser(),
                                 cartItems,
-                                isDarkTheme
+                                isDark,
+                                state = state,
+                                onVerifyCodeClick = onVerifyCodeClick,
+                                onSendVerificationCodeClick = onSendVerificationCodeClick
                             )
                         }
                     }
+                    composable("personOrders/{email}") { backStackEntry ->
+                        val email = backStackEntry.arguments?.getString("email")
+                        PersonOrdersScreen(innerNavController, email)
+                    }
+
+                    composable("itemDescription/{dish}") { backStackEntry ->
+                        val dishJson = backStackEntry.arguments?.getString("dish")
+                        val item = Gson().fromJson(dishJson, Dishfordb::class.java)
+                        if (item != null) {
+                            ItemDescription(
+                                item,
+                                cartItems = cartItems,
+                                updateTotals = ::updateTotals
+                            )
+                        }
+                    }
+                    composable("orderDetails/{email}/{date}/{name}/{orderedItems}/{timeStamp}") { backStackEntry ->
+                        val email = backStackEntry.arguments?.getString("email")
+                        val date = backStackEntry.arguments?.getString("date")
+                        val name = backStackEntry.arguments?.getString("name")
+                        val orderedItemsJson = backStackEntry.arguments?.getString("orderedItems")
+                        val orderTimeStamp = backStackEntry.arguments?.getString("timeStamp")
+                        val loggedemail = googleAuthUiClient.getSignedInUser()?.userEmail
+
+                        if (orderedItemsJson != null && orderTimeStamp != null) {
+
+                            OrderDetailsScreen(
+                                navController = innerNavController,
+                                email = email,
+                                date = date,
+                                name = name,
+                                loggedUser = loggedemail,
+                                orderedItemsJson = orderedItemsJson,
+                                timeStamp = orderTimeStamp
+                            )
+
+                        }
+                    }
+
                 }
             }
         }
@@ -433,8 +419,10 @@ fun MainScreen(
 }
 
 
+
 @Composable
 fun MyBottomNavigation(navController: NavController) {
+
     val destinationList = listOf(
         Home, Menu, Scan_Barcode
     )
@@ -461,3 +449,345 @@ fun MyBottomNavigation(navController: NavController) {
         }
     }
 }
+
+
+
+//
+//class MainActivity : ComponentActivity() {
+//    private val googleAuthUiClient by lazy {
+//        GoogleAuthUiClient(
+//            context = applicationContext,
+//            oneTapClient = Identity.getSignInClient(applicationContext)
+//        )
+//    }
+//
+//    override fun onCreate(savedInstanceState: Bundle?) {
+//        super.onCreate(savedInstanceState)
+//        FirebaseApp.initializeApp(this)
+//        createNotificationChannel(this)
+//        setContent {
+//            Surface(
+//                modifier = Modifier.fillMaxSize(), color = MaterialTheme.colors.background
+//            ) {
+//                var isDarkTheme by remember { mutableStateOf(false) }
+//                val navController = rememberNavController()
+//                var dishData by rememberSaveable { mutableStateOf<List<Dishfordb>>(emptyList()) }
+//                val context = LocalContext.current
+//                val userData = getUserFromSharedPreferences(context)
+//                if (userData == null) {
+//                    Log.d("SavingUser", "No user data found in SharedPreferences")
+//                } else {
+//                    Log.d("SavingUser", "User data loaded: $userData")
+//                }
+//
+//                // Update userState and navigate based on savedUser
+//                val userState = remember { mutableStateOf(userData) }
+//
+//                LaunchedEffect(key1 = Unit) {
+//                    if (userState.value != null) {
+//                        getdishes("Items")?.let { newData -> dishData = newData }
+//                        Toast.makeText(
+//                            applicationContext,
+//                            "Welcome back, ${userState.value?.userName}",
+//                            Toast.LENGTH_SHORT
+//                        ).show()
+//                        Log.d("MainActivity", "Navigating to MainScreen")
+//                        navController.navigate("MainScreen") {
+//                            popUpTo("sign_in") { inclusive = true }
+//                        }
+//                    } else {
+//                        Log.d("MainActivity", "User not signed in, navigating to sign_in screen")
+//                    }
+//                }
+//
+//                NavHost(
+//                    navController = navController,
+//                    startDestination = if (userState.value != null) "MainScreen" else "sign_in"
+//                ) {
+//                    composable("sign_in") {
+//                        val viewModel = viewModel<SignInViewModel>()
+//                        val state by viewModel.state.collectAsStateWithLifecycle()
+//
+//                        LaunchedEffect(key1 = state.isSignInSuccessful) {
+//                            if (state.isSignInSuccessful) {
+//                                Toast.makeText(
+//                                    applicationContext, "Sign in successful", Toast.LENGTH_SHORT
+//                                ).show()
+//                                saveUserToSharedPreferences(context, state.userData)
+//                                getdishes("Items")?.let { newData -> dishData = newData }
+//                                navController.navigate("MainScreen") {
+//                                    popUpTo("sign_in") { inclusive = true }
+//                                }
+//                                viewModel.resetState()
+//                            }
+//                        }
+//
+//                        val launcher = rememberLauncherForActivityResult(
+//                            contract = ActivityResultContracts.StartIntentSenderForResult()
+//                        ) { result ->
+//                            if (result.resultCode == RESULT_OK) {
+//                                lifecycleScope.launch {
+//                                    val signInResult = googleAuthUiClient.signInWithIntent(
+//                                        result.data ?: return@launch
+//                                    )
+//                                    viewModel.onSignInResult(signInResult)
+//                                }
+//                            } else {
+//                                viewModel.stopLoading()
+//                            }
+//                        }
+//
+//                        SignInScreen(state = state, onSignInClick = { activity, phoneNumber ->
+//                            viewModel.sendVerificationCode(
+//                                activity, phoneNumber
+//                            )
+//                        }, onGoogleSignInClick = {
+//                            viewModel.startLoading()
+//                            lifecycleScope.launch {
+//                                val signInIntentSender = googleAuthUiClient.signIn()
+//                                launcher.launch(
+//                                    IntentSenderRequest.Builder(
+//                                        signInIntentSender ?: return@launch
+//                                    ).build()
+//                                )
+//                            }
+//                        }, onVerifyCodeClick = { verificationCode ->
+//                            viewModel.verifyPhoneNumberWithCode(verificationCode)
+//                        },
+////                            onSendVerificationCodeClick = { phoneNumber ->
+////                            viewModel.sendVerificationCode(this@MainActivity, phoneNumber) }
+//                        )
+//                    }
+//                    composable("MainScreen") {
+//                        val viewModel = viewModel<SignInViewModel>()
+//                        val state by viewModel.state.collectAsStateWithLifecycle()
+//                        MainScreen(
+//                            navController,
+//                            googleAuthUiClient = googleAuthUiClient,
+//                            dishData = dishData,
+//                            scope = rememberCoroutineScope(),
+//                            state = state,
+//                            onVerifyCodeClick = { verificationCode ->
+//                                viewModel.verifyPhoneNumberWithCode(verificationCode)
+//                            }, onSendVerificationCodeClick = { phoneNumber ->
+//                                viewModel.sendVerificationCode(this@MainActivity, phoneNumber)
+//                            },
+//                            isDarkTheme = { isDarkTheme = it },
+//                            isDark = isDarkTheme
+//                        )
+//                    }
+//                }
+//            }
+//        }
+//    }
+//}
+//
+//
+//@Composable
+//fun MainScreen(
+//    navController2: NavController,
+//    googleAuthUiClient: GoogleAuthUiClient,
+//    scope: CoroutineScope,
+//    dishData: List<Dishfordb>,
+//    state: SignInState,
+//    onVerifyCodeClick: (String) -> Unit,
+//    onSendVerificationCodeClick: (String) -> Unit,
+//    isDarkTheme: (Boolean) -> Unit,
+//    isDark: Boolean
+//) {
+//    val scaffoldState = rememberScaffoldState()
+//    val navController = rememberNavController()
+//    val context = LocalContext.current
+//
+//    val cartItems = remember { mutableStateListOf<Dishfordb>() }
+//    var allOverTotalPrice by rememberSaveable { mutableDoubleStateOf(0.0) }
+//    var allOverTotalMrp by rememberSaveable { mutableDoubleStateOf(0.0) }
+//
+//    fun updateTotals() {
+//        allOverTotalPrice = cartItems.sumOf { it.price.removePrefix("₹").toDouble() * it.count }
+//        allOverTotalMrp = cartItems.sumOf { it.mrp.removePrefix("₹").toDouble() * it.count }
+//    }
+//
+//    // { Todo add getCartItemsFromSharedPreferences() }
+////    fun saveCartItemsToSharedPreferences() {
+////        val sharedPreferences = context.getSharedPreferences("MyPrefs", Context.MODE_PRIVATE)
+////        val editor = sharedPreferences.edit()
+////        val gson = Gson()
+////        val cartItemsJson = gson.toJson(cartItems)
+////        editor.putString("cartItems", cartItemsJson)
+////        editor.apply()
+////    }
+//
+//
+//
+//    val systemInDarkTheme = isSystemInDarkTheme()
+//    LaunchedEffect(systemInDarkTheme) {
+//        isDarkTheme(systemInDarkTheme)
+//    }
+//
+//    var isGridLayout by rememberSaveable { mutableStateOf(false) }
+//
+//    MyAppTheme(darkTheme = isDark) {
+//        Scaffold(scaffoldState = scaffoldState, drawerContent = {
+//            LeftDrawerPanel(scaffoldState = scaffoldState,
+//                scope = scope,
+//                navController = navController,
+//                userData = googleAuthUiClient.getSignedInUser(),
+//                signOut = {
+//                    clearDataFromSharedPreferences(context)
+//                    scope.launch {
+//                        googleAuthUiClient.signOut()
+//                        Toast.makeText(context, "Sign out successful", Toast.LENGTH_LONG).show()
+//                        navController2.navigate("sign_in")
+//                    }
+//                })
+//        }, drawerGesturesEnabled = true, topBar = {
+//            NavBar(
+//                scaffoldState = scaffoldState,
+//                scope = scope,
+//                navController = navController,
+//                isDarkTheme = isDark,
+//                count = cartItems.size
+//            )
+//        }, bottomBar = { MyBottomNavigation(navController = navController) }) { it ->
+//            Box(Modifier.padding(it)) {
+//                NavHost(navController = navController, startDestination = Home.route) {
+//                    composable(Home.route) {
+//                        HomeScreen(DishData = dishData,
+//                            isDarkTheme = isDark,
+//                            onThemeChange = { isDarkTheme(it) },
+//                            cartItems = cartItems,
+//                            updateTotals = ::updateTotals,
+//                            //saveCartItemsToSharedPreferences = ::saveCartItemsToSharedPreferences,
+//                            navController = navController,
+//                            isGridLayout = isGridLayout,
+//                            onLayoutChange = { isGridLayout = it })
+//                    }
+//                    composable(Menu.route) {
+//                        MenuListScreen(
+//                            dishData,
+//                            cartItems = cartItems,
+//                            updateTotals = ::updateTotals,
+//                            //saveCartItemsToSharedPreferences = ::saveCartItemsToSharedPreferences,
+//                            navController = navController
+//                        )
+//                    }
+//                    composable(Scan_Barcode.route) {
+//                        BarCodeScreen(
+//                            dishData,
+//                            cartItems = cartItems,
+//                            updateTotals = ::updateTotals,
+//                           // saveCartItemsToSharedPreferences = ::saveCartItemsToSharedPreferences
+//                        )
+//                    }
+//                    composable(Cart.route) {
+//                        CartDrawerPanel(
+//                            navController = navController,
+//                            cartItems = cartItems,
+//                            allOverTotalPrice = allOverTotalPrice,
+//                            updateTotals = ::updateTotals,
+//                            //saveCartItemsToSharedPreferences = ::saveCartItemsToSharedPreferences
+//                        )
+//                    }
+//                    composable(AfterCart.route) {
+//                        ConfirmCart(
+//                            navController = navController,
+//                            userData = googleAuthUiClient.getSignedInUser(),
+//                            cartItems = cartItems,
+//                            total = allOverTotalPrice,
+//                            totalmrp = allOverTotalMrp
+//                        )
+//                    }
+//                    composable(ProfileSet.route) {
+//                        Profileset(userData = googleAuthUiClient.getSignedInUser())
+//                    }
+//                    composable(AddItems.route) {
+//                        ManageItem(
+//                            userData = googleAuthUiClient.getSignedInUser(), dishData = dishData
+//                        )
+//                    }
+//                    composable(SettingScreen.route) {
+//                        Settings(
+//                            scope = scope,
+//                            navController = navController,
+//                            userData = googleAuthUiClient.getSignedInUser(),
+//                            scaffoldState = scaffoldState
+//                        )
+//                    }
+//                    composable(BluetoothScreenRoute.route) { BluetoothScreen() }
+//                    composable(ViewOrder.route) { ViewOrders(navController = navController) }
+//                    composable(AppLayout.route) {
+//                        AppLayoutScreen()
+//                    }
+//
+//                    composable("personOrders/{email}") { backStackEntry ->
+//                        val email = backStackEntry.arguments?.getString("email")
+//                        PersonOrdersScreen(navController, email)
+//                    }
+//                    composable("itemDescription/{dish}") { backStackEntry ->
+//                        val dishJson = backStackEntry.arguments?.getString("dish")
+//                        val item = Gson().fromJson(dishJson, Dishfordb::class.java)
+//                        if (item != null) {
+//                            ItemDescription(
+//                                item,
+//                                cartItems = cartItems,
+//                                updateTotals = ::updateTotals,
+//                               // saveCartItemsToSharedPreferences = ::saveCartItemsToSharedPreferences
+//                            )
+//                        }
+//                    }
+//                    composable("orderDetails/{email}/{date}/{name}/{orderedItems}/{timeStamp}") { backStackEntry ->
+//                        val email = backStackEntry.arguments?.getString("email")
+//                        val date = backStackEntry.arguments?.getString("date")
+//                        val name = backStackEntry.arguments?.getString("name")
+//                        val orderedItemsJson = backStackEntry.arguments?.getString("orderedItems")
+//                        val orderTimeStamp = backStackEntry.arguments?.getString("timeStamp")
+//                        val loggedemail = googleAuthUiClient.getSignedInUser()?.userEmail
+//
+//                        if (orderedItemsJson != null && orderTimeStamp != null) {
+//
+//                            OrderDetailsScreen(
+//                                navController = navController,
+//                                email = email,
+//                                date = date,
+//                                name = name,
+//                                loggedUser = loggedemail,
+//                                orderedItemsJson = orderedItemsJson,
+//                                timeStamp = orderTimeStamp
+//                            )
+//
+//                        }
+//                    }
+//                    composable("Location") {
+//                        ShopDistanceScreen(
+//                            shopLocation = LatLng(
+//                                27.099407,
+//                                83.271651
+//                            ) // Example shop location (Delhi, India)
+//                        )
+//                    }
+//                    composable(PreviousOrders.route) {
+//                        PreviousOrders(navController, googleAuthUiClient.getSignedInUser())
+//                    }
+//                    composable("PaymentScreen/{totalMrp}/{totalValue}") { backStackEntry ->
+//                        val totalMrp = backStackEntry.arguments?.getString("totalMrp")?.toDouble()
+//                        val totalValue =
+//                            backStackEntry.arguments?.getString("totalValue")?.toDouble()
+//                        if (totalMrp != null && totalValue != null) {
+//                            PaymentScreenLayout(
+//                                totalMrp,
+//                                totalValue,
+//                                googleAuthUiClient.getSignedInUser(),
+//                                cartItems,
+//                                isDark,
+//                                state = state,
+//                                onVerifyCodeClick = onVerifyCodeClick,
+//                                onSendVerificationCodeClick = onSendVerificationCodeClick
+//                            )
+//                        }
+//                    }
+//                }
+//            }
+//        }
+//    }
+//}

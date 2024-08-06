@@ -69,7 +69,7 @@ fun CartDrawerPanel(
     cartItems: MutableList<Dishfordb>,
     allOverTotalPrice: Double,
     updateTotals: () -> Unit,
-    saveCartItemsToSharedPreferences: () -> Unit
+    //saveCartItemsToSharedPreferences: () -> Unit
 ) {
     if (cartItems.isNotEmpty()) {
         Column(
@@ -84,7 +84,11 @@ fun CartDrawerPanel(
             ) {
                 LazyColumn {
                     items(cartItems) { dish ->
-                        CartItems(dish, cartItems, updateTotals, saveCartItemsToSharedPreferences)
+                        CartItems(dish,
+                            cartItems,
+                            updateTotals,
+                            //saveCartItemsToSharedPreferences
+                        )
                     }
                 }
             }
@@ -154,7 +158,7 @@ fun CartItems(
     dish: Dishfordb,
     cartItems: MutableList<Dishfordb>,
     updateTotals: () -> Unit,
-    saveCartItemsToSharedPreferences: () -> Unit
+    //saveCartItemsToSharedPreferences: () -> Unit
 ) {
     var dishcount by remember { mutableStateOf(TextFieldValue(dish.count.toString())) }
     val context = LocalContext.current
@@ -274,7 +278,7 @@ fun CartItems(
                                     cartItems.remove(dish)
                                 }
                                 updateTotals()
-                                saveCartItemsToSharedPreferences()
+                                //saveCartItemsToSharedPreferences()
                             }
                         }, modifier = Modifier.size(24.dp)
                     ) {
@@ -292,7 +296,7 @@ fun CartItems(
                                 dishcount = it
                                 dish.count = userInput
                                 updateTotals()
-                                saveCartItemsToSharedPreferences()
+                                //saveCartItemsToSharedPreferences()
                                 if (userInput == 0) {
                                     cartItems.remove(dish)
                                 }
@@ -313,7 +317,7 @@ fun CartItems(
                             dish.count++
                             dishcount = TextFieldValue(dish.count.toString())
                             updateTotals()
-                            saveCartItemsToSharedPreferences()
+                            //saveCartItemsToSharedPreferences()
                         }, modifier = Modifier.size(12.dp)
                     ) {
                         Icon(
@@ -365,7 +369,7 @@ fun CartItems(
                         dish.count = 0
                         cartItems.remove(dish)
                         updateTotals()
-                        saveCartItemsToSharedPreferences()
+                        //saveCartItemsToSharedPreferences()
                         Toast.makeText(context, "Item removed from cart", Toast.LENGTH_SHORT).show()
                         removeConfirm = false
                     }) {

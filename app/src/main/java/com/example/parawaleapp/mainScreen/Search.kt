@@ -34,7 +34,9 @@ import com.example.parawaleapp.database.Categories
 import com.example.parawaleapp.database.Dishfordb
 
 @Composable
-fun Search(DishData: List<Dishfordb>, cartItems: SnapshotStateList<Dishfordb>, updateTotals: () -> Unit, saveCartItemsToSharedPreferences: () -> Unit, navController: NavController) {
+fun Search(DishData: List<Dishfordb>, cartItems: SnapshotStateList<Dishfordb>, updateTotals: () -> Unit,
+           //saveCartItemsToSharedPreferences: () -> Unit,
+    navController: NavController) {
     var searches by remember { mutableStateOf(TextFieldValue("")) }
     var visible by remember { mutableStateOf(true) }
 
@@ -81,7 +83,9 @@ fun Search(DishData: List<Dishfordb>, cartItems: SnapshotStateList<Dishfordb>, u
 
             LazyColumn {
                 items(DishData) { Dish ->
-                    LinearLayoutItems(Dish, cartItems = cartItems, updateTotals, saveCartItemsToSharedPreferences, navController = navController)
+                    LinearLayoutItems(Dish, cartItems = cartItems, updateTotals,
+                        //saveCartItemsToSharedPreferences,
+                        navController = navController)
                 }
             }
         } else {
@@ -103,21 +107,27 @@ fun Search(DishData: List<Dishfordb>, cartItems: SnapshotStateList<Dishfordb>, u
                     }
                 }
 
-                SearchFilter(filteredDishes.value, cartItems = cartItems, updateTotals = updateTotals, saveCartItemsToSharedPreferences = saveCartItemsToSharedPreferences, navController = navController)
+                SearchFilter(filteredDishes.value, cartItems = cartItems, updateTotals = updateTotals,
+                    //saveCartItemsToSharedPreferences = saveCartItemsToSharedPreferences,
+                    navController = navController)
             }
         }
     }
 }
 
 @Composable
-fun SearchFilter(filteredDishes: List<Dishfordb>, cartItems: SnapshotStateList<Dishfordb>, updateTotals: () -> Unit, saveCartItemsToSharedPreferences: () -> Unit, navController: NavController) {
+fun SearchFilter(filteredDishes: List<Dishfordb>, cartItems: SnapshotStateList<Dishfordb>, updateTotals: () -> Unit,
+                 //saveCartItemsToSharedPreferences: () -> Unit,
+                 navController: NavController) {
     Column {
         Divider(
             modifier = Modifier.padding(8.dp), color = Color.Gray, thickness = 1.dp
         )
         LazyColumn {
             items(filteredDishes) { dish ->
-                LinearLayoutItems(dish, cartItems = cartItems,  updateTotals = updateTotals, saveCartItemsToSharedPreferences = saveCartItemsToSharedPreferences, navController = navController)
+                LinearLayoutItems(dish, cartItems = cartItems,  updateTotals = updateTotals,
+                    //saveCartItemsToSharedPreferences = saveCartItemsToSharedPreferences,
+                    navController = navController)
             }
         }
     }

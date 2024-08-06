@@ -57,7 +57,7 @@ class GoogleAuthUiClient(
                     userName = it.displayName,
                     profilePictureUrl = it.photoUrl?.toString(),
                     userEmail = it.email,
-                    phoneno = it.phoneNumber
+                    userPhoneNumber = it.phoneNumber
                 )
             }
             saveUserToSharedPreferences(context, userData)
@@ -88,7 +88,7 @@ class GoogleAuthUiClient(
             userName = user.displayName,
             profilePictureUrl = user.photoUrl?.toString(),
             userEmail = user.email,
-            phoneno = user.phoneNumber
+            userPhoneNumber = user.phoneNumber
         )
     }
 

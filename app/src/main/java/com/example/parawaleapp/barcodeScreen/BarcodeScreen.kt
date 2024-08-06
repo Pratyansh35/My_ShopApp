@@ -45,7 +45,7 @@ fun BarCodeScreen(
     DishData: List<Dishfordb>,
     cartItems: MutableList<Dishfordb>,
     updateTotals: () -> Unit,
-    saveCartItemsToSharedPreferences: () -> Unit
+    //saveCartItemsToSharedPreferences: () -> Unit
 ) {
     var showItemScreen by remember { mutableStateOf(false) }
     var gotDish by remember { mutableStateOf<Dishfordb?>(null) }
@@ -55,7 +55,7 @@ fun BarCodeScreen(
             showItemScreen = { showItemScreen = false },
             cartItems = cartItems,
             updateTotals = updateTotals,
-            saveCartItemsToSharedPreferences = saveCartItemsToSharedPreferences
+            //saveCartItemsToSharedPreferences = saveCartItemsToSharedPreferences
         )
     } else {
         barCodeScreen(showItemScreen = {

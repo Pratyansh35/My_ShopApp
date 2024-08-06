@@ -44,7 +44,7 @@ import com.example.parawaleapp.sign_in.verifyPhoneNumber
 fun Profileset(userData: UserData?) {
     val context = LocalContext.current
     var nametemp by remember { mutableStateOf(userData?.userName) }
-    var phonenotemp by remember { mutableStateOf(userData?.phoneno) }
+    var phonenotemp by remember { mutableStateOf(userData?.userPhoneNumber) }
     var selectImgUri by remember { mutableStateOf(userData?.profilePictureUrl) }
     var verificationId by remember { mutableStateOf<String?>(null) }
     var otpCode by remember { mutableStateOf("") }

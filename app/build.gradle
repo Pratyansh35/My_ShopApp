@@ -2,7 +2,7 @@ plugins {
     id 'com.android.application'
     id("com.google.gms.google-services")
     id 'org.jetbrains.kotlin.android'
-    id 'com.google.devtools.ksp' version '1.9.0-1.0.13' // Apply KSP plugin
+    id 'com.google.devtools.ksp' version '1.9.0-1.0.13'
 }
 
 def localProperties = new Properties()
@@ -71,6 +71,8 @@ dependencies {
     implementation "androidx.compose.runtime:runtime:1.6.8"
     implementation "androidx.compose.animation:animation:1.6.8"
     implementation 'com.google.code.gson:gson:2.10.1'
+
+    implementation 'androidx.browser:browser:1.8.0'
 
     //map
     implementation "com.google.android.gms:play-services-maps:19.0.0"

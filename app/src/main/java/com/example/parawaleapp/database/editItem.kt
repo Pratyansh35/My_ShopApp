@@ -57,6 +57,7 @@ import kotlinx.coroutines.withContext
 @Composable
 fun ModifyScreen(dish: Dishfordb, showModifyScreen: () -> Unit) {
     var name by remember { mutableStateOf(TextFieldValue(dish.name)) }
+    val originalName by remember { mutableStateOf(dish.name) }
     var description by remember { mutableStateOf(TextFieldValue(dish.description)) }
     var price by remember { mutableStateOf(TextFieldValue(dish.price.trimStart('₹'))) }
     var weight by remember { mutableStateOf(TextFieldValue(dish.weight)) }
@@ -250,6 +251,7 @@ fun ModifyScreen(dish: Dishfordb, showModifyScreen: () -> Unit) {
                         '₹' + price.text,
                         description.text,
                         weight.text,
+                        originalName,
                         category.text,
                         imageUris.map { Uri.parse(it) },
                         context,
@@ -281,7 +283,7 @@ fun ModifyScreen(dish: Dishfordb, showModifyScreen: () -> Unit) {
 }
 
 private fun modifyItemOnDatabase(
-    name: String, price: String, description: String, weight: String,
+    name: String, price: String, description: String, weight: String, originalName: String,
     category: String, images: List<Uri>, context: Context, itembarcode: String, itemmrp: String, totalCount: String,
     uploadProgress: (Float) -> Unit
 ) {
@@ -290,6 +292,13 @@ private fun modifyItemOnDatabase(
     val itemRef = datareference.child("Items").child(name)
 
     val scope = CoroutineScope(Dispatchers.Main)
+    if (name != originalName) {
+        datareference.child("Items").child(originalName).get().addOnSuccessListener {
+            itemRef.setValue(it.value).addOnSuccessListener {
+                datareference.child("Items").child(originalName).removeValue()
+            }
+        }
+    }
     scope.launch(Dispatchers.IO) {
         val imageUrls = mutableListOf<String>()
         val newImageUris = images.filter { !it.toString().contains("firebasestorage.googleapis.com") }

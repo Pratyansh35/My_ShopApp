@@ -33,7 +33,7 @@ fun ItemScreen(
     dish: Dishfordb, showItemScreen: () -> Unit,
     cartItems: MutableList<Dishfordb>,
     updateTotals: () -> Unit,
-    saveCartItemsToSharedPreferences: () -> Unit
+    //saveCartItemsToSharedPreferences: () -> Unit
 ) {
     val context = LocalContext.current
 
@@ -106,7 +106,7 @@ fun ItemScreen(
                 }
                 dish.count++
                 updateTotals()
-                saveCartItemsToSharedPreferences()
+                //saveCartItemsToSharedPreferences()
                 Toast.makeText(context, "Item added to cart", Toast.LENGTH_SHORT).show()
                 showItemScreen()
             },

@@ -79,7 +79,7 @@ fun updateOrderStatus(
 
 @Composable
 fun OrderDetailsScreen(
-    navController: NavController,
+    navController: NavController? = null,
     email: String?,
     date: String?,
     timeStamp: String,
@@ -240,7 +240,7 @@ fun OrderDetailsScreen(
                     if (selectedPrinter.isEmpty()) {
                         Toast.makeText(context, "Please select a printer", Toast.LENGTH_SHORT)
                             .show()
-                        navController.navigate("BluetoothScreenRoute")
+                        navController?.navigate("BluetoothScreenRoute")
                         return@Button
                     }
                     printData(

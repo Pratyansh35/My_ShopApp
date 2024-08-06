@@ -61,13 +61,12 @@ fun SignInScreen(
     onSignInClick: (Activity, String) -> Unit,
     onGoogleSignInClick: () -> Unit,
     onVerifyCodeClick: (String) -> Unit = {},
-    onSendVerificationCodeClick: (String) -> Unit
+
 ) {
     var phoneNumber by remember { mutableStateOf(TextFieldValue("")) }
     var verificationCode by remember { mutableStateOf(TextFieldValue("")) }
     val context = LocalContext.current as Activity
 
-    var showPhoneNumberDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(key1 = state.signInError) {
         state.signInError?.let {
@@ -76,12 +75,6 @@ fun SignInScreen(
         }
     }
 
-    LaunchedEffect(key1 = state.isSignInSuccessful) {
-        // Check if the phone number is linked, if not then show the phone number linking dialog
-        if (state.isSignInSuccessful && !state.isPhoneNumberLinked && state.isGoogleSignIn) {
-            showPhoneNumberDialog = true
-        }
-    }
 
     if (state.isLoading) {
         Dialog(onDismissRequest = {}) {
@@ -94,19 +87,6 @@ fun SignInScreen(
                 CircularProgressIndicator()
             }
         }
-    }
-
-    if (showPhoneNumberDialog) {
-        PhoneNumberLinkingDialog(
-            state = state,
-            onDismissRequest = { showPhoneNumberDialog = false },
-            onSendVerificationCodeClick = { phoneNumber ->
-                onSendVerificationCodeClick(phoneNumber)
-            },
-            onVerifyCodeClick = { otp ->
-                onVerifyCodeClick(otp)
-            }
-        )
     }
 
     Box(
@@ -142,7 +122,6 @@ fun SignInScreen(
                 if (state.errorMessage.isNotEmpty()) {
                     Toast.makeText(LocalContext.current, state.errorMessage, Toast.LENGTH_SHORT).show()
                 }
-                // OTP Verification
                 if (state.verificationId != null) {
                     OutlinedTextField(
                         value = verificationCode,
@@ -264,6 +243,8 @@ fun SignInScreen(
         }
     }
 }
+
+
 
 
 @Composable

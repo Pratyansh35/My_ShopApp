@@ -83,7 +83,7 @@ fun HomeScreen(
     onThemeChange: (Boolean) -> Unit,
     cartItems: SnapshotStateList<Dishfordb>,
     updateTotals: () -> Unit,
-    saveCartItemsToSharedPreferences: () -> Unit,
+    //saveCartItemsToSharedPreferences: () -> Unit,
     navController: NavController,
     isGridLayout: Boolean,
     onLayoutChange: (Boolean) -> Unit
@@ -109,7 +109,7 @@ fun HomeScreen(
                         dish,
                         cartItems = cartItems,
                         updateTotals = updateTotals,
-                        saveCartItemsToSharedPreferences = saveCartItemsToSharedPreferences,
+                        //saveCartItemsToSharedPreferences = saveCartItemsToSharedPreferences,
                         navController = navController
                     )
                 }
@@ -130,7 +130,7 @@ fun HomeScreen(
                                     dish = dish,
                                     cartItems = cartItems,
                                     updateTotals = updateTotals,
-                                    saveCartItemsToSharedPreferences = saveCartItemsToSharedPreferences,
+                                    //saveCartItemsToSharedPreferences = saveCartItemsToSharedPreferences,
                                     navController = navController
                                 )
                             }
@@ -294,7 +294,7 @@ fun UpperPanel2() {
                     onClick = {
                         // open dialer and dial number 7007254934
                         val intent = Intent(Intent.ACTION_DIAL)
-                        intent.data = Uri.parse("tel:7007254934")
+                        intent.data = Uri.parse("tel:+917007254934")
                         context.startActivity(intent)
                     },
                     shape = RoundedCornerShape(20.dp),
@@ -395,7 +395,7 @@ fun GridLayoutItems(
     dish: Dishfordb,
     cartItems: SnapshotStateList<Dishfordb>,
     updateTotals: () -> Unit,
-    saveCartItemsToSharedPreferences: () -> Unit,
+    //saveCartItemsToSharedPreferences: () -> Unit,
     navController: NavController
 ) {
     val context = LocalContext.current
@@ -528,7 +528,7 @@ fun GridLayoutItems(
                             }
 
                             updateTotals()
-                            saveCartItemsToSharedPreferences()
+                            //saveCartItemsToSharedPreferences()
 
                             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                                 vibrator.vibrate(
@@ -572,7 +572,7 @@ fun LinearLayoutItems(
     dish: Dishfordb,
     cartItems: SnapshotStateList<Dishfordb>,
     updateTotals: () -> Unit,
-    saveCartItemsToSharedPreferences: () -> Unit,
+    //saveCartItemsToSharedPreferences: () -> Unit,
     navController: NavController
 ) {
     val context = LocalContext.current
@@ -663,7 +663,7 @@ fun LinearLayoutItems(
                             }
 
                             updateTotals()
-                            saveCartItemsToSharedPreferences()
+                            //saveCartItemsToSharedPreferences()
 
                             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                                 vibrator.vibrate(
@@ -742,7 +742,7 @@ fun ItemDescription(
     dish: Dishfordb,
     cartItems: SnapshotStateList<Dishfordb>,
     updateTotals: () -> Unit,
-    saveCartItemsToSharedPreferences: () -> Unit
+    //saveCartItemsToSharedPreferences: () -> Unit
 ) {
     val context = LocalContext.current
     val vibrator = context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
@@ -849,7 +849,7 @@ fun ItemDescription(
                     dishcount = cartDish!!.count
                 }
                 updateTotals()
-                saveCartItemsToSharedPreferences()
+                //saveCartItemsToSharedPreferences()
 
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                     vibrator.vibrate(

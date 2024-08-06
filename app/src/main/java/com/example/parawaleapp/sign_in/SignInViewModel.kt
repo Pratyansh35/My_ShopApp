@@ -46,7 +46,7 @@ class SignInViewModel : ViewModel() {
     fun onSignInResult(result: SignInResult) {
         if (result.data != null) {
             val userData = result.data
-            val isPhoneNumberLinked = !userData.phoneno.isNullOrEmpty()
+            val isPhoneNumberLinked = !userData.userPhoneNumber.isNullOrEmpty()
             _state.value = _state.value.copy(
                 isSignInSuccessful = true,
 //                userData = userData,
@@ -101,7 +101,7 @@ class SignInViewModel : ViewModel() {
                                 userName = it.displayName,
                                 userEmail = it.email,
                                 profilePictureUrl = it.photoUrl?.toString(),
-                                phoneno = it.phoneNumber
+                                userPhoneNumber = it.phoneNumber
                             )
 
                         }
