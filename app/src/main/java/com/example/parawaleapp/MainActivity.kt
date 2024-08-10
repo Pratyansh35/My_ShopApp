@@ -13,10 +13,9 @@ import ProfileSet
 import Scan_Barcode
 import SettingScreen
 import ShopDistanceScreen
+import User_Location
 import ViewOrder
-import android.content.Context
 import android.os.Bundle
-import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -38,7 +37,6 @@ import androidx.compose.material.rememberScaffoldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableDoubleStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -57,6 +55,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.parawaleapp.AppLayout.AppLayoutScreen
+import com.example.parawaleapp.Location.AdditionalDetailsScreen
+import com.example.parawaleapp.Location.UserAddressScreen
 import com.example.parawaleapp.Notifications.createNotificationChannel
 import com.example.parawaleapp.PaymentUpi.PaymentScreenLayout
 import com.example.parawaleapp.SendViewOrders.OrderDetailsScreen
@@ -89,7 +89,6 @@ import com.google.android.gms.auth.api.identity.Identity
 import com.google.android.gms.maps.model.LatLng
 import com.google.firebase.FirebaseApp
 import com.google.gson.Gson
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
@@ -140,7 +139,7 @@ class MainActivity : ComponentActivity() {
                 navController = navController,
                 startDestination = if (userState.value != null) "MainScreen" else "sign_in"
             ) {
-                composable("sign_in") { SignIn(navController, dishData, onDishDataChange = { dishData = it }) }
+                composable("sign_in") { SignIn(navController, onDishDataChange = { dishData = it }) }
                 composable("MainScreen") {
                     val viewModel = viewModel<SignInViewModel>()
                     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -151,8 +150,8 @@ class MainActivity : ComponentActivity() {
                         isDarkTheme = { isDarkTheme = it },
                         isDark = isDarkTheme,
                         state = state,
-                        onVerifyCodeClick = { verificationCode ->
-                            viewModel.verifyPhoneNumberWithCode(verificationCode)
+                        linkWithOtpClick = { verificationCode ->
+                            viewModel.linkPhoneNumberWithOtp(verificationCode)
                         },
                         onSendVerificationCodeClick = { phoneNumber ->
                             viewModel.sendVerificationCode(this@MainActivity, phoneNumber)
@@ -164,7 +163,7 @@ class MainActivity : ComponentActivity() {
     }
 
     @Composable
-    fun SignIn(navController: NavController, dishData: List<Dishfordb>, onDishDataChange: (List<Dishfordb>) -> Unit) {
+    fun SignIn(navController: NavController, onDishDataChange: (List<Dishfordb>) -> Unit) {
         val viewModel = viewModel<SignInViewModel>()
         val state by viewModel.state.collectAsStateWithLifecycle()
         val context = LocalContext.current
@@ -225,7 +224,7 @@ fun MainScreen(
     isDarkTheme: (Boolean) -> Unit,
     isDark: Boolean,
     state: SignInState,
-    onVerifyCodeClick: (String) -> Unit,
+    linkWithOtpClick: (String) -> Unit,
     onSendVerificationCodeClick: (String) -> Unit
 ) {
     val scaffoldState = rememberScaffoldState()
@@ -258,7 +257,7 @@ fun MainScreen(
                     signOut = {
                         clearDataFromSharedPreferences(context)
                         scope.launch {
-                            googleAuthUiClient.signOut()
+                            googleAuthUiClient.signOut(email = googleAuthUiClient.getSignedInUser()?.userEmail)
                             Toast.makeText(context, "Sign out successful", Toast.LENGTH_LONG).show()
                             navController.navigate("sign_in")
                         }
@@ -324,7 +323,8 @@ fun MainScreen(
                         )
                     }
                     composable(ProfileSet.route) {
-                        Profileset(userData = googleAuthUiClient.getSignedInUser())
+                        Profileset(userData = googleAuthUiClient.getSignedInUser(), onSendVerificationCodeClick = onSendVerificationCodeClick,
+                            linkWithOtpClick = linkWithOtpClick)
                     }
                     composable(AddItems.route) {
                         ManageItem(
@@ -368,10 +368,26 @@ fun MainScreen(
                                 cartItems,
                                 isDark,
                                 state = state,
-                                onVerifyCodeClick = onVerifyCodeClick,
+                                linkWithOtpClick = linkWithOtpClick,
                                 onSendVerificationCodeClick = onSendVerificationCodeClick
                             )
                         }
+                    }
+                    composable(User_Location.route) {
+                        UserAddressScreen(onConfirm = { latLng, address ->
+                                innerNavController.navigate("confirmAddress")
+                        })
+                    }
+                    composable("confirmAddress"){
+                        var home by remember { mutableStateOf("Home") }
+                        var apartment by remember { mutableStateOf("Apartment") }
+                        var landmark by remember { mutableStateOf("Landmark") }
+                        var notes by remember { mutableStateOf("Notes") }
+                        AdditionalDetailsScreen( home = home, apartment = apartment, landmark = landmark, notes = notes,
+                            onSave = { home, apartment, landmark, notes ->
+
+                            }
+                        )
                     }
                     composable("personOrders/{email}") { backStackEntry ->
                         val email = backStackEntry.arguments?.getString("email")
@@ -424,7 +440,7 @@ fun MainScreen(
 fun MyBottomNavigation(navController: NavController) {
 
     val destinationList = listOf(
-        Home, Menu, Scan_Barcode
+        Home, Menu, Scan_Barcode, User_Location
     )
     val selectedIndex = rememberSaveable {
         mutableIntStateOf(0)

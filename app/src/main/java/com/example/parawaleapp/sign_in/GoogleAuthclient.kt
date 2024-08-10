@@ -6,6 +6,7 @@ import android.content.Intent
 import android.content.IntentSender
 import android.util.Log
 import android.widget.Toast
+import com.example.parawaleapp.Notifications.removeDeviceToken
 import com.example.parawaleapp.R
 import com.example.parawaleapp.database.saveUserToSharedPreferences
 import com.google.android.gms.auth.api.identity.BeginSignInRequest
@@ -61,7 +62,7 @@ class GoogleAuthUiClient(
                 )
             }
             saveUserToSharedPreferences(context, userData)
-            Log.d("GoogleAuthUiClient", "UserData: $userData") // Log user data
+            Log.d("GoogleAuthUiClient", "UserData: $userData")
             SignInResult(data = userData, errorMessage = null, isGoogleSignIn = true)
         } catch (e: Exception) {
             e.printStackTrace()
@@ -71,10 +72,12 @@ class GoogleAuthUiClient(
         }
     }
 
-    suspend fun signOut() {
+    suspend fun signOut(email: String?) {
         try {
             oneTapClient.signOut().await()
             auth.signOut()
+
+            removeDeviceToken(email)
         } catch (e: Exception) {
             e.printStackTrace()
             if (e is CancellationException) throw e

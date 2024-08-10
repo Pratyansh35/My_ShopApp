@@ -7,10 +7,8 @@ data class SignInState(
     val signInError: String? = null,
     val isSignInSuccessful: Boolean = false,
     val verificationId: String? = null,
-    val resendToken: PhoneAuthProvider.ForceResendingToken? = null,
-    val isPhoneNumberLinked: Boolean = false,
     val isGoogleSignIn: Boolean = false,
-    val userData: UserData? = null, // Add this property
+    val userData: UserData? = null,
     val errorMessage: String = ""
 )
 

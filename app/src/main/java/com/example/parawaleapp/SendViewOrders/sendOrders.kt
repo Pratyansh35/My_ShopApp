@@ -3,17 +3,9 @@ package com.example.parawaleapp.SendViewOrders
 import android.content.Context
 import android.util.Log
 import android.widget.Toast
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.platform.LocalLifecycleOwner
-import androidx.lifecycle.LifecycleOwner
-import androidx.lifecycle.lifecycleScope
-import com.example.parawaleapp.Notifications.sendNotificationToUser
 import com.example.parawaleapp.database.Dishfordb
 import com.example.parawaleapp.database.datareference
-import com.example.parawaleapp.database.phoneno
 import com.example.parawaleapp.sign_in.UserData
-import kotlinx.coroutines.launch
-
 
 
 fun sendOrders(
@@ -45,7 +37,10 @@ fun sendOrders(
 //    }
 
     val username = userData.userName
-    val useremail = userData.userEmail?.replace(".", ",") // Replace '.' with ',' to avoid issues in Firebase keys
+    val useremail = userData.userEmail?.replace(
+        ".",
+        ","
+    ) // Replace '.' with ',' to avoid issues in Firebase keys
 
     val orderDetails = mapOf(
         "totalMrp" to totalMrp,
@@ -63,12 +58,10 @@ fun sendOrders(
 
         userRef.child("username").setValue(username)
         userRef.child("contactno").setValue(userData.userPhoneNumber)
-        userRef.child("orders").child(transactionId).setValue(orderDetails)
-            .addOnSuccessListener {
+        userRef.child("orders").child(transactionId).setValue(orderDetails).addOnSuccessListener {
                 Toast.makeText(context, "Order Placed Successfully", Toast.LENGTH_SHORT).show()
                 onSuccessSendNotification(merchantEmail)
-            }
-            .addOnFailureListener { exception ->
+            }.addOnFailureListener { exception ->
                 Toast.makeText(context, exception.message, Toast.LENGTH_SHORT).show()
                 Log.d("booking", "sendOrders: ${exception.message}")
             }

@@ -41,10 +41,12 @@ import com.example.parawaleapp.sign_in.verifyPhoneNumber
 
 
 @Composable
-fun Profileset(userData: UserData?) {
+fun Profileset(userData: UserData?, linkWithOtpClick: (String) -> Unit,
+               onSendVerificationCodeClick: (String) -> Unit) {
     val context = LocalContext.current
     var nametemp by remember { mutableStateOf(userData?.userName) }
-    var phonenotemp by remember { mutableStateOf(userData?.userPhoneNumber) }
+    var originalPhoneNumber = userData?.userPhoneNumber.toString().removePrefix("+91")
+    var phonenotemp by remember { mutableStateOf(userData?.userPhoneNumber.toString().removePrefix("+91")) }
     var selectImgUri by remember { mutableStateOf(userData?.profilePictureUrl) }
     var verificationId by remember { mutableStateOf<String?>(null) }
     var otpCode by remember { mutableStateOf("") }
@@ -128,7 +130,7 @@ fun Profileset(userData: UserData?) {
                 fontWeight = FontWeight.Bold
             )
             AsyncImage(
-                model = if (img.toString().isEmpty()) userData?.profilePictureUrl else img!!,
+                model = selectImgUri ?: img,
                 contentDescription = "userImage",
                 modifier = Modifier
                     .padding(start = 10.dp)
@@ -152,11 +154,13 @@ fun Profileset(userData: UserData?) {
                         Toast.makeText(context, "Please enter a valid phone no.", Toast.LENGTH_LONG)
                             .show()
                         return@Button
+                    }else if(phonenotemp == originalPhoneNumber){
+                        Toast.makeText(context, "Please enter a new phone no.", Toast.LENGTH_LONG)
+                            .show()
+                        return@Button
                     } else {
                         val fullPhoneNumber = "+91$phonenotemp"
-                        verifyPhoneNumber(context, fullPhoneNumber) { id ->
-                            verificationId = id
-                        }
+                        onSendVerificationCodeClick(fullPhoneNumber)
                     }
                 },
                 shape = RoundedCornerShape(40),
@@ -166,7 +170,7 @@ fun Profileset(userData: UserData?) {
                     .height(50.dp)
                     .align(Alignment.End)
             ) {
-                Text(text = "Send OTP", color = Color.Black, fontWeight = FontWeight.Bold)
+                Text(text =  if (phonenotemp == originalPhoneNumber) "Update Profile" else "Send OTP", color = Color.Black, fontWeight = FontWeight.Bold)
             }
         }
 
@@ -174,7 +178,7 @@ fun Profileset(userData: UserData?) {
             Button(
                 onClick = {
                     if (otpCode.isNotEmpty()) {
-                        updatePhoneNumberWithOTP(verificationId!!, otpCode, context)
+                        linkWithOtpClick(otpCode)
                     } else {
                         Toast.makeText(context, "Please enter the OTP", Toast.LENGTH_LONG).show()
                     }

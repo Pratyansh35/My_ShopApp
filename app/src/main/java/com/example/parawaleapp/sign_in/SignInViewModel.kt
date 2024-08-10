@@ -37,7 +37,6 @@ class SignInViewModel : ViewModel() {
             Log.d("SignInViewModel", "onCodeSent: verificationId=$verificationId, token=$token")
             _state.value = _state.value.copy(
                 verificationId = verificationId,
-//                isPhoneNumberVerificationVisible = true,
                 isLoading = false
             )
         }
@@ -46,14 +45,9 @@ class SignInViewModel : ViewModel() {
     fun onSignInResult(result: SignInResult) {
         if (result.data != null) {
             val userData = result.data
-            val isPhoneNumberLinked = !userData.userPhoneNumber.isNullOrEmpty()
             _state.value = _state.value.copy(
                 isSignInSuccessful = true,
-//                userData = userData,
-//                isPhoneNumberVerificationVisible = !isPhoneNumberLinked,
-                isPhoneNumberLinked = isPhoneNumberLinked,
                 isLoading = false,
-                isGoogleSignIn = result.isGoogleSignIn // Use the flag from result
             )
 
             Firebase.messaging.token.addOnCompleteListener { task ->
@@ -119,8 +113,44 @@ class SignInViewModel : ViewModel() {
             stopLoading()
         }
     }
-
     fun verifyPhoneNumberWithCode(code: String) {
+        Log.d("SignInViewModel", "verifyPhoneNumberWithCode: $code")
+        val verificationId = _state.value.verificationId
+        if (verificationId != null) {
+            val credential = PhoneAuthProvider.getCredential(verificationId, code)
+            signInWithPhoneAuthCredential(credential)
+        } else {
+            _state.value = _state.value.copy(signInError = "Verification ID not found.")
+        }
+    }
+    private fun signInWithPhoneAuthCredential(credential: PhoneAuthCredential) {
+        Firebase.auth.signInWithCredential(credential)
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    val user = task.result?.user
+                    val userData = user?.let {
+                        UserData(
+                            userId = it.uid,
+                            userName = it.displayName,
+                            userEmail = it.email,
+                            profilePictureUrl = it.photoUrl?.toString(),
+                            userPhoneNumber = it.phoneNumber
+                        )
+                    }
+                    Log.d("SignInViewModel", "signInWithPhoneAuthCredential: success")
+                    onSignInResult(SignInResult(data = userData, errorMessage = null))
+                } else {
+                    Log.e(
+                        "SignInViewModel",
+                        "signInWithPhoneAuthCredential: failure",
+                        task.exception
+                    )
+                    _state.value = _state.value.copy(signInError = task.exception?.message)
+                }
+                _state.value = _state.value.copy(isLoading = false)
+            }
+    }
+    fun linkPhoneNumberWithOtp(code: String) {
         Log.d("SignInViewModel", "verifyPhoneNumberWithCode: $code")
         val verificationId = _state.value.verificationId
         if (verificationId != null) {

@@ -70,7 +70,7 @@ fun PaymentScreenLayout(
     cartItems: SnapshotStateList<Dishfordb>,
     isDarkTheme: Boolean,
     state: SignInState,
-    onVerifyCodeClick: (String) -> Unit = {},
+    linkWithOtpClick: (String) -> Unit = {},
     onSendVerificationCodeClick: (String) -> Unit
 ) {
     val merchantId = "PGTESTPAYUAT"
@@ -93,7 +93,7 @@ fun PaymentScreenLayout(
                 onSendVerificationCodeClick(phoneNumber)
             },
             onVerifyCodeClick = { otp ->
-                onVerifyCodeClick(otp)
+                linkWithOtpClick(otp)
             }
         )
     }

@@ -50,9 +50,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.CenterVertically
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shadow
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -94,7 +96,7 @@ fun HomeScreen(
         ) {
             item {
                 Column {
-                    SlidingPanels()
+                    SlidingPanels(darkTheme = isDarkTheme)
                     WeeklySpecial(
                         isDarkTheme = isDarkTheme,
                         onThemeChange = onThemeChange,
@@ -148,10 +150,10 @@ fun HomeScreen(
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun SlidingPanels() {
-    val pagerState = rememberPagerState(initialPage = 0, initialPageOffsetFraction = 0f, pageCount = { 2 })
+fun SlidingPanels(darkTheme: Boolean) {
+    val pagerState = rememberPagerState(initialPage = 0, initialPageOffsetFraction = 0f, pageCount = { 3 })
     val context = LocalContext.current
-
+    val image = painterResource(id = if (darkTheme) R.drawable.upperpaneldarkbg else R.drawable.upperpanelightbg)
     // Auto-scroll logic
     LaunchedEffect(Unit) {
         while (true) {
@@ -162,7 +164,13 @@ fun SlidingPanels() {
         }
     }
 
-    Box(modifier = Modifier.fillMaxSize()) {
+    Box(modifier = Modifier.fillMaxSize().height(300.dp)) {
+        Image(
+            painter = image,
+            contentDescription = null,
+            modifier = Modifier.fillMaxSize(),
+            contentScale = ContentScale.Crop
+        )
         HorizontalPager(
             state = pagerState,
             modifier = Modifier.fillMaxSize()
@@ -170,6 +178,10 @@ fun SlidingPanels() {
             when (page) {
                 0 -> UpperPanel()
                 1 -> UpperPanel2()
+                2 -> UpperPanel3 { category ->
+                    Toast.makeText(context, "Selected Category: $category", Toast.LENGTH_SHORT)
+                        .show()
+                }
             }
         }
 
@@ -193,129 +205,211 @@ fun SlidingPanels() {
         }
     }
 }
-
 @Composable
 fun UpperPanel() {
     val context = LocalContext.current
-    Column(
-        modifier = Modifier
-            .height(300.dp)
-            .fillMaxSize()
-            .background(MaterialTheme.colors.secondary)
-            .padding(16.dp)
-    ) {
-        Text(
-            text = stringResource(id = R.string.title),
-            fontSize = 40.sp,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colors.primary
-        )
-        Text(
-            text = stringResource(id = R.string.location),
-            fontSize = 18.sp,
-            color = MaterialTheme.colors.onSurface
-        )
-        Row(
-            modifier = Modifier.padding(top = 18.dp),
-            verticalAlignment = CenterVertically,
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp)
         ) {
             Text(
-                text = stringResource(id = R.string.description),
-                color = MaterialTheme.colors.onSurface,
-                fontSize = 22.sp,
-                modifier = Modifier
-                    .padding(bottom = 28.dp)
-                    .fillMaxWidth(0.6f)
-            )
-            Image(
-                painter = painterResource(id = R.drawable.parawale1),
-                contentDescription = "Upper Panel Image",
-                modifier = Modifier.clip(RoundedCornerShape(20.dp))
-            )
-        }
-        Button(
-            onClick = {
-                Toast.makeText(context, "Select Interested Menu", Toast.LENGTH_SHORT).show()
-            },
-            shape = RoundedCornerShape(20.dp),
-            colors = ButtonDefaults.buttonColors(backgroundColor = MaterialTheme.colors.primary),
-        ) {
-            Text(
-                text = stringResource(id = R.string.orderbuttontext),
-                fontSize = 18.sp,
+                text = stringResource(id = R.string.title),
+                fontSize = 40.sp,
                 fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colors.onPrimary
+                color = MaterialTheme.colors.primary,
             )
+            Text(
+                text = stringResource(id = R.string.location),
+                fontSize = 18.sp,
+                color = MaterialTheme.colors.onSurface
+            )
+            Row(
+                modifier = Modifier.padding(top = 18.dp),
+                verticalAlignment = CenterVertically,
+            ) {
+                Text(
+                    text = stringResource(id = R.string.description),
+                    color = MaterialTheme.colors.onSurface,
+                    fontSize = 22.sp,
+                    modifier = Modifier
+                        .padding(bottom = 28.dp)
+                        .fillMaxWidth(0.6f)
+                )
+                Image(
+                    painter = painterResource(id = R.drawable.parawale1),
+                    contentDescription = "Upper Panel Image",
+                    modifier = Modifier.clip(RoundedCornerShape(20.dp))
+                )
+            }
+            Button(
+                onClick = {
+                    Toast.makeText(context, "Select Interested Menu", Toast.LENGTH_SHORT).show()
+                },
+                shape = RoundedCornerShape(20.dp),
+                colors = ButtonDefaults.buttonColors(backgroundColor = MaterialTheme.colors.primary),
+            ) {
+                Text(
+                    text = stringResource(id = R.string.orderbuttontext),
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colors.onPrimary
+                )
+            }
         }
-    }
 }
 
 @Composable
 fun UpperPanel2() {
     val context = LocalContext.current
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .height(300.dp)
-            .background(MaterialTheme.colors.secondary)
-            .padding(16.dp)
-    ) {
-        Text(
-            text = "क्यों ना बढ़े हमभी" ,
-            fontSize = 34.sp,
-            fontWeight = FontWeight.Bold,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.fillMaxWidth(),
-            color = MaterialTheme.colors.primary
-        )
-        Spacer(modifier = Modifier.height(4.dp))
-        Text(
-            text = "Get Your Own App",
-            fontSize = 28.sp,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.fillMaxWidth(),
-            fontWeight = FontWeight.Medium,
-            color = Color.White
-        )
 
-        Spacer(modifier = Modifier.height(16.dp))
-        BulletPoint(text = "Make your business online")
-        BulletPoint(text = "Easy delivery with Map live tracking")
-        BulletPoint(text = "Barcode system")
-        Row {
-            Column {
-                BulletPoint(text = "Easy billing via Bluetooth")
-                BulletPoint(text = "All backend data handling")
-            }
-            Column (modifier = Modifier.fillMaxWidth()
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
 
-            ){
-                Button(
-                    onClick = {
-                        // open dialer and dial number 7007254934
-                        val intent = Intent(Intent.ACTION_DIAL)
-                        intent.data = Uri.parse("tel:+917007254934")
-                        context.startActivity(intent)
-                    },
-                    shape = RoundedCornerShape(20.dp),
-                    modifier = Modifier
-                        .align(Alignment.End),
+                .padding(16.dp)
+        ) {
+            Text(
+                text = "क्यों ना बढ़े हमभी",
+                fontSize = 34.sp,
+                fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth().background(MaterialTheme.colors.onSecondary),
+                color = MaterialTheme.colors.primary
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = "Get Your Own App",
+                fontSize = 28.sp,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth(),
+                fontWeight = FontWeight.Medium,
+                color = Color(0xFF00BFA5)
+            )
 
-                    colors = ButtonDefaults.buttonColors(backgroundColor = MaterialTheme.colors.primary)
+            Spacer(modifier = Modifier.height(16.dp))
+            BulletPoint(text = "Make your business online")
+            BulletPoint(text = "Easy delivery with Map live tracking")
+            BulletPoint(text = "Barcode system")
+            Row {
+                Column {
+                    BulletPoint(text = "Easy billing via Bluetooth")
+                    BulletPoint(text = "All backend data handling")
+                }
+                Column(
+                    modifier = Modifier.fillMaxWidth()
+
                 ) {
-                    Text(
-                        text = "Contact",
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colors.onPrimary
-                    )
+                    Button(
+                        onClick = {
+                            // open dialer and dial number 7007254934
+                            val intent = Intent(Intent.ACTION_DIAL)
+                            intent.data = Uri.parse("tel:+917007254934")
+                            context.startActivity(intent)
+                        },
+                        shape = RoundedCornerShape(20.dp),
+                        modifier = Modifier
+                            .align(Alignment.End),
+
+                        colors = ButtonDefaults.buttonColors(backgroundColor = MaterialTheme.colors.primary)
+                    ) {
+                        Text(
+                            text = "Contact",
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colors.onPrimary
+                        )
+                    }
+                }
+            }
+            BulletPoint(text = "and Many more features")
+        }
+}
+
+@Composable
+fun UpperPanel3(onCategorySelected: (String) -> Unit) {
+    val categories = listOf(
+        Pair("Groceries", R.drawable.groceries_icon),
+        Pair("Electronics", R.drawable.electronics_icon),
+        Pair("Medicines", R.drawable.medicines_icon),
+        Pair("Apparels", R.drawable.apparels_icon)
+    )
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+
+                .padding(16.dp)
+        ) {
+        Text(
+            text = "Categories",
+            fontSize = 28.sp,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colors.primary,
+            modifier = Modifier.padding(bottom = 16.dp).fillMaxWidth(),
+            textAlign = TextAlign.Center
+        )
+
+            val firstRow = categories.subList(0, 2)
+            val secondRow = categories.subList(2, categories.size)
+
+            Column {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceAround
+                ) {
+                    firstRow.forEach { category ->
+                        CategoryBox(
+                            categoryName = category.first,
+                            iconResId = category.second,
+                            onClick = { onCategorySelected(category.first) }
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp)) // Add spacing between rows
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceAround
+                ) {
+                    secondRow.forEach { category ->
+                        CategoryBox(
+                            categoryName = category.first,
+                            iconResId = category.second,
+                            onClick = { onCategorySelected(category.first) }
+                        )
+                    }
                 }
             }
         }
-        BulletPoint(text = "and Many more features")
+}
 
+@Composable
+fun CategoryBox(categoryName: String, iconResId: Int, onClick: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .size(100.dp)
+            .clip(RoundedCornerShape(16.dp))
+            .background(MaterialTheme.colors.surface)
+            .clickable(onClick = onClick)
+            .padding(8.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            AsyncImage(model =  iconResId, contentDescription =  categoryName, modifier = Modifier.size(48.dp))
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = categoryName,
+                fontWeight = FontWeight.Medium,
+                fontSize = 16.sp,
+                color = MaterialTheme.colors.onSurface
+            )
+        }
     }
 }
+
 
 @Composable
 fun BulletPoint(text: String) {
@@ -337,9 +431,6 @@ fun BulletPoint(text: String) {
         )
     }
 }
-
-
-
 
 @Composable
 fun WeeklySpecial(
