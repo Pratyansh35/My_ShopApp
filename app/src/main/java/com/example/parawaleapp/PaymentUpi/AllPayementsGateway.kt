@@ -2,6 +2,7 @@ package com.example.parawaleapp.PaymentUpi
 
 import android.content.Context
 import android.content.Intent
+import android.widget.Toast
 import androidx.activity.compose.ManagedActivityResultLauncher
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.ActivityResult
@@ -58,7 +59,9 @@ import com.example.parawaleapp.SendViewOrders.sendOrders
 import com.example.parawaleapp.database.Dishfordb
 import com.example.parawaleapp.sign_in.PhoneNumberLinkingDialog
 import com.example.parawaleapp.sign_in.SignInState
+import com.example.parawaleapp.sign_in.SignInViewModel
 import com.example.parawaleapp.sign_in.UserData
+import com.google.android.exoplayer2.util.Log
 import kotlinx.coroutines.launch
 import java.util.UUID
 
@@ -251,6 +254,7 @@ fun PaymentScreenLayout(
                     merchantId = merchantId,
                     iconRes = R.drawable.bhimupi,
                     onClick = { vpa, name, note, merchantTransactionId, transactionUrl ->
+                        SignInViewModel().startLoading()
                         payUsingUPI(
                             context,
                             launcher,
@@ -267,6 +271,7 @@ fun PaymentScreenLayout(
 
                 if (selectedPercentage == 0f) {
                     IconButton(onClick = {
+                        SignInViewModel().startLoading()
                         sendOrders(
                             context = context,
                             userData = userData,
@@ -282,10 +287,9 @@ fun PaymentScreenLayout(
                                 lifecycleOwner.lifecycleScope.launch {
                                     sendNotificationTOMerchant(merchantEmail, userData?.userPhoneNumber.toString())
                                 }
+                                cartItems.clear()
                             }
-
                         )
-                        cartItems.clear()
                     }) {
                         Card(
                             elevation = 4.dp,
@@ -318,6 +322,7 @@ fun PaymentScreenLayout(
 }
 
 suspend fun sendNotificationTOMerchant(merchantEmail: String, client:String ){
+    Log.d("Notifications", "sendNotificationTOMerchant: $merchantEmail")
         sendNotificationToUser(merchantEmail, "New Order from $client", "You have a new order from $client. Please check Customers Orders for more details.")
 }
 
@@ -338,6 +343,7 @@ fun UPIIconButton(
 
     IconButton(onClick = {
         if (specialCode.replace(" ", "").lowercase().trim() == "parawalespecial") {
+            SignInViewModel().startLoading()
             sendOrders(
                 context,
                 userData,

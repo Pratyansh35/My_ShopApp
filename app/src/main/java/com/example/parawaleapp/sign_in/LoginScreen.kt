@@ -4,6 +4,7 @@ package com.example.parawaleapp.sign_in
 import android.app.Activity
 import android.util.Log
 import android.widget.Toast
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -81,6 +82,9 @@ fun SignInScreen(
     val context = LocalContext.current as Activity
     val focusRequesters = remember { List(6) { FocusRequester() } }
     val isFocusOnTextField = remember { mutableStateOf(false) }
+
+    var backPressedTime by remember { mutableStateOf(0L) }
+
     // Display sign-in errors as a Toast message
     LaunchedEffect(key1 = state.signInError) {
         state.signInError?.let {
@@ -88,7 +92,15 @@ fun SignInScreen(
             Log.e("SignInScreen", "Sign-in error: $it")
         }
     }
-
+    BackHandler {
+        val currentTime = System.currentTimeMillis()
+        if (currentTime - backPressedTime > 2000) {
+            Toast.makeText(context, "Press again to exit", Toast.LENGTH_SHORT).show()
+            backPressedTime = currentTime
+        } else {
+            context.finish() // Exit the app
+        }
+    }
     // Show a loading dialog while sign-in is in progress
     if (state.isLoading) {
         Dialog(onDismissRequest = {}) {
@@ -155,7 +167,7 @@ fun SignInScreen(
                         onClick = {
                             if (phoneNumber.isNotEmpty()) {
                                 onSignInClick(context, "+91${phoneNumber}")
-                                phoneNumber = ""
+
                             } else {
                                 Toast.makeText(
                                     context, "Please enter a valid phone number.", Toast.LENGTH_LONG

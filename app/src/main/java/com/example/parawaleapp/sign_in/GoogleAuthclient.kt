@@ -6,6 +6,7 @@ import android.content.Intent
 import android.content.IntentSender
 import android.util.Log
 import android.widget.Toast
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.parawaleapp.Notifications.removeDeviceToken
 import com.example.parawaleapp.R
 import com.example.parawaleapp.database.saveUserToSharedPreferences
@@ -19,8 +20,11 @@ import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.auth.PhoneAuthCredential
 import com.google.firebase.auth.PhoneAuthProvider
 import com.google.firebase.auth.auth
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.tasks.await
 import java.util.concurrent.CancellationException
+import kotlin.coroutines.resume
+import kotlin.coroutines.suspendCoroutine
 
 val listofAuthorizedUsersEmails = listOf(
     "pratyansh35@gmail.com",
@@ -50,17 +54,28 @@ class GoogleAuthUiClient(
         val credential = oneTapClient.getSignInCredentialFromIntent(intent)
         val googleIdToken = credential.googleIdToken
         val googleCredentials = GoogleAuthProvider.getCredential(googleIdToken, null)
+
         return try {
             val user = auth.signInWithCredential(googleCredentials).await().user
+
             val userData = user?.let {
+                val isAdminCheck = suspendCoroutine { continuation ->
+                    SignInViewModel().checkAdmin(it.email.toString(), it.phoneNumber.toString()) { isAdmin ->
+                        continuation.resume(isAdmin)
+                    }
+                }
+
                 UserData(
                     userId = it.uid,
                     userName = it.displayName,
                     profilePictureUrl = it.photoUrl?.toString(),
+                    isAdmin = isAdminCheck,
                     userEmail = it.email,
                     userPhoneNumber = it.phoneNumber
                 )
+
             }
+
             saveUserToSharedPreferences(context, userData)
             Log.d("GoogleAuthUiClient", "UserData: $userData")
             SignInResult(data = userData, errorMessage = null, isGoogleSignIn = true)
@@ -71,6 +86,7 @@ class GoogleAuthUiClient(
             SignInResult(data = null, errorMessage = e.message)
         }
     }
+
 
     suspend fun signOut(email: String?) {
         try {
@@ -84,16 +100,29 @@ class GoogleAuthUiClient(
         }
     }
 
-    fun getSignedInUser(): UserData? {
+    suspend fun getSignedInUser(): UserData? {
         val user = auth.currentUser ?: return null
+
+        val isAdminCheck = CompletableDeferred<Boolean>()
+
+        SignInViewModel().checkAdmin(user.email ?: "", user.phoneNumber ?: "") { isAdmin ->
+            if (!isAdminCheck.isCompleted) {
+                isAdminCheck.complete(isAdmin)
+            }
+        }
+
+        val isAdmin = isAdminCheck.await()
+
         return UserData(
             userId = user.uid,
             userName = user.displayName,
             profilePictureUrl = user.photoUrl?.toString(),
             userEmail = user.email,
-            userPhoneNumber = user.phoneNumber
+            userPhoneNumber = user.phoneNumber,
+            isAdmin = isAdmin
         )
     }
+
 
     private fun buildSignInRequest(): BeginSignInRequest {
         return BeginSignInRequest.Builder()
@@ -109,36 +138,6 @@ class GoogleAuthUiClient(
     }
 }
 
-fun verifyPhoneNumber(
-    context: Context,
-    phoneNumber: String,
-    onVerificationIdReceived: (String) -> Unit
-) {
-    val callbacks = object : PhoneAuthProvider.OnVerificationStateChangedCallbacks() {
-        override fun onVerificationCompleted(credential: PhoneAuthCredential) {
-            // Handle verification completion if needed
-        }
-
-        override fun onVerificationFailed(e: FirebaseException) {
-            Toast.makeText(context, "Verification failed: ${e.message}", Toast.LENGTH_LONG).show()
-        }
-
-        override fun onCodeSent(
-            verificationId: String,
-            token: PhoneAuthProvider.ForceResendingToken
-        ) {
-            onVerificationIdReceived(verificationId)
-        }
-    }
-
-    PhoneAuthProvider.getInstance().verifyPhoneNumber(
-        phoneNumber,
-        60,
-        java.util.concurrent.TimeUnit.SECONDS,
-        context as Activity,
-        callbacks
-    )
-}
 
 fun updatePhoneNumberWithOTP(
     verificationId: String,

@@ -5,6 +5,7 @@ import android.util.Log
 import android.widget.Toast
 import com.example.parawaleapp.database.Dishfordb
 import com.example.parawaleapp.database.datareference
+import com.example.parawaleapp.sign_in.SignInViewModel
 import com.example.parawaleapp.sign_in.UserData
 
 
@@ -36,6 +37,7 @@ fun sendOrders(
 //        return
 //    }
 
+
     val username = userData.userName
     val useremail = userData.userEmail?.replace(
         ".",
@@ -60,6 +62,7 @@ fun sendOrders(
         userRef.child("contactno").setValue(userData.userPhoneNumber)
         userRef.child("orders").child(transactionId).setValue(orderDetails).addOnSuccessListener {
                 Toast.makeText(context, "Order Placed Successfully", Toast.LENGTH_SHORT).show()
+                SignInViewModel().stopLoading()
                 onSuccessSendNotification(merchantEmail)
             }.addOnFailureListener { exception ->
                 Toast.makeText(context, exception.message, Toast.LENGTH_SHORT).show()

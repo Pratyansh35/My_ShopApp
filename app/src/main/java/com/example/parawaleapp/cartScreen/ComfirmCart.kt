@@ -37,6 +37,7 @@ import androidx.compose.ui.unit.sp
 import androidx.core.app.ActivityCompat
 import androidx.navigation.NavController
 import com.example.parawaleapp.database.Dishfordb
+import com.example.parawaleapp.sign_in.SignInViewModel
 import com.example.parawaleapp.sign_in.UserData
 import java.io.IOException
 import java.io.OutputStream
@@ -217,7 +218,7 @@ fun ConfirmCart(navController: NavController? = null, userData: UserData?, cartI
                         navController?.navigate("BluetoothScreenRoute")
                         return@Button
                     }
-
+                    SignInViewModel().startLoading()
                     val printData =
                         formatForPrinting(context, cartItems, totalmrp, total)
                     printData(context, selectedPrinter, printData)
@@ -413,10 +414,12 @@ fun printData(context: Context, printerAddress: String, data: String) {
         e.printStackTrace()
     } finally {
         try {
+            SignInViewModel().stopLoading()
             outputStream?.close()
             socket?.close()
         } catch (e: IOException) {
             e.printStackTrace()
+            SignInViewModel().stopLoading()
         }
     }
 }

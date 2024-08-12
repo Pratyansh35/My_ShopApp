@@ -16,6 +16,7 @@ import ShopDistanceScreen
 import User_Location
 import ViewOrder
 import android.os.Bundle
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -84,6 +85,7 @@ import com.example.parawaleapp.sign_in.GoogleAuthUiClient
 import com.example.parawaleapp.sign_in.SignInScreen
 import com.example.parawaleapp.sign_in.SignInState
 import com.example.parawaleapp.sign_in.SignInViewModel
+import com.example.parawaleapp.sign_in.UserData
 import com.example.parawaleapp.ui.theme.MyAppTheme
 import com.google.android.gms.auth.api.identity.Identity
 import com.google.android.gms.maps.model.LatLng
@@ -98,7 +100,6 @@ class MainActivity : ComponentActivity() {
             oneTapClient = Identity.getSignInClient(applicationContext)
         )
     }
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         FirebaseApp.initializeApp(this)
@@ -113,13 +114,21 @@ class MainActivity : ComponentActivity() {
         Surface(
             modifier = Modifier.fillMaxSize(), color = MaterialTheme.colors.background
         ) {
-            var isDarkTheme by rememberSaveable { mutableStateOf(false) }
+            val isSystemDark = isSystemInDarkTheme()
+
+            var isDarkTheme by rememberSaveable { mutableStateOf(isSystemDark) }
             var dishData by rememberSaveable { mutableStateOf<List<Dishfordb>>(emptyList()) }
             val navController = rememberNavController()
             val context = LocalContext.current
 
-            val userData = getUserFromSharedPreferences(context)
+            var userData by remember { mutableStateOf<UserData?>(null) }
+
+            Log.d("MainActivity userData", "User data: $userData")
+            userData = getUserFromSharedPreferences(context)
             val userState = remember { mutableStateOf(userData) }
+            LaunchedEffect(isSystemDark) {
+                isDarkTheme = isSystemDark
+            }
 
             LaunchedEffect(key1 = userState.value) {
                 if (userState.value != null) {
@@ -129,6 +138,7 @@ class MainActivity : ComponentActivity() {
                         "Welcome back, ${userState.value?.userName}",
                         Toast.LENGTH_SHORT
                     ).show()
+
                     navController.navigate("MainScreen") {
                         popUpTo("sign_in") { inclusive = true }
                     }
@@ -236,13 +246,15 @@ fun MainScreen(
     var allOverTotalMrp by rememberSaveable { mutableStateOf(0.0) }
     var isGridLayout by rememberSaveable { mutableStateOf(false) }
 
+    var userData by remember { mutableStateOf<UserData?>(null) }
+
+    LaunchedEffect(Unit) {
+        userData = googleAuthUiClient.getSignedInUser()
+    }
+
     fun updateTotals() {
         allOverTotalPrice = cartItems.sumOf { it.price.removePrefix("₹").toDouble() * it.count }
         allOverTotalMrp = cartItems.sumOf { it.mrp.removePrefix("₹").toDouble() * it.count }
-    }
-    val systemInDarkTheme = isSystemInDarkTheme()
-    LaunchedEffect(systemInDarkTheme) {
-        isDarkTheme(systemInDarkTheme)
     }
 
     MyAppTheme(darkTheme = isDark) {
@@ -253,13 +265,17 @@ fun MainScreen(
                     scaffoldState = scaffoldState,
                     scope = scope,
                     navController = innerNavController,
-                    userData = googleAuthUiClient.getSignedInUser(),
+                    userData = userData,
                     signOut = {
                         clearDataFromSharedPreferences(context)
                         scope.launch {
-                            googleAuthUiClient.signOut(email = googleAuthUiClient.getSignedInUser()?.userEmail)
+                            googleAuthUiClient.signOut(email = userData?.userEmail)
                             Toast.makeText(context, "Sign out successful", Toast.LENGTH_LONG).show()
-                            navController.navigate("sign_in")
+                            navController.navigate("sign_in") {
+                                popUpTo(navController.graph.startDestinationId) {
+                                    inclusive = true
+                                }
+                            }
                         }
                     }
                 )
@@ -274,7 +290,7 @@ fun MainScreen(
                     count = cartItems.size
                 )
             },
-            bottomBar = { MyBottomNavigation(navController = innerNavController) }
+            bottomBar = { MyBottomNavigation(navController = innerNavController, userData ) }
         ) { paddingValues ->
             Box(Modifier.padding(paddingValues)) {
                 NavHost(navController = innerNavController, startDestination = Home.route) {
@@ -316,26 +332,26 @@ fun MainScreen(
                     composable(AfterCart.route) {
                         ConfirmCart(
                             navController = innerNavController,
-                            userData = googleAuthUiClient.getSignedInUser(),
+                            userData = userData,
                             cartItems = cartItems,
                             total = allOverTotalPrice,
                             totalmrp = allOverTotalMrp
                         )
                     }
                     composable(ProfileSet.route) {
-                        Profileset(userData = googleAuthUiClient.getSignedInUser(), onSendVerificationCodeClick = onSendVerificationCodeClick,
+                        Profileset(userData = userData, onSendVerificationCodeClick = onSendVerificationCodeClick,
                             linkWithOtpClick = linkWithOtpClick)
                     }
                     composable(AddItems.route) {
                         ManageItem(
-                            userData = googleAuthUiClient.getSignedInUser(), dishData = dishData
+                            userData = userData, dishData = dishData
                         )
                     }
                     composable(SettingScreen.route) {
                         Settings(
                             scope = scope,
                             navController = innerNavController,
-                            userData = googleAuthUiClient.getSignedInUser(),
+                            userData = userData,
                             scaffoldState = scaffoldState
                         )
                     }
@@ -354,7 +370,7 @@ fun MainScreen(
                         )
                     }
                     composable(PreviousOrders.route) {
-                        PreviousOrders(navController, googleAuthUiClient.getSignedInUser())
+                        PreviousOrders(navController, userData)
                     }
                     composable("PaymentScreen/{totalMrp}/{totalValue}") { backStackEntry ->
                         val totalMrp = backStackEntry.arguments?.getString("totalMrp")?.toDouble()
@@ -364,7 +380,7 @@ fun MainScreen(
                             PaymentScreenLayout(
                                 totalMrp,
                                 totalValue,
-                                googleAuthUiClient.getSignedInUser(),
+                                userData,
                                 cartItems,
                                 isDark,
                                 state = state,
@@ -411,7 +427,7 @@ fun MainScreen(
                         val name = backStackEntry.arguments?.getString("name")
                         val orderedItemsJson = backStackEntry.arguments?.getString("orderedItems")
                         val orderTimeStamp = backStackEntry.arguments?.getString("timeStamp")
-                        val loggedemail = googleAuthUiClient.getSignedInUser()?.userEmail
+                        val loggedemail = userData?.userEmail
 
                         if (orderedItemsJson != null && orderTimeStamp != null) {
 
@@ -437,11 +453,13 @@ fun MainScreen(
 
 
 @Composable
-fun MyBottomNavigation(navController: NavController) {
+fun MyBottomNavigation(navController: NavController, userData: UserData?) {
 
     val destinationList = listOf(
-        Home, Menu, Scan_Barcode, User_Location
+        Home, Menu, if (userData?.isAdmin == true) Scan_Barcode else null , User_Location
     )
+    Log.d("MyBottomNavigation", "Destination List: ${userData}")
+
     val selectedIndex = rememberSaveable {
         mutableIntStateOf(0)
     }
@@ -450,18 +468,22 @@ fun MyBottomNavigation(navController: NavController) {
         contentColor = MaterialTheme.colors.surface
     ) {
         destinationList.forEachIndexed { index, destination ->
-            BottomNavigationItem(label = { Text(text = destination.title) }, icon = {
-                Icon(
-                    painter = painterResource(id = destination.icon),
-                    contentDescription = destination.title
-                )
-            }, selected = index == selectedIndex.intValue, onClick = {
-                selectedIndex.intValue = index
-                navController.navigate(destinationList[index].route) {
-                    popUpTo(Login.route)
-                    launchSingleTop = true
-                }
-            })
+            if (destination != null) {
+                BottomNavigationItem(label = { Text(text = destination.title) }, icon = {
+                    Icon(
+                        painter = painterResource(id = destination.icon),
+                        contentDescription = destination.title
+                    )
+                }, selected = index == selectedIndex.intValue, onClick = {
+                    selectedIndex.intValue = index
+                    destinationList[index]?.let {
+                        navController.navigate(it.route) {
+                            popUpTo(Login.route)
+                            launchSingleTop = true
+                        }
+                    }
+                })
+            }
         }
     }
 }

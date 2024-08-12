@@ -1,6 +1,7 @@
 package com.example.parawaleapp.mainScreen
 
 
+import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
@@ -8,6 +9,7 @@ import android.os.Build
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.widget.Toast
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -43,6 +45,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateList
@@ -90,6 +93,17 @@ fun HomeScreen(
     isGridLayout: Boolean,
     onLayoutChange: (Boolean) -> Unit
 ) {
+    val context = LocalContext.current as Activity
+    var backPressedTime by remember { mutableStateOf(0L) }
+    BackHandler {
+        val currentTime = System.currentTimeMillis()
+        if (currentTime - backPressedTime > 2000) {
+            Toast.makeText(context, "Press again to exit", Toast.LENGTH_SHORT).show()
+            backPressedTime = currentTime
+        } else {
+            context.finish() // Exit the app
+        }
+    }
     MyAppTheme(darkTheme = isDarkTheme) {
         LazyColumn(
             modifier = Modifier.fillMaxSize()

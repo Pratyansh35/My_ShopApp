@@ -102,8 +102,5 @@ val SlidesItems = listOf(
     ), Slidess(
         "Add Items", "Add items to database", R.drawable.additemcloud
     )
-
-
-
 )
 

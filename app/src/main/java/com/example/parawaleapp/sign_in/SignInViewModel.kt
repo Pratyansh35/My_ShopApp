@@ -5,16 +5,19 @@ import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.lifecycle.ViewModel
 import com.example.parawaleapp.Notifications.storeDeviceToken
+import com.example.parawaleapp.database.datareference
 import com.example.parawaleapp.database.img
 import com.google.firebase.FirebaseException
 import com.google.firebase.auth.PhoneAuthCredential
 import com.google.firebase.auth.PhoneAuthOptions
 import com.google.firebase.auth.PhoneAuthProvider
 import com.google.firebase.auth.ktx.auth
+import com.google.firebase.database.values
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.messaging.ktx.messaging
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.tasks.await
 import java.util.concurrent.TimeUnit
 
 class SignInViewModel : ViewModel() {
@@ -41,13 +44,59 @@ class SignInViewModel : ViewModel() {
             )
         }
     }
+    fun checkAdmin(email: String?, phone: String?, onResult: (Boolean) -> Unit) {
+        var isEmailChecked = false
+        var isPhoneChecked = false
+        var isAdmin = false
+
+        if (!email.isNullOrEmpty()) {
+            val emailKey = email.replace(".", ",")
+            val emailRef = datareference.child("Admins").child("emails").child(emailKey)
+            emailRef.get().addOnCompleteListener { emailTask ->
+                if (emailTask.isSuccessful) {
+                    isAdmin = emailTask.result?.getValue(Boolean::class.java) ?: false
+                }
+                isEmailChecked = true
+                if (isPhoneChecked) {
+                    onResult(isAdmin)
+                }
+            }
+        } else {
+            isEmailChecked = true
+        }
+
+        if (!phone.isNullOrEmpty()) {
+            val phoneRef = datareference.child("Admins").child("phones").child(phone)
+            phoneRef.get().addOnCompleteListener { phoneTask ->
+                if (phoneTask.isSuccessful) {
+                    isAdmin = isAdmin || (phoneTask.result?.getValue(Boolean::class.java) ?: false)
+                }
+                isPhoneChecked = true
+                if (isEmailChecked) {
+                    onResult(isAdmin)
+                }
+            }
+        } else {
+            isPhoneChecked = true
+        }
+
+        if (isEmailChecked && isPhoneChecked) {
+            onResult(isAdmin)
+        }
+    }
+
+
+
+
 
     fun onSignInResult(result: SignInResult) {
         if (result.data != null) {
+
             val userData = result.data
             _state.value = _state.value.copy(
                 isSignInSuccessful = true,
                 isLoading = false,
+                userData = userData
             )
 
             Firebase.messaging.token.addOnCompleteListener { task ->
@@ -59,7 +108,7 @@ class SignInViewModel : ViewModel() {
         } else {
             _state.value = _state.value.copy(
                 signInError = result.errorMessage,
-                isLoading = false
+                isLoading = false,
             )
         }
     }
@@ -84,24 +133,26 @@ class SignInViewModel : ViewModel() {
         Log.d("SignInViewModel", "linkPhoneAuthCredential: $credential")
         val currentUser = Firebase.auth.currentUser
 
-        currentUser?.let {
-            it.linkWithCredential(credential)
+        currentUser?.let { user ->
+            user.linkWithCredential(credential)
                 .addOnCompleteListener { task ->
                     if (task.isSuccessful) {
-                        val user = task.result?.user
-                        val userData = user?.let {
-                            UserData(
-                                userId = it.uid,
-                                userName = it.displayName,
-                                userEmail = it.email,
-                                profilePictureUrl = it.photoUrl?.toString(),
-                                userPhoneNumber = it.phoneNumber
-                            )
+                        val linkedUser = task.result?.user
+                        linkedUser?.let {
+                            checkAdmin(it.email.toString(), it.phoneNumber.toString()) { isAdmin ->
+                                val userData = UserData(
+                                    userId = it.uid,
+                                    userName = it.displayName,
+                                    userEmail = it.email,
+                                    profilePictureUrl = it.photoUrl?.toString(),
+                                    userPhoneNumber = it.phoneNumber,
+                                    isAdmin = isAdmin
+                                )
 
+                                Log.d("SignInViewModel", "linkPhoneAuthCredential: success")
+                                onSignInResult(SignInResult(data = userData, errorMessage = null))
+                            }
                         }
-                        Log.d("SignInViewModel", "linkPhoneAuthCredential: success")
-                        img = it.photoUrl
-                        onSignInResult(SignInResult(data = userData, errorMessage = null))
                     } else {
                         Log.e("SignInViewModel", "linkPhoneAuthCredential: failure", task.exception)
                         _state.value = _state.value.copy(signInError = task.exception?.message)
@@ -113,7 +164,9 @@ class SignInViewModel : ViewModel() {
             stopLoading()
         }
     }
+
     fun verifyPhoneNumberWithCode(code: String) {
+        startLoading()
         Log.d("SignInViewModel", "verifyPhoneNumberWithCode: $code")
         val verificationId = _state.value.verificationId
         if (verificationId != null) {
@@ -128,28 +181,29 @@ class SignInViewModel : ViewModel() {
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
                     val user = task.result?.user
-                    val userData = user?.let {
-                        UserData(
-                            userId = it.uid,
-                            userName = it.displayName,
-                            userEmail = it.email,
-                            profilePictureUrl = it.photoUrl?.toString(),
-                            userPhoneNumber = it.phoneNumber
-                        )
+                    user?.let {
+                        checkAdmin(it.email.toString(), it.phoneNumber.toString()) { isAdmin ->
+                            val userData = UserData(
+                                userId = it.uid,
+                                userName = it.displayName,
+                                userEmail = it.email,
+                                isAdmin = isAdmin,
+                                profilePictureUrl = it.photoUrl?.toString(),
+                                userPhoneNumber = it.phoneNumber
+                            )
+                            stopLoading()
+                            Log.d("SignInViewModel", "signInWithPhoneAuthCredential: success")
+                            onSignInResult(SignInResult(data = userData, errorMessage = null))
+                        }
                     }
-                    Log.d("SignInViewModel", "signInWithPhoneAuthCredential: success")
-                    onSignInResult(SignInResult(data = userData, errorMessage = null))
                 } else {
-                    Log.e(
-                        "SignInViewModel",
-                        "signInWithPhoneAuthCredential: failure",
-                        task.exception
-                    )
+                    Log.e("SignInViewModel", "signInWithPhoneAuthCredential: failure", task.exception)
                     _state.value = _state.value.copy(signInError = task.exception?.message)
                 }
                 _state.value = _state.value.copy(isLoading = false)
             }
     }
+
     fun linkPhoneNumberWithOtp(code: String) {
         Log.d("SignInViewModel", "verifyPhoneNumberWithCode: $code")
         val verificationId = _state.value.verificationId

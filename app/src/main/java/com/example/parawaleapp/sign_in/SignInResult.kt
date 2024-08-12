@@ -12,7 +12,10 @@ data class UserData(
     val userName: String?,
     val userEmail: String?,
     val profilePictureUrl: String?,
-    val userPhoneNumber: String?
+    val userPhoneNumber: String?,
+    val isAdmin: Boolean,
+    val isVerified: Boolean = false,
+    val isMerchant: Boolean = false,
 )
 
 

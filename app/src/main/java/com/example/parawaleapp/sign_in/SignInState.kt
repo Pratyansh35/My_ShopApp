@@ -1,7 +1,5 @@
 package com.example.parawaleapp.sign_in
 
-import com.google.firebase.auth.PhoneAuthProvider
-
 data class SignInState(
     val isLoading: Boolean = false,
     val signInError: String? = null,
