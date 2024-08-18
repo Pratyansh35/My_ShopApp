@@ -1,20 +1,31 @@
 package com.example.parawaleapp.mainScreen
 
 
+import android.Manifest
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
+import android.os.Bundle
 import android.os.VibrationEffect
 import android.os.Vibrator
+import android.speech.RecognitionListener
+import android.speech.RecognizerIntent
+import android.speech.SpeechRecognizer
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -32,15 +43,22 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Button
 import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.Card
 import androidx.compose.material.Divider
+import androidx.compose.material.FloatingActionButton
+import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.material.MaterialTheme
+import androidx.compose.material.Scaffold
 import androidx.compose.material.Text
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -55,9 +73,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -70,6 +90,8 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import coil.compose.rememberAsyncImagePainter
@@ -78,8 +100,14 @@ import com.example.parawaleapp.R
 import com.example.parawaleapp.database.Dishfordb
 import com.example.parawaleapp.ui.theme.MyAppTheme
 import com.google.gson.Gson
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.yield
+import java.util.Locale
+
 
 @Composable
 fun HomeScreen(
@@ -88,13 +116,15 @@ fun HomeScreen(
     onThemeChange: (Boolean) -> Unit,
     cartItems: SnapshotStateList<Dishfordb>,
     updateTotals: () -> Unit,
-    //saveCartItemsToSharedPreferences: () -> Unit,
     navController: NavController,
     isGridLayout: Boolean,
     onLayoutChange: (Boolean) -> Unit
 ) {
     val context = LocalContext.current as Activity
     var backPressedTime by remember { mutableStateOf(0L) }
+    var voiceInputResult by remember { mutableStateOf("") } // To store the voice input result
+    var suggestions by remember { mutableStateOf(emptyList<Dishfordb>()) } // To store the suggestions
+
     BackHandler {
         val currentTime = System.currentTimeMillis()
         if (currentTime - backPressedTime > 2000) {
@@ -104,61 +134,199 @@ fun HomeScreen(
             context.finish() // Exit the app
         }
     }
+    val speechRecognizer = remember { SpeechRecognizer.createSpeechRecognizer(context) }
+    val listening = remember { mutableStateOf(false) }
+    val isPressed = remember { mutableStateOf(false) }
+    if (ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO)
+        != PackageManager.PERMISSION_GRANTED) {
+        ActivityCompat.requestPermissions(
+            context,
+            arrayOf(Manifest.permission.RECORD_AUDIO),
+            1
+        )
+    }
     MyAppTheme(darkTheme = isDarkTheme) {
-        LazyColumn(
-            modifier = Modifier.fillMaxSize()
-        ) {
-            item {
-                Column {
-                    SlidingPanels(darkTheme = isDarkTheme)
-                    WeeklySpecial(
-                        isDarkTheme = isDarkTheme,
-                        onThemeChange = onThemeChange,
-                        isGridLayout = isGridLayout,
-                        onLayoutChange = onLayoutChange
+        Scaffold(
+            floatingActionButton = {
+                // Gradient colors
+                val gradientStartColor by animateColorAsState(
+                    targetValue = if (isPressed.value) Color.Blue else Color.Cyan,
+                    animationSpec = tween(durationMillis = 500)
+                )
+                val gradientEndColor by animateColorAsState(
+                    targetValue = if (isPressed.value) Color.Red else Color.Yellow,
+                    animationSpec = tween(durationMillis = 500)
+                )
+
+                Box(
+                    modifier = Modifier
+                        .size(60.dp)
+                        .background(
+                            brush = Brush.linearGradient(
+                                colors = listOf(gradientStartColor, gradientEndColor)
+                            ),
+                            shape = CircleShape
+                        )
+                        .clickable {
+                            // Handle click action
+                            Log.d("VoiceInput", "Button clicked.")
+                        }
+                        .pointerInput(Unit) {
+                            detectTapGestures(
+                                onPress = {
+                                    // User starts pressing the button
+                                    isPressed.value = true
+                                    startListening(context) { result ->
+                                        if (result == "error") {
+                                            Log.e("VoiceInput", "Speech recognition error occurred.")
+                                        } else {
+                                            voiceInputResult = result
+                                            Log.d("VoiceInput", "User said: $result")
+                                            processVoiceInput(result)
+                                            Toast.makeText(context, result, Toast.LENGTH_SHORT).show()
+                                        }
+                                    }
+                                    tryAwaitRelease()
+                                    // User releases the button
+                                    isPressed.value = false
+                                    stopListening(speechRecognizer)
+                                }
+                            )
+                        },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Favorite, // Use a microphone icon
+                        contentDescription = "Voice Input",
+                        tint = Color.White
                     )
                 }
             }
-            if (!isGridLayout) {
-                items(DishData) { dish ->
-                    LinearLayoutItems(
-                        dish,
-                        cartItems = cartItems,
-                        updateTotals = updateTotals,
-                        //saveCartItemsToSharedPreferences = saveCartItemsToSharedPreferences,
-                        navController = navController
-                    )
-                }
-            } else {
-                items(DishData.chunked(3)) { rowItems ->
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(8.dp)
-                    ) {
-                        for (dish in rowItems) {
-                            Box(
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .padding(4.dp)
-                            ) {
-                                GridLayoutItems(
-                                    dish = dish,
+
+            ,
+            content = { paddingValues -> // This is the padding provided by Scaffold
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues) // Apply the padding here
+                ) {
+                    item {
+                        Column {
+                            SlidingPanels(darkTheme = isDarkTheme)
+                            WeeklySpecial(
+                                isDarkTheme = isDarkTheme,
+                                onThemeChange = onThemeChange,
+                                isGridLayout = isGridLayout,
+                                onLayoutChange = onLayoutChange
+                            )
+                        }
+                    }
+                    if (suggestions.isNotEmpty()) {
+                        items(suggestions) { dish ->
+                            LinearLayoutItems(
+                                dish,
+                                cartItems = cartItems,
+                                updateTotals = updateTotals,
+                                navController = navController
+                            )
+                        }
+                    } else {
+                        if (!isGridLayout) {
+                            items(DishData) { dish ->
+                                LinearLayoutItems(
+                                    dish,
                                     cartItems = cartItems,
                                     updateTotals = updateTotals,
-                                    //saveCartItemsToSharedPreferences = saveCartItemsToSharedPreferences,
                                     navController = navController
                                 )
                             }
-                        }
-                        if (rowItems.size == 1) {
-                            Spacer(modifier = Modifier.weight(1f))
+                        } else {
+                            items(DishData.chunked(3)) { rowItems ->
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(8.dp)
+                                ) {
+                                    for (dish in rowItems) {
+                                        Box(
+                                            modifier = Modifier
+                                                .weight(1f)
+                                                .padding(4.dp)
+                                        ) {
+                                            GridLayoutItems(
+                                                dish = dish,
+                                                cartItems = cartItems,
+                                                updateTotals = updateTotals,
+                                                navController = navController
+                                            )
+                                        }
+                                    }
+                                    if (rowItems.size == 1) {
+                                        Spacer(modifier = Modifier.weight(1f))
+                                    }
+                                }
+                            }
                         }
                     }
                 }
             }
+        )
+    }
+}
+
+
+private fun startListening(context: Context, onResult: (String) -> Unit) {
+    val speechRecognizer = SpeechRecognizer.createSpeechRecognizer(context)
+    val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
+    intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+    intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault())
+
+    speechRecognizer.setRecognitionListener(object : RecognitionListener {
+        override fun onReadyForSpeech(params: Bundle?) {}
+        override fun onBeginningOfSpeech() {}
+        override fun onRmsChanged(rmsdB: Float) {}
+        override fun onBufferReceived(buffer: ByteArray?) {}
+        override fun onEndOfSpeech() {}
+        override fun onError(error: Int) {
+            onResult("error")
+        }
+
+        override fun onResults(results: Bundle?) {
+            val result = results?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)?.get(0) ?: "error"
+            onResult(result)
+        }
+
+        override fun onPartialResults(partialResults: Bundle?) {}
+        override fun onEvent(eventType: Int, params: Bundle?) {}
+    })
+
+    speechRecognizer.startListening(intent)
+}
+
+private fun stopListening(speechRecognizer: SpeechRecognizer) {
+    speechRecognizer.stopListening()
+    speechRecognizer.destroy()
+}
+
+private fun processVoiceInput(query: String) {
+    CoroutineScope(Dispatchers.IO).launch {
+        try {
+            val suggestions = fetchSuggestionsFromOpenAI(query)
+            // Update UI or state with the suggestions on the main thread
+            withContext(Dispatchers.Main) {
+                // Update the state with suggestions here
+                // Example: updateSuggestions(suggestions)
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            // Handle any errors here
         }
     }
+}
+
+suspend fun fetchSuggestionsFromOpenAI(query: String) {
+    // Use OpenAI API to process the query and fetch matching items from Firebase
+    // This will update the `suggestions` list with relevant items based on the user's input
 }
 
 

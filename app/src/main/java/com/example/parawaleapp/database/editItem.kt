@@ -53,7 +53,6 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
-
 @Composable
 fun ModifyScreen(dish: Dishfordb, showModifyScreen: () -> Unit) {
     var name by remember { mutableStateOf(TextFieldValue(dish.name)) }
@@ -61,7 +60,8 @@ fun ModifyScreen(dish: Dishfordb, showModifyScreen: () -> Unit) {
     var description by remember { mutableStateOf(TextFieldValue(dish.description)) }
     var price by remember { mutableStateOf(TextFieldValue(dish.price.trimStart('₹'))) }
     var weight by remember { mutableStateOf(TextFieldValue(dish.weight)) }
-    var category by remember { mutableStateOf(TextFieldValue(dish.category)) }
+    Log.d("category", dish.categories.joinToString(", "))
+    var category by remember { mutableStateOf(TextFieldValue(dish.categories.joinToString(", "))) }
     var imageUris by remember { mutableStateOf(dish.imagesUrl.toMutableList()) }
     var itembarcode by remember { mutableStateOf(dish.barcode) }
     var Itemmrp by remember { mutableStateOf(dish.mrp.trimStart('₹')) }
@@ -246,13 +246,14 @@ fun ModifyScreen(dish: Dishfordb, showModifyScreen: () -> Unit) {
         Button(
             onClick = {
                 if (name.text.isNotEmpty() && description.text.isNotEmpty() && price.text.isNotEmpty() && category.text.isNotEmpty() && imageUris.isNotEmpty()) {
+                    val categoryList = category.text.split(",").map { it.trim() }  // Convert back to list
                     modifyItemOnDatabase(
                         name.text,
                         '₹' + price.text,
                         description.text,
                         weight.text,
                         originalName,
-                        category.text,
+                        categoryList,
                         imageUris.map { Uri.parse(it) },
                         context,
                         itembarcode,
@@ -275,16 +276,17 @@ fun ModifyScreen(dish: Dishfordb, showModifyScreen: () -> Unit) {
             LinearProgressIndicator(
                 progress = uploadProgress,
                 modifier = Modifier
+                    .padding(top = 16.dp)
                     .fillMaxWidth()
-                    .padding(8.dp)
             )
         }
     }
 }
 
+
 private fun modifyItemOnDatabase(
     name: String, price: String, description: String, weight: String, originalName: String,
-    category: String, images: List<Uri>, context: Context, itembarcode: String, itemmrp: String, totalCount: String,
+    category: List<String>, images: List<Uri>, context: Context, itembarcode: String, itemmrp: String, totalCount: String,
     uploadProgress: (Float) -> Unit
 ) {
     val storage = FirebaseStorage.getInstance()
@@ -340,7 +342,7 @@ private fun modifyItemOnDatabase(
                         "price" to price,
                         "description" to description,
                         "weight" to weight,
-                        "category" to category,
+                        "categories" to category,  // Now accepts a list of strings
                         "imagesUrl" to imageUrls,
                         "barcode" to itembarcode,
                         "mrp" to itemmrp,
@@ -363,3 +365,4 @@ private fun modifyItemOnDatabase(
         }
     }
 }
+

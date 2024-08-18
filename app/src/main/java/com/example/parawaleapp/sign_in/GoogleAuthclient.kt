@@ -139,6 +139,24 @@ class GoogleAuthUiClient(
 }
 
 
+fun updateEmailandSendOtp( email: String, context: Context) {
+    val currentUser = FirebaseAuth.getInstance().currentUser
+
+    if (currentUser != null) {
+        currentUser.updateEmail(email)
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    Toast.makeText(context, "Email updated successfully", Toast.LENGTH_LONG).show()
+                } else {
+                    Toast.makeText(context, "Update failed: ${task.exception?.message}", Toast.LENGTH_LONG).show()
+                    Log.e("GoogleAuthUiClient", "updateEmail: failure", task.exception)
+                }
+            }
+    } else {
+        Toast.makeText(context, "No user is currently signed in", Toast.LENGTH_LONG).show()
+    }
+}
+
 fun updatePhoneNumberWithOTP(
     verificationId: String,
     otp: String,

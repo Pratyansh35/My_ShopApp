@@ -17,12 +17,13 @@ data class Dishfordb(
     var count: Int = 0,
     var weight: String,
     val description: String = "",
-    val category: String = "",
+    val categories: List<String> = listOf(), // Updated to List<String>
     val imagesUrl: MutableList<String> = mutableListOf(""),
     val barcode: String,
     val mrp: String,
     val totalcount: String
-) : Parcelable {constructor() : this("", "", 0,"", "", "", mutableListOf(""), "", "", "")
+) : Parcelable {
+    constructor() : this("", "", 0,"", "", listOf(), mutableListOf(""), "", "", "")
 
     override fun describeContents(): Int {
         return 0
@@ -34,13 +35,15 @@ data class Dishfordb(
         dest.writeInt(count)
         dest.writeString(weight)
         dest.writeString(description)
-        dest.writeString(category)
+        dest.writeStringList(categories) // Updated to write list of strings
         dest.writeString(imagesUrl.toString())
         dest.writeString(barcode)
         dest.writeString(mrp)
         dest.writeString(totalcount)
+        Log.e("category", "categories: $categories")
     }
 }
+
 
 
 

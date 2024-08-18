@@ -35,6 +35,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
+import com.example.parawaleapp.R
 import com.example.parawaleapp.database.SlidesItems
 import com.example.parawaleapp.database.img
 import com.example.parawaleapp.database.name
@@ -77,7 +78,7 @@ fun LeftDrawerPanel(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 AsyncImage(
-                    model = userData?.profilePictureUrl,
+                    model = userData?.profilePictureUrl ?: R.drawable.temppic,
                     contentDescription = "userImage",
                     modifier = Modifier
                         .padding(start = 10.dp)

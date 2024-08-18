@@ -96,23 +96,56 @@ fun fetchAllOrders(callback: (List<EmailOrder>) -> Unit) {
             val orders = mutableListOf<OrdersFromEmails>()
 
             for (orderSnapshot in ordersSnapshot.children) {
-                val orderTimestamp = orderSnapshot.key?.toLongOrNull() ?: 0L
-                val DateFormat = SimpleDateFormat("dd MMM yy", Locale.getDefault())
-                val date = DateFormat.format(Date(orderTimestamp))
-                val TimeFormat = SimpleDateFormat("hh:mm a", Locale.getDefault())
-                val atTime = TimeFormat.format(Date(orderTimestamp))
-                val totalAmountRecieved = orderSnapshot.child("Amount received").getValue(String::class.java) ?: "0"
-                val totalAmountRemaining = orderSnapshot.child("Amount remaining").getValue(String::class.java) ?: "0"
-                val merchantCode = orderSnapshot.child("Merchant Code").getValue(String::class.java) ?: ""
-                val totalMrp = orderSnapshot.child("totalMrp").getValue(Double::class.java) ?: 0.0
-                val total = orderSnapshot.child("total").getValue(Double::class.java) ?: 0.0
-                val orderStatus =
-                    orderSnapshot.child("Order Status").getValue(String::class.java) ?: ""
-                val items = orderSnapshot.child("items").children.mapNotNull {
-                    it.getValue(Dishfordb::class.java)
+                try {
+                    val orderTimestamp = orderSnapshot.key?.toLongOrNull() ?: 0L
+                    val dateFormat = SimpleDateFormat("dd MMM yy", Locale.getDefault())
+                    val date = dateFormat.format(Date(orderTimestamp))
+                    val timeFormat = SimpleDateFormat("hh:mm a", Locale.getDefault())
+                    val atTime = timeFormat.format(Date(orderTimestamp))
+                    val totalAmountReceived = orderSnapshot.child("Amount received").getValue(String::class.java) ?: "0"
+                    val totalAmountRemaining = orderSnapshot.child("Amount remaining").getValue(String::class.java) ?: "0"
+                    val merchantCode = orderSnapshot.child("Merchant Code").getValue(String::class.java) ?: ""
+                    val totalMrp = orderSnapshot.child("totalMrp").getValue(Double::class.java) ?: 0.0
+                    val total = orderSnapshot.child("total").getValue(Double::class.java) ?: 0.0
+                    val orderStatus = orderSnapshot.child("Order Status").getValue(String::class.java) ?: ""
+
+                    val items = mutableListOf<Dishfordb>()
+                    val itemsSnapshot = orderSnapshot.child("items")
+
+                    // Check if itemsSnapshot exists and has children (indicating it's a list)
+                    if (itemsSnapshot.exists() && itemsSnapshot.hasChildren()) {
+                        items.addAll(itemsSnapshot.children.mapNotNull {
+                            it.getValue(Dishfordb::class.java)
+                        })
+                    } else {
+                        // Handle case where items is not a list
+                        val singleItem = itemsSnapshot.getValue(Dishfordb::class.java)
+                        if (singleItem != null) {
+                            items.add(singleItem)
+                        } else {
+                            Log.d("fetchAllOrders", "Items not found for order: $orderTimestamp")
+                        }
+                    }
+
+                    orders.add(
+                        OrdersFromEmails(
+                            date = date,
+                            atTime = atTime,
+                            transactionId = orderTimestamp.toString(),
+                            totalprice = total,
+                            totalmrp = totalMrp,
+                            orderedItems = items,
+                            orderStatus = orderStatus,
+                            merchantCode = merchantCode,
+                            amountReceived = totalAmountReceived,
+                            amountRemaining = totalAmountRemaining
+                        )
+                    )
+                } catch (e: Exception) {
+                    Log.e("fetchAllOrders", "Error processing order: ${e.message}", e)
                 }
-                orders.add(OrdersFromEmails(date, atTime,orderTimestamp.toString() ,totalMrp, total, items, orderStatus, merchantCode, totalAmountRecieved, totalAmountRemaining))
             }
+
             allOrders.add(EmailOrder(email, username, contactno, orders))
         }
 

@@ -15,6 +15,8 @@ import SettingScreen
 import ShopDistanceScreen
 import User_Location
 import ViewOrder
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
@@ -48,6 +50,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -92,6 +95,9 @@ import com.google.android.gms.maps.model.LatLng
 import com.google.firebase.FirebaseApp
 import com.google.gson.Gson
 import kotlinx.coroutines.launch
+import android.Manifest
+import androidx.annotation.RequiresApi
+import com.example.parawaleapp.database.updateCategoriesInDatabase
 
 class MainActivity : ComponentActivity() {
     private val googleAuthUiClient by lazy {
@@ -100,12 +106,36 @@ class MainActivity : ComponentActivity() {
             oneTapClient = Identity.getSignInClient(applicationContext)
         )
     }
+    private val notificationPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted: Boolean ->
+        if (isGranted) {
+            Toast.makeText(this, "Notification permission granted", Toast.LENGTH_SHORT).show()
+        } else {
+            Toast.makeText(this, "Notification permission denied", Toast.LENGTH_SHORT).show()
+        }
+    }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         FirebaseApp.initializeApp(this)
         createNotificationChannel(this)
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            checkNotificationPermission()
+        }
         setContent {
             MyApp()
+        }
+    }
+
+
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
+    private fun checkNotificationPermission() {
+        if (ContextCompat.checkSelfPermission(
+                this, Manifest.permission.POST_NOTIFICATIONS
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
         }
     }
 
@@ -177,11 +207,17 @@ class MainActivity : ComponentActivity() {
         val viewModel = viewModel<SignInViewModel>()
         val state by viewModel.state.collectAsStateWithLifecycle()
         val context = LocalContext.current
+
         LaunchedEffect(key1 = state.isSignInSuccessful) {
             if (state.isSignInSuccessful) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    checkNotificationPermission()
+                }
+
                 Toast.makeText(
                     applicationContext, "Sign in successful", Toast.LENGTH_SHORT
                 ).show()
+
                 getdishes("Items")?.let { newData ->
                     onDishDataChange(newData)
                 }
@@ -390,18 +426,16 @@ fun MainScreen(
                         }
                     }
                     composable(User_Location.route) {
-                        UserAddressScreen(onConfirm = { latLng, address ->
-                                innerNavController.navigate("confirmAddress")
-                        })
+                        UserAddressScreen(innerNavController)
                     }
-                    composable("confirmAddress"){
-                        var home by remember { mutableStateOf("Home") }
-                        var apartment by remember { mutableStateOf("Apartment") }
-                        var landmark by remember { mutableStateOf("Landmark") }
-                        var notes by remember { mutableStateOf("Notes") }
-                        AdditionalDetailsScreen( home = home, apartment = apartment, landmark = landmark, notes = notes,
-                            onSave = { home, apartment, landmark, notes ->
-
+                    composable("confirmAddress/{locality}/{city}/{pincode}/{state}/{landmark}") { backStackEntry ->
+                        val locality = backStackEntry.arguments?.getString("locality")
+                        val city = backStackEntry.arguments?.getString("city")
+                        val pincode = backStackEntry.arguments?.getString("pincode")
+                        val state = backStackEntry.arguments?.getString("state")
+                        val landmark = backStackEntry.arguments?.getString("landmark")
+                        AdditionalDetailsScreen( userData = userData,
+                            onSave = {
                             }
                         )
                     }

@@ -39,6 +39,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -75,7 +76,7 @@ suspend fun getRelatedItems(query: String): List<Dishfordb>? {
         val result = task.children.mapNotNull { childSnapshot ->
             try {
                 val item = childSnapshot.getValue(Dishfordb::class.java)
-                Log.e("FirebaseData", "Fetched item: ${item?.name}")
+                Log.e("FirebaseData", "Fetched item: $item")
                 item
             } catch (e: Exception) {
                 Log.e("FirebaseData", "Error converting data: ${e.message}")
@@ -96,7 +97,7 @@ fun AddItemScreen() {
     var name by remember { mutableStateOf("") }
     var price by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
-    var category by remember { mutableStateOf("") }
+    var categoryInput by remember { mutableStateOf("") }
     var weight by remember { mutableStateOf("") }
     var images by remember { mutableStateOf<List<Uri>>(emptyList()) }
     var itembarcode by remember { mutableStateOf("") }
@@ -104,7 +105,7 @@ fun AddItemScreen() {
     var totalCount by remember { mutableStateOf("") }
     var suggestions by remember { mutableStateOf<List<Dishfordb>>(emptyList()) }
     val focusManager = LocalFocusManager.current
-    var uploadProgress by remember { mutableStateOf(0f) }
+    var uploadProgress by remember { mutableFloatStateOf(0f) }
     var showLoading by remember { mutableStateOf(false) }
     var showErrorDialog by remember { mutableStateOf(false) }
     var showSuccessDialog by remember { mutableStateOf(false) }
@@ -115,7 +116,7 @@ fun AddItemScreen() {
         } else {
             suggestions = emptyList()
         }
-        Log.e("suggestions", suggestions.toString())
+        Log.e("Suggestions", "Current suggestions: $suggestions")
     }
 
     val multiplePhotoPickerLauncher =
@@ -155,7 +156,9 @@ fun AddItemScreen() {
             OutlinedTextField(value = name,
                 onValueChange = { name = it },
                 label = { Text(text = "Product Name") },
-                modifier = Modifier.padding(start = 10.dp, end = 10.dp, top = 4.dp, bottom = 4.dp),
+                modifier = Modifier
+                    .padding(start = 10.dp, end = 10.dp, top = 4.dp, bottom = 4.dp)
+                    .fillMaxWidth(),
                 maxLines = 2,
                 textStyle = TextStyle(fontSize = 12.sp),
                 keyboardOptions = KeyboardOptions.Default.copy(
@@ -164,36 +167,40 @@ fun AddItemScreen() {
             )
         }
 
+        // Displaying suggestions as the user types
         items(suggestions) { suggestion ->
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(MaterialTheme.colors.background)
-                    .height(50.dp)
-                    .padding(4.dp), elevation = 4.dp
-            ) {
-                Row(modifier = Modifier
-                    .fillMaxWidth()
+                    .padding(4.dp)
                     .clickable {
                         name = suggestion.name
                         price = suggestion.price.removePrefix("₹")
                         description = suggestion.description
-                        category = suggestion.category
+                        categoryInput = suggestion.categories.joinToString(", ")
                         weight = suggestion.weight
                         itemmrp = suggestion.mrp.removePrefix("₹")
                         itembarcode = suggestion.barcode
-                        images = listOf(Uri.parse(suggestion.imagesUrl[0]))
-                        suggestions = emptyList()
+                        images = suggestion.imagesUrl.map { Uri.parse(it) }
+                        suggestions = emptyList() // Clear suggestions after selection
                         focusManager.clearFocus()
-                    }
-                    .padding(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                    },
+                elevation = 4.dp
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
                     Text(
                         text = suggestion.name, modifier = Modifier.weight(1f)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     AsyncImage(
                         model = suggestion.imagesUrl[0],
-                        contentDescription = "productImage",
+                        contentDescription = "Product Image",
                         modifier = Modifier.size(40.dp)
                     )
                 }
@@ -216,9 +223,10 @@ fun AddItemScreen() {
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            OutlinedTextField(value = category,
-                onValueChange = { category = it },
-                label = { Text(text = "Product Category") },
+            OutlinedTextField(
+                value = categoryInput,
+                onValueChange = { categoryInput = it },
+                label = { Text(text = "Categories (comma separated)") },
                 modifier = Modifier.padding(10.dp),
                 maxLines = 1,
                 textStyle = TextStyle(fontSize = 12.sp),
@@ -355,7 +363,7 @@ fun AddItemScreen() {
 
             Button(
                 onClick = {
-                    if (name.isNullOrBlank() || price.isNullOrBlank() || description.isNullOrBlank() || images.isEmpty()) {
+                    if (name.isBlank() || price.isBlank() || description.isBlank() || images.isEmpty()) {
                         Toast.makeText(context, "Please fill all the fields", Toast.LENGTH_SHORT)
                             .show()
                     } else {
@@ -364,22 +372,25 @@ fun AddItemScreen() {
                         }
                         showLoading = true // Show loading indicator
 
-                        uploadImagesAndAddItemToDatabase(name,
-                            price,
-                            description,
-                            weight,
-                            category,
-                            images,
-                            context,
-                            itembarcode,
-                            itemmrp,
-                            totalCount,
+                        uploadImagesAndAddItemToDatabase(
+                            name = name,
+                            price = price,
+                            description = description,
+                            weight = weight,
+                            categories = categoryInput.split(",").map { it.trim() }.filter { it.isNotEmpty() },
+                            images = images,
+                            context = context,
+                            itembarcode = itembarcode,
+                            itemmrp = itemmrp,
+                            totalCount = totalCount,
                             uploadProgress = { progress -> uploadProgress = progress },
                             onSuccess = { showSuccessDialog = true },
                             onFailure = { showErrorDialog = true }
                         )
                     }
-                }, shape = RoundedCornerShape(15), modifier = Modifier
+                },
+                shape = RoundedCornerShape(15),
+                modifier = Modifier
                     .padding(20.dp)
                     .height(40.dp)
             ) {
@@ -416,7 +427,7 @@ fun AddItemScreen() {
         )
     }
 
-
+    // Error dialog
     if (showErrorDialog) {
         AlertDialog(
             onDismissRequest = { showErrorDialog = false },
@@ -438,7 +449,7 @@ private fun uploadImagesAndAddItemToDatabase(
     price: String,
     description: String,
     weight: String,
-    category: String,
+    categories: List<String>,
     images: List<Uri>,
     context: Context,
     itembarcode: String,
@@ -450,7 +461,6 @@ private fun uploadImagesAndAddItemToDatabase(
 ) {
     val storage = FirebaseStorage.getInstance()
     val storageRef = storage.reference
-
     val scope = CoroutineScope(Dispatchers.Main)
 
     scope.launch(Dispatchers.IO) {
@@ -480,7 +490,7 @@ private fun uploadImagesAndAddItemToDatabase(
                         "price" to "₹$price",
                         "description" to description,
                         "weight" to weight,
-                        "category" to category,
+                        "categories" to categories,  // Updated to handle list of categories
                         "imagesUrl" to imageUrls,
                         "barcode" to itembarcode,
                         "mrp" to "₹$itemmrp",
@@ -505,3 +515,4 @@ private fun uploadImagesAndAddItemToDatabase(
         }
     }
 }
+

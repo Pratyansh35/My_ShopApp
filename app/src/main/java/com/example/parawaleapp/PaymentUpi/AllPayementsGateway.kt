@@ -61,6 +61,7 @@ import com.example.parawaleapp.sign_in.PhoneNumberLinkingDialog
 import com.example.parawaleapp.sign_in.SignInState
 import com.example.parawaleapp.sign_in.SignInViewModel
 import com.example.parawaleapp.sign_in.UserData
+import com.example.parawaleapp.sign_in.updateEmailandSendOtp
 import com.google.android.exoplayer2.util.Log
 import kotlinx.coroutines.launch
 import java.util.UUID
@@ -87,7 +88,7 @@ fun PaymentScreenLayout(
     var showPhoneLinkDialog by remember { mutableStateOf(false) }
 
     val lifecycleOwner = LocalLifecycleOwner.current
-
+    val showAddressDialog by remember { mutableStateOf(false) }
     if (showPhoneLinkDialog) {
         PhoneNumberLinkingDialog(
             state = state,
@@ -266,7 +267,8 @@ fun PaymentScreenLayout(
                             transactionUrl
                         )
                     },
-                    onPhoneLinkRequired = { showPhoneLinkDialog = true }
+                    onPhoneLinkRequired = { showPhoneLinkDialog = true },
+
                 )
 
                 if (selectedPercentage == 0f) {
@@ -288,6 +290,9 @@ fun PaymentScreenLayout(
                                     sendNotificationTOMerchant(merchantEmail, userData?.userPhoneNumber.toString())
                                 }
                                 cartItems.clear()
+                            },
+                            onAddressRequired = {
+
                             }
                         )
                     }) {
@@ -311,14 +316,6 @@ fun PaymentScreenLayout(
     if (showDialog) {
         TransactionResultDialog(result = transactionResult, onDismiss = { showDialog = false })
     }
-
-//    if (showPhoneLinkDialog) {
-//        PhoneNumberLinkingDialog(onDismiss = { showPhoneLinkDialog = false }) { phoneNumber ->
-//            // Handle phone number linking
-//            showPhoneLinkDialog = false
-//            // After linking, you may want to retry the order submission
-//        }
-//    }
 }
 
 suspend fun sendNotificationTOMerchant(merchantEmail: String, client:String ){
@@ -359,6 +356,9 @@ fun UPIIconButton(
                     lifecycleOwner.lifecycleScope.launch {
                         sendNotificationTOMerchant(merchantEmail, userData?.userPhoneNumber.toString())
                     }
+                },
+                onAddressRequired = {
+
                 }
             )
         } else {

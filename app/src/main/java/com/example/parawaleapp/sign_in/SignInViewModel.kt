@@ -4,6 +4,7 @@ import android.app.Activity
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.example.parawaleapp.Notifications.storeDeviceToken
 import com.example.parawaleapp.database.datareference
 import com.example.parawaleapp.database.img
@@ -17,13 +18,13 @@ import com.google.firebase.ktx.Firebase
 import com.google.firebase.messaging.ktx.messaging
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import java.util.concurrent.TimeUnit
 
 class SignInViewModel : ViewModel() {
     private val _state = MutableStateFlow(SignInState())
     val state: StateFlow<SignInState> = _state
-    val context = ComponentActivity()
     val phoneAuthCallbacks = object : PhoneAuthProvider.OnVerificationStateChangedCallbacks() {
         override fun onVerificationCompleted(credential: PhoneAuthCredential) {
             Log.d("SignInViewModel", "onVerificationCompleted: $credential")
@@ -45,45 +46,48 @@ class SignInViewModel : ViewModel() {
         }
     }
     fun checkAdmin(email: String?, phone: String?, onResult: (Boolean) -> Unit) {
-        var isEmailChecked = false
-        var isPhoneChecked = false
-        var isAdmin = false
+        viewModelScope.launch {
+            var isEmailChecked = false
+            var isPhoneChecked = false
+            var isAdmin = false
 
-        if (!email.isNullOrEmpty()) {
-            val emailKey = email.replace(".", ",")
-            val emailRef = datareference.child("Admins").child("emails").child(emailKey)
-            emailRef.get().addOnCompleteListener { emailTask ->
-                if (emailTask.isSuccessful) {
-                    isAdmin = emailTask.result?.getValue(Boolean::class.java) ?: false
+            if (!email.isNullOrEmpty()) {
+                val emailKey = email.replace(".", ",")
+                val emailRef = datareference.child("Admins").child("emails").child(emailKey)
+                emailRef.get().addOnCompleteListener { emailTask ->
+                    if (emailTask.isSuccessful) {
+                        isAdmin = emailTask.result?.getValue(Boolean::class.java) ?: false
+                    }
+                    isEmailChecked = true
+                    if (isPhoneChecked) {
+                        onResult(isAdmin)
+                    }
                 }
+            } else {
                 isEmailChecked = true
-                if (isPhoneChecked) {
-                    onResult(isAdmin)
-                }
             }
-        } else {
-            isEmailChecked = true
-        }
 
-        if (!phone.isNullOrEmpty()) {
-            val phoneRef = datareference.child("Admins").child("phones").child(phone)
-            phoneRef.get().addOnCompleteListener { phoneTask ->
-                if (phoneTask.isSuccessful) {
-                    isAdmin = isAdmin || (phoneTask.result?.getValue(Boolean::class.java) ?: false)
+            if (!phone.isNullOrEmpty()) {
+                val phoneRef = datareference.child("Admins").child("phones").child(phone)
+                phoneRef.get().addOnCompleteListener { phoneTask ->
+                    if (phoneTask.isSuccessful) {
+                        isAdmin = isAdmin || (phoneTask.result?.getValue(Boolean::class.java) ?: false)
+                    }
+                    isPhoneChecked = true
+                    if (isEmailChecked) {
+                        onResult(isAdmin)
+                    }
                 }
+            } else {
                 isPhoneChecked = true
-                if (isEmailChecked) {
-                    onResult(isAdmin)
-                }
             }
-        } else {
-            isPhoneChecked = true
-        }
 
-        if (isEmailChecked && isPhoneChecked) {
-            onResult(isAdmin)
+            if (isEmailChecked && isPhoneChecked) {
+                onResult(isAdmin)
+            }
         }
     }
+
 
 
 

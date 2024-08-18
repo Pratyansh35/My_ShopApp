@@ -5,11 +5,13 @@ import android.annotation.SuppressLint
 import android.location.Geocoder
 import android.location.Location
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.Button
 import androidx.compose.material.MaterialTheme
@@ -28,6 +30,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
+import com.example.parawaleapp.sign_in.UserData
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import com.google.android.gms.location.FusedLocationProviderClient
@@ -48,10 +52,11 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.Locale
 
+
 @OptIn(ExperimentalPermissionsApi::class)
 @SuppressLint("MissingPermission")
 @Composable
-fun UserAddressScreen(onConfirm: (LatLng, String) -> Unit) {
+fun UserAddressScreen(navController: NavController) {
     val context = LocalContext.current
     val fusedLocationClient: FusedLocationProviderClient = remember {
         LocationServices.getFusedLocationProviderClient(context)
@@ -66,7 +71,11 @@ fun UserAddressScreen(onConfirm: (LatLng, String) -> Unit) {
     var currentLocation by remember { mutableStateOf<LatLng?>(null) }
     var selectedLocation by remember { mutableStateOf<LatLng?>(null) }
     var formattedAddress by remember { mutableStateOf("Fetching address...") }
-
+    var locality by remember { mutableStateOf("") }
+    var adminArea by remember { mutableStateOf("") }
+    var countryName by remember { mutableStateOf("") }
+    var postalCode by remember { mutableStateOf("") }
+    var thoroughfare by remember { mutableStateOf("") }
     val geocoder = Geocoder(context, Locale.getDefault())
 
     // Create a state for the camera position and set it to null initially
@@ -118,8 +127,15 @@ fun UserAddressScreen(onConfirm: (LatLng, String) -> Unit) {
                         )?.firstOrNull()
 
                         formattedAddress = address?.let {
-                            "${it.locality}, ${it.adminArea}, ${it.countryName}, ${it.postalCode}"
+                            "${it.locality}, ${it.adminArea}, ${it.countryName}, ${it.postalCode}, ${it.thoroughfare}"
                         } ?: "Address not found"
+                        address?.let {
+                            locality = it.locality
+                            adminArea = it.adminArea
+                            countryName = it.countryName
+                            postalCode = it.postalCode
+                            thoroughfare = it.thoroughfare
+                        }
                     }
                 }
             }
@@ -138,8 +154,11 @@ fun UserAddressScreen(onConfirm: (LatLng, String) -> Unit) {
             // Confirm button
             Button(
                 onClick = {
+                    if (locality.isEmpty() || adminArea.isEmpty() || countryName.isEmpty() || postalCode.isEmpty() || thoroughfare.isEmpty()) {
+                        return@Button
+                    }
                     selectedLocation?.let {
-                        onConfirm(it, formattedAddress)
+                       navController.navigate("confirmAddress/${locality}/${adminArea}/${countryName}/${postalCode}/${thoroughfare}")
                     }
                 },
                 modifier = Modifier.align(Alignment.CenterHorizontally)
@@ -160,36 +179,75 @@ fun UserAddressScreen(onConfirm: (LatLng, String) -> Unit) {
 
 @Composable
 fun AdditionalDetailsScreen(
-    home: String,
-    apartment: String,
-    landmark: String,
-    notes: String,
-    onSave: (String, String, String, String) -> Unit
+    userData: UserData?,
+    onSave: () -> Unit
 ) {
+
+    var name by remember { mutableStateOf(userData?.addressDetails?.get(0)?.name ?: "" ) }
+    var phone  by remember { mutableStateOf(userData?.addressDetails?.get(0)?.phone ?: "" ) }
+    var pincode  by remember { mutableStateOf(userData?.addressDetails?.get(0)?.pincode ?: "" ) }
+    var address  by remember { mutableStateOf(userData?.addressDetails?.get(0)?.address ?: "" ) }
+    var  landmark  by remember { mutableStateOf(userData?.addressDetails?.get(0)?.landmark ?: "" ) }
+    var   city  by remember { mutableStateOf(userData?.addressDetails?.get(0)?.city ?: "" ) }
+    var  state  by remember { mutableStateOf(userData?.addressDetails?.get(0)?.state ?: "" ) }
+    var  isHome  by remember { mutableStateOf(userData?.addressDetails?.get(0)?.isHome ?: true ) }
+    var  isWork  by remember { mutableStateOf(userData?.addressDetails?.get(0)?.isWork ?: false ) }
+    var isDefault  by remember { mutableStateOf(userData?.addressDetails?.get(0)?.isDefault ?: false ) }
     Column(modifier = Modifier.padding(16.dp)) {
         OutlinedTextField(
-            value = home,
-            onValueChange = { onSave(it, apartment, landmark, notes) },
-            label = { Text("Home") },
+            value = name,
+            onValueChange = { },
+            label = { "Name" },
             modifier = Modifier.fillMaxWidth()
         )
         OutlinedTextField(
-            value = apartment,
-            onValueChange = { onSave(home, it, landmark, notes) },
-            label = { Text("Apartment") },
+            value = phone,
+            onValueChange = {  },
+            label = { "Mobile No" },
+            modifier = Modifier.fillMaxWidth()
+        )
+        OutlinedTextField(
+            value = pincode,
+            onValueChange = {  },
+            label = {"Pin Code" },
+            modifier = Modifier.fillMaxWidth()
+        )
+        OutlinedTextField(
+            value = address,
+            onValueChange = { },
+            label = { "Address(Flat, House No., Building, Company)" },
             modifier = Modifier.fillMaxWidth()
         )
         OutlinedTextField(
             value = landmark,
-            onValueChange = { onSave(home, apartment, it, notes) },
-            label = { Text("Landmark") },
+            onValueChange = { },
+            label = { "Landmark" },
             modifier = Modifier.fillMaxWidth()
         )
         OutlinedTextField(
-            value = notes,
-            onValueChange = { onSave(home, apartment, landmark, it) },
-            label = { Text("Notes") },
+            value = city,
+            onValueChange = { },
+            label = { "City" },
             modifier = Modifier.fillMaxWidth()
         )
+        OutlinedTextField(
+            value = state,
+            onValueChange = { },
+            label = { "State" },
+            modifier = Modifier.fillMaxWidth()
+        )
+        Row {
+            Button(onClick = {  }) {
+                Text("Home", color = if (isHome) MaterialTheme.colors.primary else MaterialTheme.colors.onSurface)
+            }
+            Spacer(modifier = Modifier.width(16.dp))
+            Button(onClick = {  }) {
+                Text("Work", color = if (isWork) MaterialTheme.colors.primary else MaterialTheme.colors.onSurface)
+            }
+            Spacer(modifier = Modifier.width(16.dp))
+            Button(onClick = {  }) {
+                Text("Default")
+            }
+        }
     }
 }

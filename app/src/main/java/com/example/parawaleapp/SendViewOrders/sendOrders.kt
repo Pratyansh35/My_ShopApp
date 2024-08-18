@@ -6,6 +6,7 @@ import android.widget.Toast
 import com.example.parawaleapp.database.Dishfordb
 import com.example.parawaleapp.database.datareference
 import com.example.parawaleapp.sign_in.SignInViewModel
+import com.example.parawaleapp.sign_in.UserAddressDetails
 import com.example.parawaleapp.sign_in.UserData
 
 
@@ -20,7 +21,8 @@ fun sendOrders(
     amountReceived: String,
     amountRemaining: String,
     onPhoneLinkRequired: () -> Unit,
-    onSuccessSendNotification: (String) -> Unit
+    onSuccessSendNotification: (String) -> Unit,
+    onAddressRequired: () -> Unit,
 ) {
     val merchantEmail = "pratyansh35@gmail.com"
     if (userData == null) {
@@ -31,6 +33,11 @@ fun sendOrders(
         Toast.makeText(context, "Cart is Empty", Toast.LENGTH_SHORT).show()
         return
     }
+    if(userData.addressDetails == null){
+       onAddressRequired()
+
+    }
+
 //    if (userData.userPhoneNumber.isNullOrEmpty()) {
 //        // Show linking dialog
 //        onPhoneLinkRequired()

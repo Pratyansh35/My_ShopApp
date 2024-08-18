@@ -6,6 +6,19 @@ data class SignInResult(
     var isGoogleSignIn: Boolean = false
 )
 
+data class UserAddressDetails(
+    val name: String,
+    val phone: String,
+    val pincode: String,
+    val address: String,
+    val landmark: String,
+    val city: String,
+    val state: String,
+    val isHome: Boolean = true,
+    val isWork: Boolean = false,
+    val isDefault: Boolean = false
+)
+
 
 data class UserData(
     val userId: String,
@@ -16,6 +29,7 @@ data class UserData(
     val isAdmin: Boolean,
     val isVerified: Boolean = false,
     val isMerchant: Boolean = false,
+    var addressDetails: List<UserAddressDetails>? = null
 )
 
 

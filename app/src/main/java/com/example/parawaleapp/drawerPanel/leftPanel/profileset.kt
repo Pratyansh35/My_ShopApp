@@ -34,6 +34,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
+import com.example.parawaleapp.R
 import com.example.parawaleapp.database.img
 import com.example.parawaleapp.sign_in.UserData
 import com.example.parawaleapp.sign_in.updatePhoneNumberWithOTP
@@ -130,7 +131,7 @@ fun Profileset(userData: UserData?, linkWithOtpClick: (String) -> Unit,
                 fontWeight = FontWeight.Bold
             )
             AsyncImage(
-                model = selectImgUri ?: img,
+                model = (selectImgUri ?: img) ?: R.drawable.temppic,
                 contentDescription = "userImage",
                 modifier = Modifier
                     .padding(start = 10.dp)

@@ -73,7 +73,7 @@ fun ItemScreen(
         Spacer(modifier = Modifier.height(8.dp))
 
         Text(
-            text = "Category: ${dish.category}",
+            text = "Category: ${dish.categories}",
             fontSize = 16.sp,
             modifier = Modifier
                 .fillMaxWidth()
