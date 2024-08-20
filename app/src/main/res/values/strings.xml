@@ -8,4 +8,6 @@
     <string name="title_activity_login_screen">LoginScreen</string>
     <string name="title_activity_nav_bar">NavBar</string>
     <string name="Web_clientId">252813628903-1sa87q67q9fqc6iji9gkeqf1o13nfn59.apps.googleusercontent.com</string>
+    <string name="openai_api_key">sk-proj-w5FnEF46mP3IAmJnI7NHT3BlbkFJ1tJ2EV80I6SAnwO27IMh</string>
+    <string name="openai_assistant">asst_HBNb9OnVDFbFSrmdRcEmAKqq</string>
 </resources>

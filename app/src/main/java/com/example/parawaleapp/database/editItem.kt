@@ -147,7 +147,6 @@ fun ModifyScreen(dish: Dishfordb, showModifyScreen: () -> Unit) {
             modifier = Modifier
                 .align(Alignment.CenterHorizontally)
                 .padding(start = 10.dp, end = 10.dp, top = 4.dp, bottom = 4.dp),
-            maxLines = 1,
             textStyle = TextStyle(fontSize = 16.sp),
             keyboardOptions = KeyboardOptions.Default.copy(
                 keyboardType = KeyboardType.Text

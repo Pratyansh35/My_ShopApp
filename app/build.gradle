@@ -148,6 +148,9 @@ plugins {
 
 def localProperties = new Properties()
 def localPropertiesFile = rootProject.file('local.properties')
+def openAiApiKey = localProperties.getProperty('OPENAI_API_KEY')
+def openAiAssistant = localProperties.getProperty('OPENAI_ASSISTANT')
+
 if (localPropertiesFile.exists()) {
     localPropertiesFile.withInputStream { stream -> localProperties.load(stream) }
 }
@@ -169,7 +172,10 @@ android {
         }
 
         // Use manifestPlaceholders instead of buildConfigField for API key
-        manifestPlaceholders = [GOOGLE_MAPS_API_KEY: localProperties['GOOGLE_MAPS_API_KEY']]
+        manifestPlaceholders = [GOOGLE_MAPS_API_KEY: localProperties['GOOGLE_MAPS_API_KEY'],
+                                OPENAI_API_KEY: "sk-proj-w5FnEF46mP3IAmJnI7NHT3BlbkFJ1tJ2EV80I6SAnwO27IMh",
+                                OPENAI_ASSISTANT: "asst_HBNb9OnVDFbFSrmdRcEmAKqq"]
+
     }
 
     buildToolsVersion = "30.0.3"

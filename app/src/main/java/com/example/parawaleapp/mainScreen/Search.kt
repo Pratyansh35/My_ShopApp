@@ -32,6 +32,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.parawaleapp.database.Categories
 import com.example.parawaleapp.database.Dishfordb
+import com.example.parawaleapp.mainScreen.DiffLayouts.LinearLayoutItems
 
 @Composable
 fun Search(DishData: List<Dishfordb>, cartItems: SnapshotStateList<Dishfordb>, updateTotals: () -> Unit,

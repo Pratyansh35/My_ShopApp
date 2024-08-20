@@ -97,7 +97,11 @@ import com.google.gson.Gson
 import kotlinx.coroutines.launch
 import android.Manifest
 import androidx.annotation.RequiresApi
-import com.example.parawaleapp.database.updateCategoriesInDatabase
+import com.example.parawaleapp.Ai.ItemSelectionPopup
+import com.example.parawaleapp.ViewModels.SharedViewModel
+import com.google.gson.JsonSyntaxException
+import java.net.URLDecoder
+import java.nio.charset.StandardCharsets
 
 class MainActivity : ComponentActivity() {
     private val googleAuthUiClient by lazy {
@@ -284,6 +288,8 @@ fun MainScreen(
 
     var userData by remember { mutableStateOf<UserData?>(null) }
 
+    val sharedViewModel: SharedViewModel = viewModel()
+
     LaunchedEffect(Unit) {
         userData = googleAuthUiClient.getSignedInUser()
     }
@@ -332,16 +338,32 @@ fun MainScreen(
                 NavHost(navController = innerNavController, startDestination = Home.route) {
                     composable(Home.route) {
                         HomeScreen(
-                            DishData = dishData,
+                            dishData = dishData,
                             isDarkTheme = isDark,
                             onThemeChange = { isDarkTheme(it) },
                             cartItems = cartItems,
                             updateTotals = ::updateTotals,
                             navController = innerNavController,
                             isGridLayout = isGridLayout,
-                            onLayoutChange = { isGridLayout = it }
+                            onLayoutChange = { isGridLayout = it },
+                            context = context,
+                            sharedViewModel = sharedViewModel
                         )
                     }
+                    composable("itemSelection") {
+                        val items = sharedViewModel.selectedItems.value
+                        Log.d("itemSelection", "items: $items")
+                        ItemSelectionPopup(
+                            dishData = items,
+                            onItemSelected = { selectedItem ->
+                                // Handle item selection
+                            },
+                            onDismiss = {
+                                navController.popBackStack()
+                            }
+                        )
+                    }
+
                     composable(Menu.route) {
                         MenuListScreen(
                             dishData,
