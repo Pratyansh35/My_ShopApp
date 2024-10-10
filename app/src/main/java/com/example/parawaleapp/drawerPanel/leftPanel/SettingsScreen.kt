@@ -13,7 +13,7 @@ import androidx.navigation.NavController
 import com.example.parawaleapp.R
 import com.example.parawaleapp.database.Slidess
 import com.example.parawaleapp.mainScreen.MenuSlide
-import com.example.parawaleapp.sign_in.UserData
+import com.example.parawaleapp.DataClasses.UserData
 import com.example.parawaleapp.sign_in.listofAuthorizedUsersEmails
 import kotlinx.coroutines.CoroutineScope
 

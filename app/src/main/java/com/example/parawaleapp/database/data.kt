@@ -7,7 +7,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import com.example.parawaleapp.R
-import com.example.parawaleapp.sign_in.UserData
+import com.example.parawaleapp.DataClasses.UserData
 import com.google.gson.Gson
 
 
@@ -78,9 +78,8 @@ val Categories = listOf(
 data class Slidess(
     val Type: String,
     val Description: String,
-    val image: Int,
-
-    )
+    val image: Int
+)
 
 
 

@@ -37,10 +37,9 @@ import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.example.parawaleapp.R
 import com.example.parawaleapp.database.SlidesItems
-import com.example.parawaleapp.database.img
 import com.example.parawaleapp.database.name
 import com.example.parawaleapp.mainScreen.MenuSlide
-import com.example.parawaleapp.sign_in.UserData
+import com.example.parawaleapp.DataClasses.UserData
 import com.example.parawaleapp.sign_in.listofAuthorizedUsersEmails
 import kotlinx.coroutines.CoroutineScope
 

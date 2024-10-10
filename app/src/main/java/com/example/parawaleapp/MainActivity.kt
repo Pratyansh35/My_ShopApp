@@ -6,6 +6,7 @@ import AppLayout
 import BluetoothScreenRoute
 import Cart
 import Home
+import LocationSelectionScreen
 import Login
 import Menu
 import PreviousOrders
@@ -15,7 +16,9 @@ import SettingScreen
 import ShopDistanceScreen
 import User_Location
 import ViewOrder
+import android.Manifest
 import android.content.pm.PackageManager
+import android.location.Location
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
@@ -25,6 +28,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -40,6 +44,7 @@ import androidx.compose.material.rememberScaffoldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableDoubleStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -58,19 +63,26 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.parawaleapp.Ai.ItemSelectionPopup
 import com.example.parawaleapp.AppLayout.AppLayoutScreen
+import com.example.parawaleapp.DataClasses.Dishfordb
+import com.example.parawaleapp.DataClasses.UserAddressDetails
+import com.example.parawaleapp.DataClasses.UserData
 import com.example.parawaleapp.Location.AdditionalDetailsScreen
+import com.example.parawaleapp.Location.FetchCurrentLocation
 import com.example.parawaleapp.Location.UserAddressScreen
+import com.example.parawaleapp.Location.getLocations
+import com.example.parawaleapp.Location.uploadLocation
 import com.example.parawaleapp.Notifications.createNotificationChannel
 import com.example.parawaleapp.PaymentUpi.PaymentScreenLayout
 import com.example.parawaleapp.SendViewOrders.OrderDetailsScreen
 import com.example.parawaleapp.SendViewOrders.PersonOrdersScreen
 import com.example.parawaleapp.SendViewOrders.ViewOrders
+import com.example.parawaleapp.ViewModels.SharedViewModel
 import com.example.parawaleapp.barcodeScreen.BarCodeScreen
 import com.example.parawaleapp.cartScreen.CartDrawerPanel
 import com.example.parawaleapp.cartScreen.ConfirmCart
 import com.example.parawaleapp.cartScreen.PreviousOrders
-import com.example.parawaleapp.database.Dishfordb
 import com.example.parawaleapp.database.ManageItem
 import com.example.parawaleapp.database.clearDataFromSharedPreferences
 import com.example.parawaleapp.database.getUserFromSharedPreferences
@@ -88,20 +100,12 @@ import com.example.parawaleapp.sign_in.GoogleAuthUiClient
 import com.example.parawaleapp.sign_in.SignInScreen
 import com.example.parawaleapp.sign_in.SignInState
 import com.example.parawaleapp.sign_in.SignInViewModel
-import com.example.parawaleapp.sign_in.UserData
 import com.example.parawaleapp.ui.theme.MyAppTheme
 import com.google.android.gms.auth.api.identity.Identity
 import com.google.android.gms.maps.model.LatLng
 import com.google.firebase.FirebaseApp
 import com.google.gson.Gson
 import kotlinx.coroutines.launch
-import android.Manifest
-import androidx.annotation.RequiresApi
-import com.example.parawaleapp.Ai.ItemSelectionPopup
-import com.example.parawaleapp.ViewModels.SharedViewModel
-import com.google.gson.JsonSyntaxException
-import java.net.URLDecoder
-import java.nio.charset.StandardCharsets
 
 class MainActivity : ComponentActivity() {
     private val googleAuthUiClient by lazy {
@@ -119,6 +123,7 @@ class MainActivity : ComponentActivity() {
             Toast.makeText(this, "Notification permission denied", Toast.LENGTH_SHORT).show()
         }
     }
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         FirebaseApp.initializeApp(this)
@@ -143,6 +148,7 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     @Composable
     fun MyApp() {
         Surface(
@@ -163,6 +169,9 @@ class MainActivity : ComponentActivity() {
             LaunchedEffect(isSystemDark) {
                 isDarkTheme = isSystemDark
             }
+
+
+
 
             LaunchedEffect(key1 = userState.value) {
                 if (userState.value != null) {
@@ -266,6 +275,7 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+@RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @Composable
 fun MainScreen(
     navController: NavController,
@@ -282,17 +292,30 @@ fun MainScreen(
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val cartItems = remember { mutableStateListOf<Dishfordb>() }
-    var allOverTotalPrice by rememberSaveable { mutableStateOf(0.0) }
-    var allOverTotalMrp by rememberSaveable { mutableStateOf(0.0) }
+    var allOverTotalPrice by rememberSaveable { mutableDoubleStateOf(0.0) }
+    var allOverTotalMrp by rememberSaveable { mutableDoubleStateOf(0.0) }
     var isGridLayout by rememberSaveable { mutableStateOf(false) }
 
     var userData by remember { mutableStateOf<UserData?>(null) }
 
     val sharedViewModel: SharedViewModel = viewModel()
+    var isMapInteracting by remember { mutableStateOf(false) }
+
+    var selectedAddress by remember { mutableStateOf<UserAddressDetails?>(null) }
 
     LaunchedEffect(Unit) {
         userData = googleAuthUiClient.getSignedInUser()
+        userData?.let { user ->
+            if (user.userAddressDetails.isNullOrEmpty()) {
+                val fetchedAddresses = getLocations(user)
+                if (fetchedAddresses.isNotEmpty()) {
+                    userData = user.copy(userAddressDetails = fetchedAddresses)
+                }
+            }
+            Log.d("FirebaseData", "Retrieved locations: ${userData?.userAddressDetails}")
+        }
     }
+
 
     fun updateTotals() {
         allOverTotalPrice = cartItems.sumOf { it.price.removePrefix("₹").toDouble() * it.count }
@@ -302,6 +325,7 @@ fun MainScreen(
     MyAppTheme(darkTheme = isDark) {
         Scaffold(
             scaffoldState = scaffoldState,
+
             drawerContent = {
                 LeftDrawerPanel(
                     scaffoldState = scaffoldState,
@@ -322,7 +346,7 @@ fun MainScreen(
                     }
                 )
             },
-            drawerGesturesEnabled = true,
+            drawerGesturesEnabled = !isMapInteracting,
             topBar = {
                 NavBar(
                     scaffoldState = scaffoldState,
@@ -354,13 +378,11 @@ fun MainScreen(
                         val items = sharedViewModel.selectedItems.value
                         Log.d("itemSelection", "items: $items")
                         ItemSelectionPopup(
-                            dishData = items,
-                            onItemSelected = { selectedItem ->
-                                // Handle item selection
-                            },
-                            onDismiss = {
-                                navController.popBackStack()
-                            }
+                            suggestions = items,
+                            cartItems = cartItems,
+                            updateTotals = ::updateTotals,
+                            navController = innerNavController,
+                            onDismiss = { innerNavController.popBackStack() }
                         )
                     }
 
@@ -393,7 +415,8 @@ fun MainScreen(
                             userData = userData,
                             cartItems = cartItems,
                             total = allOverTotalPrice,
-                            totalmrp = allOverTotalMrp
+                            totalmrp = allOverTotalMrp,
+                            selectedAddress = selectedAddress
                         )
                     }
                     composable(ProfileSet.route) {
@@ -424,7 +447,7 @@ fun MainScreen(
                             shopLocation = LatLng(
                                 27.099407,
                                 83.271651
-                            ) // Example shop location (Delhi, India)
+                            )
                         )
                     }
                     composable(PreviousOrders.route) {
@@ -443,24 +466,54 @@ fun MainScreen(
                                 isDark,
                                 state = state,
                                 linkWithOtpClick = linkWithOtpClick,
-                                onSendVerificationCodeClick = onSendVerificationCodeClick
+                                onSendVerificationCodeClick = onSendVerificationCodeClick,
+                                location = selectedAddress
                             )
                         }
                     }
-                    composable(User_Location.route) {
-                        UserAddressScreen(innerNavController)
+
+                    composable("mapScreen"){
+                        var currentLocation  by remember { mutableStateOf<Location?>(null) }
+                        FetchCurrentLocation(context = context) { currentLocation = it }
+
+                        LocationSelectionScreen(
+                            userData = userData,
+                            currentLocation = currentLocation,
+                            onCurrentLocationClicked = {},
+                            onAddAddressClicked = {
+                                innerNavController.navigate("user_location")
+                            },
+                            onAddressSelected = {
+                                selectedAddress = it
+                                Toast.makeText(context, "Selected $selectedAddress", Toast.LENGTH_SHORT).show()
+                                Log.d("mapScreen", "Selected address: $selectedAddress")
+                            },
+                            onEditAddressClicked = {})
                     }
-                    composable("confirmAddress/{locality}/{city}/{pincode}/{state}/{landmark}") { backStackEntry ->
-                        val locality = backStackEntry.arguments?.getString("locality")
-                        val city = backStackEntry.arguments?.getString("city")
-                        val pincode = backStackEntry.arguments?.getString("pincode")
-                        val state = backStackEntry.arguments?.getString("state")
-                        val landmark = backStackEntry.arguments?.getString("landmark")
-                        AdditionalDetailsScreen( userData = userData,
-                            onSave = {
-                            }
+                    composable(User_Location.route) {
+                        UserAddressScreen(
+                            innerNavController,
+                            onMapInteractionStart = { isMapInteracting = true },
+                            onMapInteractionEnd = { isMapInteracting = false }
                         )
                     }
+                    composable("confirmAddress/{userAddress}") { backStackEntry ->
+                        val userAddressJson = backStackEntry.arguments?.getString("userAddress")
+                        val userAddress = Gson().fromJson(userAddressJson, UserAddressDetails::class.java)
+                        Log.d("UserAddressScreen", "confirmScreen $userAddress")
+                        AdditionalDetailsScreen(
+                            userData = userData,
+                            userAddressDetails = userAddress,
+                            onSave = {
+                                uploadLocation(userData!!, it.userAddressDetails)
+                                userData = it
+                                Log.d("UserAddressScreen", "Updated user data: $userData")
+                            },
+                            navController = innerNavController,
+                            selectedLocation = {selectedAddress = it}
+                        )
+                    }
+
                     composable("personOrders/{email}") { backStackEntry ->
                         val email = backStackEntry.arguments?.getString("email")
                         PersonOrdersScreen(innerNavController, email)
@@ -514,7 +567,7 @@ fun MyBottomNavigation(navController: NavController, userData: UserData?) {
     val destinationList = listOf(
         Home, Menu, if (userData?.isAdmin == true) Scan_Barcode else null , User_Location
     )
-    Log.d("MyBottomNavigation", "Destination List: ${userData}")
+    Log.d("MyBottomNavigation", "Destination List: $userData")
 
     val selectedIndex = rememberSaveable {
         mutableIntStateOf(0)
@@ -543,345 +596,3 @@ fun MyBottomNavigation(navController: NavController, userData: UserData?) {
         }
     }
 }
-
-
-
-//
-//class MainActivity : ComponentActivity() {
-//    private val googleAuthUiClient by lazy {
-//        GoogleAuthUiClient(
-//            context = applicationContext,
-//            oneTapClient = Identity.getSignInClient(applicationContext)
-//        )
-//    }
-//
-//    override fun onCreate(savedInstanceState: Bundle?) {
-//        super.onCreate(savedInstanceState)
-//        FirebaseApp.initializeApp(this)
-//        createNotificationChannel(this)
-//        setContent {
-//            Surface(
-//                modifier = Modifier.fillMaxSize(), color = MaterialTheme.colors.background
-//            ) {
-//                var isDarkTheme by remember { mutableStateOf(false) }
-//                val navController = rememberNavController()
-//                var dishData by rememberSaveable { mutableStateOf<List<Dishfordb>>(emptyList()) }
-//                val context = LocalContext.current
-//                val userData = getUserFromSharedPreferences(context)
-//                if (userData == null) {
-//                    Log.d("SavingUser", "No user data found in SharedPreferences")
-//                } else {
-//                    Log.d("SavingUser", "User data loaded: $userData")
-//                }
-//
-//                // Update userState and navigate based on savedUser
-//                val userState = remember { mutableStateOf(userData) }
-//
-//                LaunchedEffect(key1 = Unit) {
-//                    if (userState.value != null) {
-//                        getdishes("Items")?.let { newData -> dishData = newData }
-//                        Toast.makeText(
-//                            applicationContext,
-//                            "Welcome back, ${userState.value?.userName}",
-//                            Toast.LENGTH_SHORT
-//                        ).show()
-//                        Log.d("MainActivity", "Navigating to MainScreen")
-//                        navController.navigate("MainScreen") {
-//                            popUpTo("sign_in") { inclusive = true }
-//                        }
-//                    } else {
-//                        Log.d("MainActivity", "User not signed in, navigating to sign_in screen")
-//                    }
-//                }
-//
-//                NavHost(
-//                    navController = navController,
-//                    startDestination = if (userState.value != null) "MainScreen" else "sign_in"
-//                ) {
-//                    composable("sign_in") {
-//                        val viewModel = viewModel<SignInViewModel>()
-//                        val state by viewModel.state.collectAsStateWithLifecycle()
-//
-//                        LaunchedEffect(key1 = state.isSignInSuccessful) {
-//                            if (state.isSignInSuccessful) {
-//                                Toast.makeText(
-//                                    applicationContext, "Sign in successful", Toast.LENGTH_SHORT
-//                                ).show()
-//                                saveUserToSharedPreferences(context, state.userData)
-//                                getdishes("Items")?.let { newData -> dishData = newData }
-//                                navController.navigate("MainScreen") {
-//                                    popUpTo("sign_in") { inclusive = true }
-//                                }
-//                                viewModel.resetState()
-//                            }
-//                        }
-//
-//                        val launcher = rememberLauncherForActivityResult(
-//                            contract = ActivityResultContracts.StartIntentSenderForResult()
-//                        ) { result ->
-//                            if (result.resultCode == RESULT_OK) {
-//                                lifecycleScope.launch {
-//                                    val signInResult = googleAuthUiClient.signInWithIntent(
-//                                        result.data ?: return@launch
-//                                    )
-//                                    viewModel.onSignInResult(signInResult)
-//                                }
-//                            } else {
-//                                viewModel.stopLoading()
-//                            }
-//                        }
-//
-//                        SignInScreen(state = state, onSignInClick = { activity, phoneNumber ->
-//                            viewModel.sendVerificationCode(
-//                                activity, phoneNumber
-//                            )
-//                        }, onGoogleSignInClick = {
-//                            viewModel.startLoading()
-//                            lifecycleScope.launch {
-//                                val signInIntentSender = googleAuthUiClient.signIn()
-//                                launcher.launch(
-//                                    IntentSenderRequest.Builder(
-//                                        signInIntentSender ?: return@launch
-//                                    ).build()
-//                                )
-//                            }
-//                        }, onVerifyCodeClick = { verificationCode ->
-//                            viewModel.verifyPhoneNumberWithCode(verificationCode)
-//                        },
-////                            onSendVerificationCodeClick = { phoneNumber ->
-////                            viewModel.sendVerificationCode(this@MainActivity, phoneNumber) }
-//                        )
-//                    }
-//                    composable("MainScreen") {
-//                        val viewModel = viewModel<SignInViewModel>()
-//                        val state by viewModel.state.collectAsStateWithLifecycle()
-//                        MainScreen(
-//                            navController,
-//                            googleAuthUiClient = googleAuthUiClient,
-//                            dishData = dishData,
-//                            scope = rememberCoroutineScope(),
-//                            state = state,
-//                            onVerifyCodeClick = { verificationCode ->
-//                                viewModel.verifyPhoneNumberWithCode(verificationCode)
-//                            }, onSendVerificationCodeClick = { phoneNumber ->
-//                                viewModel.sendVerificationCode(this@MainActivity, phoneNumber)
-//                            },
-//                            isDarkTheme = { isDarkTheme = it },
-//                            isDark = isDarkTheme
-//                        )
-//                    }
-//                }
-//            }
-//        }
-//    }
-//}
-//
-//
-//@Composable
-//fun MainScreen(
-//    navController2: NavController,
-//    googleAuthUiClient: GoogleAuthUiClient,
-//    scope: CoroutineScope,
-//    dishData: List<Dishfordb>,
-//    state: SignInState,
-//    onVerifyCodeClick: (String) -> Unit,
-//    onSendVerificationCodeClick: (String) -> Unit,
-//    isDarkTheme: (Boolean) -> Unit,
-//    isDark: Boolean
-//) {
-//    val scaffoldState = rememberScaffoldState()
-//    val navController = rememberNavController()
-//    val context = LocalContext.current
-//
-//    val cartItems = remember { mutableStateListOf<Dishfordb>() }
-//    var allOverTotalPrice by rememberSaveable { mutableDoubleStateOf(0.0) }
-//    var allOverTotalMrp by rememberSaveable { mutableDoubleStateOf(0.0) }
-//
-//    fun updateTotals() {
-//        allOverTotalPrice = cartItems.sumOf { it.price.removePrefix("₹").toDouble() * it.count }
-//        allOverTotalMrp = cartItems.sumOf { it.mrp.removePrefix("₹").toDouble() * it.count }
-//    }
-//
-//    // { Todo add getCartItemsFromSharedPreferences() }
-////    fun saveCartItemsToSharedPreferences() {
-////        val sharedPreferences = context.getSharedPreferences("MyPrefs", Context.MODE_PRIVATE)
-////        val editor = sharedPreferences.edit()
-////        val gson = Gson()
-////        val cartItemsJson = gson.toJson(cartItems)
-////        editor.putString("cartItems", cartItemsJson)
-////        editor.apply()
-////    }
-//
-//
-//
-//    val systemInDarkTheme = isSystemInDarkTheme()
-//    LaunchedEffect(systemInDarkTheme) {
-//        isDarkTheme(systemInDarkTheme)
-//    }
-//
-//    var isGridLayout by rememberSaveable { mutableStateOf(false) }
-//
-//    MyAppTheme(darkTheme = isDark) {
-//        Scaffold(scaffoldState = scaffoldState, drawerContent = {
-//            LeftDrawerPanel(scaffoldState = scaffoldState,
-//                scope = scope,
-//                navController = navController,
-//                userData = googleAuthUiClient.getSignedInUser(),
-//                signOut = {
-//                    clearDataFromSharedPreferences(context)
-//                    scope.launch {
-//                        googleAuthUiClient.signOut()
-//                        Toast.makeText(context, "Sign out successful", Toast.LENGTH_LONG).show()
-//                        navController2.navigate("sign_in")
-//                    }
-//                })
-//        }, drawerGesturesEnabled = true, topBar = {
-//            NavBar(
-//                scaffoldState = scaffoldState,
-//                scope = scope,
-//                navController = navController,
-//                isDarkTheme = isDark,
-//                count = cartItems.size
-//            )
-//        }, bottomBar = { MyBottomNavigation(navController = navController) }) { it ->
-//            Box(Modifier.padding(it)) {
-//                NavHost(navController = navController, startDestination = Home.route) {
-//                    composable(Home.route) {
-//                        HomeScreen(DishData = dishData,
-//                            isDarkTheme = isDark,
-//                            onThemeChange = { isDarkTheme(it) },
-//                            cartItems = cartItems,
-//                            updateTotals = ::updateTotals,
-//                            //saveCartItemsToSharedPreferences = ::saveCartItemsToSharedPreferences,
-//                            navController = navController,
-//                            isGridLayout = isGridLayout,
-//                            onLayoutChange = { isGridLayout = it })
-//                    }
-//                    composable(Menu.route) {
-//                        MenuListScreen(
-//                            dishData,
-//                            cartItems = cartItems,
-//                            updateTotals = ::updateTotals,
-//                            //saveCartItemsToSharedPreferences = ::saveCartItemsToSharedPreferences,
-//                            navController = navController
-//                        )
-//                    }
-//                    composable(Scan_Barcode.route) {
-//                        BarCodeScreen(
-//                            dishData,
-//                            cartItems = cartItems,
-//                            updateTotals = ::updateTotals,
-//                           // saveCartItemsToSharedPreferences = ::saveCartItemsToSharedPreferences
-//                        )
-//                    }
-//                    composable(Cart.route) {
-//                        CartDrawerPanel(
-//                            navController = navController,
-//                            cartItems = cartItems,
-//                            allOverTotalPrice = allOverTotalPrice,
-//                            updateTotals = ::updateTotals,
-//                            //saveCartItemsToSharedPreferences = ::saveCartItemsToSharedPreferences
-//                        )
-//                    }
-//                    composable(AfterCart.route) {
-//                        ConfirmCart(
-//                            navController = navController,
-//                            userData = googleAuthUiClient.getSignedInUser(),
-//                            cartItems = cartItems,
-//                            total = allOverTotalPrice,
-//                            totalmrp = allOverTotalMrp
-//                        )
-//                    }
-//                    composable(ProfileSet.route) {
-//                        Profileset(userData = googleAuthUiClient.getSignedInUser())
-//                    }
-//                    composable(AddItems.route) {
-//                        ManageItem(
-//                            userData = googleAuthUiClient.getSignedInUser(), dishData = dishData
-//                        )
-//                    }
-//                    composable(SettingScreen.route) {
-//                        Settings(
-//                            scope = scope,
-//                            navController = navController,
-//                            userData = googleAuthUiClient.getSignedInUser(),
-//                            scaffoldState = scaffoldState
-//                        )
-//                    }
-//                    composable(BluetoothScreenRoute.route) { BluetoothScreen() }
-//                    composable(ViewOrder.route) { ViewOrders(navController = navController) }
-//                    composable(AppLayout.route) {
-//                        AppLayoutScreen()
-//                    }
-//
-//                    composable("personOrders/{email}") { backStackEntry ->
-//                        val email = backStackEntry.arguments?.getString("email")
-//                        PersonOrdersScreen(navController, email)
-//                    }
-//                    composable("itemDescription/{dish}") { backStackEntry ->
-//                        val dishJson = backStackEntry.arguments?.getString("dish")
-//                        val item = Gson().fromJson(dishJson, Dishfordb::class.java)
-//                        if (item != null) {
-//                            ItemDescription(
-//                                item,
-//                                cartItems = cartItems,
-//                                updateTotals = ::updateTotals,
-//                               // saveCartItemsToSharedPreferences = ::saveCartItemsToSharedPreferences
-//                            )
-//                        }
-//                    }
-//                    composable("orderDetails/{email}/{date}/{name}/{orderedItems}/{timeStamp}") { backStackEntry ->
-//                        val email = backStackEntry.arguments?.getString("email")
-//                        val date = backStackEntry.arguments?.getString("date")
-//                        val name = backStackEntry.arguments?.getString("name")
-//                        val orderedItemsJson = backStackEntry.arguments?.getString("orderedItems")
-//                        val orderTimeStamp = backStackEntry.arguments?.getString("timeStamp")
-//                        val loggedemail = googleAuthUiClient.getSignedInUser()?.userEmail
-//
-//                        if (orderedItemsJson != null && orderTimeStamp != null) {
-//
-//                            OrderDetailsScreen(
-//                                navController = navController,
-//                                email = email,
-//                                date = date,
-//                                name = name,
-//                                loggedUser = loggedemail,
-//                                orderedItemsJson = orderedItemsJson,
-//                                timeStamp = orderTimeStamp
-//                            )
-//
-//                        }
-//                    }
-//                    composable("Location") {
-//                        ShopDistanceScreen(
-//                            shopLocation = LatLng(
-//                                27.099407,
-//                                83.271651
-//                            ) // Example shop location (Delhi, India)
-//                        )
-//                    }
-//                    composable(PreviousOrders.route) {
-//                        PreviousOrders(navController, googleAuthUiClient.getSignedInUser())
-//                    }
-//                    composable("PaymentScreen/{totalMrp}/{totalValue}") { backStackEntry ->
-//                        val totalMrp = backStackEntry.arguments?.getString("totalMrp")?.toDouble()
-//                        val totalValue =
-//                            backStackEntry.arguments?.getString("totalValue")?.toDouble()
-//                        if (totalMrp != null && totalValue != null) {
-//                            PaymentScreenLayout(
-//                                totalMrp,
-//                                totalValue,
-//                                googleAuthUiClient.getSignedInUser(),
-//                                cartItems,
-//                                isDark,
-//                                state = state,
-//                                onVerifyCodeClick = onVerifyCodeClick,
-//                                onSendVerificationCodeClick = onSendVerificationCodeClick
-//                            )
-//                        }
-//                    }
-//                }
-//            }
-//        }
-//    }
-//}

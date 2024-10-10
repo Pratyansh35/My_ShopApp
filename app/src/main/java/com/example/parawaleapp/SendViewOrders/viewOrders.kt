@@ -37,13 +37,14 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.example.parawaleapp.DataClasses.Dishfordb
 import com.example.parawaleapp.PaymentUpi.TransactionResult
 import com.example.parawaleapp.cartScreen.CartLayout
 import com.example.parawaleapp.cartScreen.ConfirmItems
 import com.example.parawaleapp.cartScreen.formatForPrinting
 import com.example.parawaleapp.cartScreen.printData
 import com.example.parawaleapp.cartScreen.selectedPrinter
-import com.example.parawaleapp.database.Dishfordb
+
 import com.example.parawaleapp.database.datareference
 import com.google.gson.Gson
 import java.text.SimpleDateFormat

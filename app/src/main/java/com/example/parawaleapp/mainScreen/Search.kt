@@ -30,14 +30,14 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.example.parawaleapp.DataClasses.Dishfordb
 import com.example.parawaleapp.database.Categories
-import com.example.parawaleapp.database.Dishfordb
-import com.example.parawaleapp.mainScreen.DiffLayouts.LinearLayoutItems
+import com.example.parawaleapp.mainScreen.diffLayouts.LinearLayoutItems
 
 @Composable
 fun Search(DishData: List<Dishfordb>, cartItems: SnapshotStateList<Dishfordb>, updateTotals: () -> Unit,
            //saveCartItemsToSharedPreferences: () -> Unit,
-    navController: NavController) {
+           navController: NavController) {
     var searches by remember { mutableStateOf(TextFieldValue("")) }
     var visible by remember { mutableStateOf(true) }
 
@@ -84,9 +84,14 @@ fun Search(DishData: List<Dishfordb>, cartItems: SnapshotStateList<Dishfordb>, u
 
             LazyColumn {
                 items(DishData) { Dish ->
-                    LinearLayoutItems(Dish, cartItems = cartItems, updateTotals,
+                    LinearLayoutItems(
+                        Dish, cartItems = cartItems, updateTotals,
                         //saveCartItemsToSharedPreferences,
-                        navController = navController)
+                        navController = navController,
+                        onItemClick = {}
+                    )
+
+
                 }
             }
         } else {
@@ -126,9 +131,13 @@ fun SearchFilter(filteredDishes: List<Dishfordb>, cartItems: SnapshotStateList<D
         )
         LazyColumn {
             items(filteredDishes) { dish ->
-                LinearLayoutItems(dish, cartItems = cartItems,  updateTotals = updateTotals,
+                LinearLayoutItems(
+                    dish, cartItems = cartItems, updateTotals = updateTotals,
                     //saveCartItemsToSharedPreferences = saveCartItemsToSharedPreferences,
-                    navController = navController)
+                    navController = navController,
+                    onItemClick = {}
+                )
+
             }
         }
     }

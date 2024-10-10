@@ -36,6 +36,11 @@ import com.example.parawaleapp.R
 import com.example.parawaleapp.mainScreen.CategoryBox
 
 @Composable
+fun UserLocation(){
+
+}
+
+@Composable
 fun UpperPanel() {
     val context = LocalContext.current
     Column(

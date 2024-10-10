@@ -2,10 +2,8 @@ package com.example.parawaleapp.PaymentUpi
 
 import android.content.Context
 import android.content.Intent
-import android.widget.Toast
-import androidx.activity.compose.ManagedActivityResultLauncher
+import android.location.Location
 import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.ActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -36,6 +34,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -53,15 +52,15 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.lifecycleScope
+import com.example.parawaleapp.DataClasses.Dishfordb
+import com.example.parawaleapp.DataClasses.UserAddressDetails
 import com.example.parawaleapp.Notifications.sendNotificationToUser
 import com.example.parawaleapp.R
 import com.example.parawaleapp.SendViewOrders.sendOrders
-import com.example.parawaleapp.database.Dishfordb
 import com.example.parawaleapp.sign_in.PhoneNumberLinkingDialog
 import com.example.parawaleapp.sign_in.SignInState
 import com.example.parawaleapp.sign_in.SignInViewModel
-import com.example.parawaleapp.sign_in.UserData
-import com.example.parawaleapp.sign_in.updateEmailandSendOtp
+import com.example.parawaleapp.DataClasses.UserData
 import com.google.android.exoplayer2.util.Log
 import kotlinx.coroutines.launch
 import java.util.UUID
@@ -75,12 +74,13 @@ fun PaymentScreenLayout(
     isDarkTheme: Boolean,
     state: SignInState,
     linkWithOtpClick: (String) -> Unit = {},
-    onSendVerificationCodeClick: (String) -> Unit
+    onSendVerificationCodeClick: (String) -> Unit,
+    location: UserAddressDetails?
 ) {
     val merchantId = "PGTESTPAYUAT"
     val context = LocalContext.current
     var specialCode by remember { mutableStateOf("") }
-    var selectedPercentage by remember { mutableStateOf(10f) }
+    var selectedPercentage by remember { mutableFloatStateOf(10f) }
     val selectedAmount = totalValue * (selectedPercentage / 100)
 
     var showDialog by remember { mutableStateOf(false) }
@@ -245,31 +245,33 @@ fun PaymentScreenLayout(
                     .padding(start = 16.dp, end = 16.dp)
                     .background(color = MaterialTheme.colors.background)
             ) {
-                UPIIconButton(
-                    specialCode = specialCode,
-                    context = context,
-                    userData = userData,
-                    cartItems = cartItems,
-                    totalMrp = totalMrp,
-                    totalValue = totalValue,
-                    merchantId = merchantId,
-                    iconRes = R.drawable.bhimupi,
-                    onClick = { vpa, name, note, merchantTransactionId, transactionUrl ->
-                        SignInViewModel().startLoading()
-                        payUsingUPI(
-                            context,
-                            launcher,
-                            String.format("%.2f", selectedAmount),
-                            vpa,
-                            name,
-                            note,
-                            merchantTransactionId,
-                            transactionUrl
-                        )
-                    },
-                    onPhoneLinkRequired = { showPhoneLinkDialog = true },
 
-                )
+                    UPIIconButton(
+                        specialCode = specialCode,
+                        context = context,
+                        userData = userData,
+                        cartItems = cartItems,
+                        totalMrp = totalMrp,
+                        totalValue = totalValue,
+                        merchantId = merchantId,
+                        iconRes = R.drawable.bhimupi,
+                        onClick = { vpa, name, note, merchantTransactionId, transactionUrl ->
+                            SignInViewModel().startLoading()
+                            payUsingUPI(
+                                context,
+                                launcher,
+                                String.format("%.2f", selectedAmount),
+                                vpa,
+                                name,
+                                note,
+                                merchantTransactionId,
+                                transactionUrl
+                            )
+                        },
+                        onPhoneLinkRequired = { showPhoneLinkDialog = true },
+                        location = location
+                    )
+
 
                 if (selectedPercentage == 0f) {
                     IconButton(onClick = {
@@ -285,15 +287,17 @@ fun PaymentScreenLayout(
                             amountReceived = "0",
                             amountRemaining = totalValue.toString(),
                             onPhoneLinkRequired = { showPhoneLinkDialog = true },
-                            onSuccessSendNotification = { merchantEmail ->
+                            onSuccessSendNotification = {
                                 lifecycleOwner.lifecycleScope.launch {
-                                    sendNotificationTOMerchant(merchantEmail, userData?.userPhoneNumber.toString())
+                                    sendNotificationTOMerchant(
+                                        userData?.userEmail ?: userData?.userPhoneNumber.toString(), userData?.userPhoneNumber.toString())
                                 }
                                 cartItems.clear()
                             },
                             onAddressRequired = {
 
-                            }
+                            },
+                            location = location
                         )
                     }) {
                         Card(
@@ -335,7 +339,8 @@ fun UPIIconButton(
     iconRes: Int,
     onClick: (vpa: String, name: String, note: String, transactionId: String, transactionUrl: String) -> Unit,
     onPhoneLinkRequired: () -> Unit,
-    lifecycleOwner: LifecycleOwner = LocalLifecycleOwner.current
+    lifecycleOwner: LifecycleOwner = LocalLifecycleOwner.current,
+    location: UserAddressDetails?
 ) {
 
     IconButton(onClick = {
@@ -352,14 +357,16 @@ fun UPIIconButton(
                 amountReceived = "0",
                 amountRemaining = totalValue.toString(),
                 onPhoneLinkRequired = onPhoneLinkRequired,
-                onSuccessSendNotification = { merchantEmail ->
+                onSuccessSendNotification = {
                     lifecycleOwner.lifecycleScope.launch {
-                        sendNotificationTOMerchant(merchantEmail, userData?.userPhoneNumber.toString())
+                        sendNotificationTOMerchant(
+                            userData?.userEmail ?: userData?.userPhoneNumber.toString(), userData?.userPhoneNumber.toString())
                     }
                 },
                 onAddressRequired = {
 
-                }
+                },
+                location = location
             )
         } else {
             onClick(

@@ -2,8 +2,8 @@ package com.example.parawaleapp.Ai
 
 import android.content.Context
 import android.util.Log
+import com.example.parawaleapp.DataClasses.Dishfordb
 import com.example.parawaleapp.R
-import com.example.parawaleapp.database.Dishfordb
 import com.example.parawaleapp.database.datareference
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers

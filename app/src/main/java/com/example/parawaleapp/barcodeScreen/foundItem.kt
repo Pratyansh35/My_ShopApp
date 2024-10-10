@@ -25,7 +25,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
-import com.example.parawaleapp.database.Dishfordb
+import com.example.parawaleapp.DataClasses.Dishfordb
+
 import com.example.parawaleapp.mainScreen.truncateString
 
 @Composable

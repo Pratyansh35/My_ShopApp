@@ -36,9 +36,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.app.ActivityCompat
 import androidx.navigation.NavController
-import com.example.parawaleapp.database.Dishfordb
+import com.example.parawaleapp.DataClasses.Dishfordb
+import com.example.parawaleapp.DataClasses.UserAddressDetails
 import com.example.parawaleapp.sign_in.SignInViewModel
-import com.example.parawaleapp.sign_in.UserData
+import com.example.parawaleapp.DataClasses.UserData
 import java.io.IOException
 import java.io.OutputStream
 import java.text.SimpleDateFormat
@@ -144,7 +145,7 @@ fun ConfirmItems(dish: Dishfordb) {
 var selectedPrinter by mutableStateOf<String>("")
 
 @Composable
-fun ConfirmCart(navController: NavController? = null, userData: UserData?, cartItems: List<Dishfordb>, totalmrp: Double, total: Double) {
+fun ConfirmCart(navController: NavController? = null, userData: UserData?, cartItems: List<Dishfordb>, totalmrp: Double, total: Double, selectedAddress: UserAddressDetails?) {
     val context = LocalContext.current
     Column(
         modifier = Modifier
@@ -237,7 +238,12 @@ fun ConfirmCart(navController: NavController? = null, userData: UserData?, cartI
             Button(
                 onClick = {
                     //sendOrders(context , userData = userData, cartItems = cartItems, totalMrp = totalmrp ,total = total)
-                    navController?.navigate("PaymentScreen/$totalmrp/$total")
+                    if (selectedAddress == null){
+                        navController?.navigate("mapScreen")
+                    }else {
+                        navController?.navigate("PaymentScreen/$totalmrp/$total")
+                    }
+                    Log.e("Location","Got Locaation ${selectedAddress}")
                 },
                 colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFFF4CE14)),
                 shape = RoundedCornerShape(40),

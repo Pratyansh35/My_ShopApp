@@ -1,12 +1,12 @@
 package com.example.parawaleapp.sign_in
 
-import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.content.IntentSender
 import android.util.Log
 import android.widget.Toast
-import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.parawaleapp.DataClasses.SignInResult
+import com.example.parawaleapp.DataClasses.UserData
 import com.example.parawaleapp.Notifications.removeDeviceToken
 import com.example.parawaleapp.R
 import com.example.parawaleapp.database.saveUserToSharedPreferences
@@ -14,10 +14,8 @@ import com.google.android.gms.auth.api.identity.BeginSignInRequest
 import com.google.android.gms.auth.api.identity.BeginSignInRequest.GoogleIdTokenRequestOptions
 import com.google.android.gms.auth.api.identity.SignInClient
 import com.google.firebase.Firebase
-import com.google.firebase.FirebaseException
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
-import com.google.firebase.auth.PhoneAuthCredential
 import com.google.firebase.auth.PhoneAuthProvider
 import com.google.firebase.auth.auth
 import kotlinx.coroutines.CompletableDeferred

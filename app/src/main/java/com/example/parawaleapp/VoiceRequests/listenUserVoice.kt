@@ -1,23 +1,26 @@
 package com.example.parawaleapp.VoiceRequests
 
+import android.Manifest
+import android.app.Activity
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.os.Bundle
 import android.speech.RecognitionListener
 import android.speech.RecognizerIntent
 import android.speech.SpeechRecognizer
 import androidx.compose.runtime.Composable
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import java.util.Locale
 
 
-fun startListening(context: Context, onResult:  (String) -> Unit) {
+fun startListening(context: Context, onResult: (String) -> Unit) {
     val speechRecognizer = SpeechRecognizer.createSpeechRecognizer(context)
-    val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
-    intent.putExtra(
-        RecognizerIntent.EXTRA_LANGUAGE_MODEL,
-        RecognizerIntent.LANGUAGE_MODEL_FREE_FORM
-    )
-    intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault())
+    val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
+        putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+        putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault())
+    }
 
     speechRecognizer.setRecognitionListener(object : RecognitionListener {
         override fun onReadyForSpeech(params: Bundle?) {}
@@ -30,8 +33,8 @@ fun startListening(context: Context, onResult:  (String) -> Unit) {
         }
 
         override fun onResults(results: Bundle?) {
-            val result =
-                results?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)?.get(0) ?: "error"
+            val result = results?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)?.get(0)
+                ?: "error"
             onResult(result)
         }
 
@@ -42,7 +45,10 @@ fun startListening(context: Context, onResult:  (String) -> Unit) {
     speechRecognizer.startListening(intent)
 }
 
+// Stop listening for voice input
 fun stopListening(speechRecognizer: SpeechRecognizer) {
     speechRecognizer.stopListening()
     speechRecognizer.destroy()
 }
+
+// Check and request audio recording permission

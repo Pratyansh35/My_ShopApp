@@ -1,15 +1,6 @@
 package com.example.parawaleapp.AppLayout
 
-import androidx.compose.foundation.layout.Column
-import androidx.compose.material.*
-import androidx.compose.runtime.*
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.unit.dp
-import com.example.parawaleapp.database.Dishfordb
-import com.example.parawaleapp.mainScreen.HomeScreen
-import com.example.parawaleapp.mainScreen.WeeklySpecial
-import com.example.parawaleapp.ui.theme.MyAppTheme
+import androidx.compose.runtime.Composable
 
 
 @Composable

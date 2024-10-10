@@ -3,11 +3,11 @@ package com.example.parawaleapp.SendViewOrders
 import android.content.Context
 import android.util.Log
 import android.widget.Toast
-import com.example.parawaleapp.database.Dishfordb
+import com.example.parawaleapp.DataClasses.Dishfordb
+import com.example.parawaleapp.DataClasses.UserAddressDetails
+import com.example.parawaleapp.DataClasses.UserData
 import com.example.parawaleapp.database.datareference
 import com.example.parawaleapp.sign_in.SignInViewModel
-import com.example.parawaleapp.sign_in.UserAddressDetails
-import com.example.parawaleapp.sign_in.UserData
 
 
 fun sendOrders(
@@ -21,8 +21,9 @@ fun sendOrders(
     amountReceived: String,
     amountRemaining: String,
     onPhoneLinkRequired: () -> Unit,
-    onSuccessSendNotification: (String) -> Unit,
+    onSuccessSendNotification: () -> Unit,
     onAddressRequired: () -> Unit,
+    location: UserAddressDetails?
 ) {
     val merchantEmail = "pratyansh35@gmail.com"
     if (userData == null) {
@@ -33,9 +34,8 @@ fun sendOrders(
         Toast.makeText(context, "Cart is Empty", Toast.LENGTH_SHORT).show()
         return
     }
-    if(userData.addressDetails == null){
+    if(location == null){
        onAddressRequired()
-
     }
 
 //    if (userData.userPhoneNumber.isNullOrEmpty()) {
@@ -52,6 +52,7 @@ fun sendOrders(
     ) // Replace '.' with ',' to avoid issues in Firebase keys
 
     val orderDetails = mapOf(
+        "location" to location,
         "totalMrp" to totalMrp,
         "total" to totalValue,
         "items" to cartItems,
@@ -70,7 +71,7 @@ fun sendOrders(
         userRef.child("orders").child(transactionId).setValue(orderDetails).addOnSuccessListener {
                 Toast.makeText(context, "Order Placed Successfully", Toast.LENGTH_SHORT).show()
                 SignInViewModel().stopLoading()
-                onSuccessSendNotification(merchantEmail)
+                onSuccessSendNotification()
             }.addOnFailureListener { exception ->
                 Toast.makeText(context, exception.message, Toast.LENGTH_SHORT).show()
                 Log.d("booking", "sendOrders: ${exception.message}")

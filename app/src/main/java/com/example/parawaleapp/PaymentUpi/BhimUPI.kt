@@ -6,9 +6,7 @@ import android.net.Uri
 import android.widget.Toast
 import androidx.activity.compose.ManagedActivityResultLauncher
 import androidx.activity.result.ActivityResult
-import com.example.parawaleapp.PaymentUpi.TransactionResult
-import com.example.parawaleapp.sign_in.UserData
-import java.util.UUID
+import com.example.parawaleapp.DataClasses.UserData
 
 fun payUsingUPI(
     context: Context,

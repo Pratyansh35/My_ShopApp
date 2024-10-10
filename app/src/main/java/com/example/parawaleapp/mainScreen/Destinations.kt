@@ -14,7 +14,7 @@ object Login : Destinations {
 
 object Home : Destinations {
     override val route = "Home"
-    override val icon = R.drawable.ic_home
+    override val icon = R.drawable.ic_home2
     override val title = "Home"
 }
 

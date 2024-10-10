@@ -1,14 +1,29 @@
 import android.Manifest
 import android.annotation.SuppressLint
 import android.location.Location
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.parawaleapp.DataClasses.UserAddressDetails
+import com.example.parawaleapp.DataClasses.UserData
+import com.example.parawaleapp.Location.LocationCard
+import com.example.parawaleapp.Location.SearchBar
+import com.example.parawaleapp.R
 import com.google.accompanist.permissions.*
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
@@ -21,10 +36,130 @@ import kotlinx.coroutines.withContext
 import org.json.JSONObject
 import java.net.URL
 
+
+
+
+@Composable
+fun LocationSelectionScreen(
+    userData: UserData?,
+    currentLocation: Location?,
+    onCurrentLocationClicked: () -> Unit,
+    onAddAddressClicked: () -> Unit,
+    onAddressSelected: (UserAddressDetails) -> Unit,
+    onEditAddressClicked: (UserAddressDetails) -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp)
+    ) {
+        Text(
+            text = "Select a location",
+            style = MaterialTheme.typography.h6,
+            modifier = Modifier.padding(bottom = 8.dp)
+        )
+
+        // Search Bar
+        SearchBar(value = "", onValueChange = {})
+
+        LazyColumn {
+            // Use Current Location
+            item {
+                LocationCard(
+                    icon = Icons.Default.LocationOn,
+                    onClick = { onCurrentLocationClicked() }
+                )
+
+
+                // Add Address
+                TextButton(
+                    onClick = { onAddAddressClicked() },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.textButtonColors(contentColor = Color.Green)
+                ) {
+                    Icon(Icons.Default.Add, contentDescription = "Add Address")
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Add Address")
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Saved Addresses
+                Text(
+                    text = "SAVED ADDRESSES",
+                    style = MaterialTheme.typography.body2.copy(color = Color.Gray),
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+            }
+            items(userData?.userAddressDetails ?: emptyList()) { address ->
+                SavedAddressItem(
+                    address = address,
+                    onAddressSelected = { onAddressSelected(address) },
+                    onEditAddressClicked = { onEditAddressClicked(address) }
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun SavedAddressItem(
+    address: UserAddressDetails,
+    onAddressSelected: () -> Unit,
+    onEditAddressClicked: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onAddressSelected() }
+            .padding(vertical = 8.dp)
+    ) {
+        Row(
+            modifier = Modifier.padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+                Icon(
+                    painter = painterResource(id = if (address.isHome) R.drawable.ic_home2 else R.drawable.work),
+                    contentDescription = if (address.isHome) "Home Address" else "Work Address"
+                )
+
+            Spacer(modifier = Modifier.width(8.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Row {
+                    Text(
+                        text = if (address.isHome) "Home" else "Work",
+                        style = MaterialTheme.typography.body1
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "(${address.landmark.take(10)}...)",
+                        style = MaterialTheme.typography.body1,
+                        minLines = 1,
+
+                        )
+                }
+                Text(
+                    text = "${address.address}, ${address.city}, ${address.state}",
+                    style = MaterialTheme.typography.body2
+                )
+                Text(
+                    text = "Phone number: ${address.phone}",
+                    style = MaterialTheme.typography.caption
+                )
+            }
+            IconButton(onClick = { onEditAddressClicked() }) {
+                Icon(Icons.Default.MoreVert, contentDescription = "Edit Address")
+            }
+        }
+    }
+}
+
+
+
 @OptIn(ExperimentalPermissionsApi::class)
 @SuppressLint("MissingPermission")
 @Composable
-fun ShopDistanceScreen(shopLocation: LatLng) {
+fun ShopDistanceScreen(shopLocation: LatLng ) {
     val context = LocalContext.current
     val fusedLocationClient: FusedLocationProviderClient = remember {
         LocationServices.getFusedLocationProviderClient(context)

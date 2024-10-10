@@ -4,9 +4,7 @@ package com.example.parawaleapp.mainScreen
 import android.Manifest
 import android.app.Activity
 import android.content.Context
-import android.content.Intent
 import android.content.pm.PackageManager
-import android.net.Uri
 import android.os.Build
 import android.os.VibrationEffect
 import android.os.Vibrator
@@ -14,7 +12,12 @@ import android.speech.SpeechRecognizer
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
-import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
@@ -33,7 +36,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.pager.HorizontalPager
@@ -45,14 +47,17 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Button
 import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.Card
-import androidx.compose.material.Divider
+import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.material.MaterialTheme
+import androidx.compose.material.ModalBottomSheetLayout
+import androidx.compose.material.ModalBottomSheetValue
 import androidx.compose.material.Scaffold
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -60,27 +65,23 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.CenterVertically
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Shadow
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.app.ActivityCompat
@@ -88,33 +89,28 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.lifecycleScope
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
-import coil.compose.rememberAsyncImagePainter
-import coil.request.ImageRequest
 import com.example.parawaleapp.Ai.fetchSuggestionsFromOpenAI
+import com.example.parawaleapp.DataClasses.Dishfordb
+import com.example.parawaleapp.Location.CurrentLocationComposable
 import com.example.parawaleapp.R
 import com.example.parawaleapp.ViewModels.SharedViewModel
 import com.example.parawaleapp.VoiceRequests.startListening
 import com.example.parawaleapp.VoiceRequests.stopListening
-import com.example.parawaleapp.database.Dishfordb
-import com.example.parawaleapp.mainScreen.DiffLayouts.GridLayoutItems
-import com.example.parawaleapp.mainScreen.DiffLayouts.LinearLayoutItems
+import com.example.parawaleapp.mainScreen.diffLayouts.GridLayoutItems
+import com.example.parawaleapp.mainScreen.diffLayouts.LinearLayoutItems
 import com.example.parawaleapp.mainScreen.UpperPanels.UpperPanel
 import com.example.parawaleapp.mainScreen.UpperPanels.UpperPanel2
 import com.example.parawaleapp.mainScreen.UpperPanels.UpperPanel3
+import com.example.parawaleapp.mainScreen.diffLayouts.DishDetailsSheet
 import com.example.parawaleapp.ui.theme.MyAppTheme
-import com.google.gson.Gson
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.yield
-import java.net.URLEncoder
-import java.nio.charset.StandardCharsets
 
 
+@OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun HomeScreen(
     dishData: List<Dishfordb>,
@@ -129,11 +125,19 @@ fun HomeScreen(
     lifecycleOwner: LifecycleOwner = LocalLifecycleOwner.current,
     sharedViewModel: SharedViewModel
 ) {
-
     var backPressedTime by remember { mutableLongStateOf(0L) }
-    var voiceInputResult by remember { mutableStateOf("") } // To store the voice input result
-    val suggestions by remember { mutableStateOf(emptyList<Dishfordb>()) } // To store the suggestions
+    var voiceInputResult by remember { mutableStateOf("") }
+    val suggestions by remember { mutableStateOf(emptyList<Dishfordb>()) }
+    var currentLocation by remember { mutableStateOf("Fetching current location...") }
 
+    // State to handle the selected dish and modal sheet
+    var selectedDish by remember { mutableStateOf<Dishfordb?>(null) }
+
+    // Modal bottom sheet state and coroutine scope
+    val sheetState = rememberModalBottomSheetState(initialValue = ModalBottomSheetValue.Hidden)
+    val scope = rememberCoroutineScope()
+
+    // Back button handler logic
     BackHandler {
         val currentTime = System.currentTimeMillis()
         if (currentTime - backPressedTime > 2000) {
@@ -141,148 +145,377 @@ fun HomeScreen(
             backPressedTime = currentTime
         } else {
             context as Activity
-            context.finish() // Exit the app
+            context.finish()
         }
     }
+
+    // Voice input and speech recognizer
     val speechRecognizer = remember { SpeechRecognizer.createSpeechRecognizer(context) }
     val listening = remember { mutableStateOf(false) }
     val isPressed = remember { mutableStateOf(false) }
+
+    // Permission check for audio recording
     if (ContextCompat.checkSelfPermission(
             context, Manifest.permission.RECORD_AUDIO
         ) != PackageManager.PERMISSION_GRANTED
     ) {
         ActivityCompat.requestPermissions(
-            context as Activity, arrayOf(Manifest.permission.RECORD_AUDIO), 1
+            context as Activity,
+            arrayOf(Manifest.permission.RECORD_AUDIO),
+            1
         )
     }
-    MyAppTheme(darkTheme = isDarkTheme) {
-        Scaffold(floatingActionButton = {
-            // Gradient colors
-            val gradientStartColor by animateColorAsState(
-                targetValue = if (isPressed.value) Color.Blue else Color.Cyan,
-                animationSpec = tween(durationMillis = 500),
-                label = ""
-            )
-            val gradientEndColor by animateColorAsState(
-                targetValue = if (isPressed.value) Color.Red else Color.Yellow,
-                animationSpec = tween(durationMillis = 500),
-                label = ""
-            )
 
-            Box(modifier = Modifier
-                .size(60.dp)
-                .background(
-                    brush = Brush.linearGradient(
-                        colors = listOf(gradientStartColor, gradientEndColor)
-                    ), shape = CircleShape
-                )
-                .clickable {
-                    // Handle click action
-                    Log.d("VoiceInput", "Button clicked.")
+    // UI
+    MyAppTheme(darkTheme = isDarkTheme) {
+
+        // ModalBottomSheetLayout wrapping the entire content of the home screen
+        ModalBottomSheetLayout(
+            sheetState = sheetState,
+            sheetContent = {
+                // Show dish details in the bottom sheet when selected
+                selectedDish?.let { dish ->
+                    DishDetailsSheet(dish)
                 }
-                .pointerInput(Unit) {
-                    detectTapGestures(onPress = {
-                        // User starts pressing the button
-                        isPressed.value = true
-                        startListening(context) { result ->
-                            if (result == "error") {
-                                Log.e(
-                                    "VoiceInput", "Speech recognition error occurred."
-                                )
-                            } else {
-                                voiceInputResult = result
-                                Log.d("VoiceInput", "User said: $result")
-                                lifecycleOwner.lifecycleScope.launch {
-                                    ProcessVoiceInput(sharedViewModel,navController, context, result)
-                                }
-                                Toast
-                                    .makeText(context, result, Toast.LENGTH_SHORT)
-                                    .show()
-                            }
-                        }
-                        tryAwaitRelease()
-                        // User releases the button
-                        isPressed.value = false
-                        stopListening(speechRecognizer)
-                    })
-                }, contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Favorite, // Use a microphone icon
-                    contentDescription = "Voice Input", tint = Color.White
-                )
             }
-        }, content = { paddingValues -> // This is the padding provided by Scaffold
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues) // Apply the padding here
-            ) {
-                item {
-                    Column {
-                        SlidingPanels(darkTheme = isDarkTheme)
-                        WeeklySpecial(
-                            isDarkTheme = isDarkTheme,
-                            onThemeChange = onThemeChange,
-                            isGridLayout = isGridLayout,
-                            onLayoutChange = onLayoutChange
-                        )
-                    }
-                }
-                if (suggestions.isNotEmpty()) {
-                    items(suggestions) { dish ->
-                        LinearLayoutItems(
-                            dish,
-                            cartItems = cartItems,
-                            updateTotals = updateTotals,
-                            navController = navController
-                        )
-                    }
-                } else {
-                    if (!isGridLayout) {
-                        items(dishData) { dish ->
-                            LinearLayoutItems(
-                                dish,
-                                cartItems = cartItems,
-                                updateTotals = updateTotals,
-                                navController = navController
-                            )
+        ) {
+            Scaffold(
+                floatingActionButton = {
+                    Box(
+                        modifier = Modifier
+                            .size(60.dp)
+                            .clickable { Log.d("VoiceInput", "Button clicked.") }
+                            .pointerInput(Unit) {
+                                detectTapGestures(onPress = {
+                                    isPressed.value = true
+                                    listening.value = true
+                                    startListening(context) { result ->
+                                        if (result == "error") {
+                                            Log.e("VoiceInput", "Speech recognition error occurred.")
+                                        } else {
+                                            voiceInputResult = result
+                                            Log.d("VoiceInput", "User said: $result")
+                                            lifecycleOwner.lifecycleScope.launch {
+                                                ProcessVoiceInput(sharedViewModel, navController, context, result)
+                                            }
+                                            Toast.makeText(context, result, Toast.LENGTH_SHORT).show()
+                                        }
+                                    }
+                                    tryAwaitRelease()
+                                    isPressed.value = false
+                                    listening.value = false
+                                    stopListening(speechRecognizer)
+                                })
+                            },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Row(modifier = Modifier.fillMaxWidth()) {
+                            if (listening.value) {
+                                ListeningAnimationBar()
+                            }
+                            MicrophoneWaveAnimation(isPressed = isPressed.value)
                         }
-                    } else {
-                        items(dishData.chunked(3)) { rowItems ->
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(8.dp)
-                            ) {
-                                for (dish in rowItems) {
-                                    Box(
-                                        modifier = Modifier
-                                            .weight(1f)
-                                            .padding(4.dp)
-                                    ) {
-                                        GridLayoutItems(
+                    }
+                },
+                content = { paddingValues ->
+                    Column(modifier = Modifier.fillMaxSize()) {
+
+                        // LazyColumn to display dish items or suggestions
+                        LazyColumn(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(paddingValues)
+                        ) {
+                            // Top section with location, weekly special, etc.
+                            item {
+                                Column {
+                                    CurrentLocationComposable(navController = navController, context = context, onLocationFetched = { location ->
+                                        currentLocation = location
+                                    })
+                                    SlidingPanels(darkTheme = isDarkTheme)
+                                    WeeklySpecial(
+                                        isDarkTheme = isDarkTheme,
+                                        onThemeChange = onThemeChange,
+                                        isGridLayout = isGridLayout,
+                                        onLayoutChange = onLayoutChange
+                                    )
+                                }
+                            }
+
+                            // Display suggestions or regular dishData
+                            if (suggestions.isNotEmpty()) {
+                                items(suggestions, key = { it.id }) { dish ->
+                                    LinearLayoutItems(
+                                        dish = dish,
+                                        cartItems = cartItems,
+                                        updateTotals = updateTotals,
+                                        navController = navController,
+                                        onItemClick = { selectedDishItem ->
+                                            selectedDish = selectedDishItem
+                                            scope.launch { sheetState.show() }
+                                        }
+                                    )
+                                }
+                            } else {
+                                if (!isGridLayout) {
+                                    // Display items in list layout
+                                    items(dishData, key = { it.id }) { dish ->
+                                        LinearLayoutItems(
                                             dish = dish,
                                             cartItems = cartItems,
                                             updateTotals = updateTotals,
-                                            navController = navController
+                                            navController = navController,
+                                            onItemClick = { selectedDishItem ->
+                                                selectedDish = selectedDishItem
+                                                scope.launch { sheetState.show() }
+                                            }
                                         )
                                     }
-                                }
-                                if (rowItems.size == 1) {
-                                    Spacer(modifier = Modifier.weight(1f))
+                                } else {
+                                    // Display items in grid layout
+                                    items(dishData.chunked(3), key = {
+                                        it.joinToString { dish -> dish.id }
+                                    }) { rowItems ->
+                                        Row(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(8.dp)
+                                        ) {
+                                            for (dish in rowItems) {
+                                                Box(
+                                                    modifier = Modifier
+                                                        .weight(1f)
+                                                        .padding(4.dp)
+                                                ) {
+                                                    GridLayoutItems(
+                                                        dish = dish,
+                                                        cartItems = cartItems,
+                                                        updateTotals = updateTotals,
+                                                        navController = navController
+                                                    )
+                                                }
+                                            }
+                                            if (rowItems.size == 1) {
+                                                Spacer(modifier = Modifier.weight(1f))
+                                            }
+                                        }
+                                    }
                                 }
                             }
                         }
                     }
                 }
-            }
-        })
+            )
+        }
     }
 }
 
 
-suspend fun ProcessVoiceInput( sharedViewModel: SharedViewModel,navController: NavController, context: Context, query: String) {
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+fun SlidableDishImage(
+    imageUrls: List<String>,
+    darkTheme: Boolean
+) {
+    val pagerState = rememberPagerState(
+        initialPage = 0,
+        initialPageOffsetFraction = 0f,
+        pageCount = { imageUrls.size }
+    )
+
+    // Auto-scroll logic (optional)
+    LaunchedEffect(Unit) {
+        while (true) {
+            yield()
+            delay(10000) // Delay between image transitions
+            val nextPage = (pagerState.currentPage + 1) % pagerState.pageCount
+            pagerState.animateScrollToPage(nextPage)
+        }
+    }
+
+    Box(
+        modifier = Modifier
+            .size(108.dp)
+            .clip(RoundedCornerShape(20.dp))
+    ) {
+        // Horizontal Pager for sliding images
+        HorizontalPager(
+            state = pagerState,
+            modifier = Modifier.fillMaxSize()
+        ) { page ->
+            // Display each image from the list
+            AsyncImage(
+                model = imageUrls[page],
+                contentDescription = "Dish Image",
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop
+            )
+        }
+
+        // Page indicators (dots)
+        Row(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(4.dp),
+            horizontalArrangement = Arrangement.Center
+        ) {
+            repeat(pagerState.pageCount) { page ->
+                Box(
+                    modifier = Modifier
+                        .padding(horizontal = 4.dp)
+                        .size(width = 16.dp, height = 8.dp)
+                        .background(
+                            color = if (pagerState.currentPage == page) MaterialTheme.colors.primary else Color.Gray,
+                            shape = RoundedCornerShape(4.dp)
+                        )
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun ListeningAnimationBar() {
+    // Infinite transition for the animation
+    val infiniteTransition = rememberInfiniteTransition(label = "")
+
+    // Animations for each dot
+    val scale1 by infiniteTransition.animateFloat(
+        initialValue = 0.7f, targetValue = 1.3f, animationSpec = infiniteRepeatable(
+            animation = tween(700, easing = LinearEasing), repeatMode = RepeatMode.Reverse
+        ), label = ""
+    )
+
+    val scale2 by infiniteTransition.animateFloat(
+        initialValue = 0.7f, targetValue = 1.3f, animationSpec = infiniteRepeatable(
+            animation = tween(700, easing = LinearEasing, delayMillis = 100),
+            repeatMode = RepeatMode.Reverse
+        ), label = ""
+    )
+
+    val scale3 by infiniteTransition.animateFloat(
+        initialValue = 0.7f, targetValue = 1.3f, animationSpec = infiniteRepeatable(
+            animation = tween(700, easing = LinearEasing, delayMillis = 200),
+            repeatMode = RepeatMode.Reverse
+        ), label = ""
+    )
+
+    val scale4 by infiniteTransition.animateFloat(
+        initialValue = 0.7f, targetValue = 1.3f, animationSpec = infiniteRepeatable(
+            animation = tween(700, easing = LinearEasing, delayMillis = 300),
+            repeatMode = RepeatMode.Reverse
+        ), label = ""
+    )
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(50.dp)
+            .background(Color(0xFFE0E0E0)) // Light background
+    ) {
+        Row(
+            verticalAlignment = CenterVertically,
+            modifier = Modifier.padding(horizontal = 16.dp)
+        ) {
+            Text(
+                text = "Listening...",
+                color = Color.Gray,
+                fontSize = 18.sp,
+                modifier = Modifier.weight(1f)
+            )
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Dot(scale = scale1, color = Color(0xFF3B3B3B)) // Dark blue dot
+                Dot(scale = scale2, color = Color(0xFF4A90E2)) // Blue dot
+                Dot(scale = scale3, color = Color(0xFFFFA726)) // Orange dot
+                Dot(scale = scale4, color = Color(0xFFFFE082)) // Light orange dot
+            }
+        }
+    }
+}
+
+@Composable
+fun Dot(scale: Float, color: Color) {
+    Box(
+        modifier = Modifier
+            .size(10.dp)
+            .scale(scale)
+            .background(color, CircleShape)
+    )
+}
+
+@Composable
+fun MicrophoneWaveAnimation(
+    isPressed: Boolean
+) {
+    val infiniteTransition = rememberInfiniteTransition(label = "")
+
+    // Animate the scale for a smoother and more modern effect
+    val scale1 by infiniteTransition.animateFloat(
+        initialValue = 1f, targetValue = 2.5f, animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 1000, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Restart
+        ), label = ""
+    )
+
+    val scale2 by infiniteTransition.animateFloat(
+        initialValue = 1f, targetValue = 2.5f, animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 1200, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Restart
+        ), label = ""
+    )
+
+    val scale3 by infiniteTransition.animateFloat(
+        initialValue = 1f, targetValue = 2.5f, animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 1400, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Restart
+        )
+    )
+
+    Box(
+        contentAlignment = Alignment.Center, modifier = Modifier.size(120.dp)
+    ) {
+        if (isPressed) {
+            Box(
+                modifier = Modifier
+                    .size(120.dp)
+                    .graphicsLayer(scaleX = scale3, scaleY = scale3)
+                    .background(Color.Blue.copy(alpha = 0.2f), shape = CircleShape)
+                    .clip(CircleShape)
+            )
+            Box(
+                modifier = Modifier
+                    .size(90.dp)
+                    .graphicsLayer(scaleX = scale2, scaleY = scale2)
+                    .background(Color.Blue.copy(alpha = 0.4f), shape = CircleShape)
+                    .clip(CircleShape)
+            )
+            Box(
+                modifier = Modifier
+                    .size(60.dp)
+                    .graphicsLayer(scaleX = scale1, scaleY = scale1)
+                    .background(Color.Blue.copy(alpha = 0.6f), shape = CircleShape)
+                    .clip(CircleShape)
+            )
+        }
+        Icon(
+            imageVector = Icons.Default.Favorite,
+            contentDescription = "Voice Input",
+            tint = Color.White,
+            modifier = Modifier.size(50.dp)
+        )
+    }
+}
+
+
+suspend fun ProcessVoiceInput(
+    sharedViewModel: SharedViewModel,
+    navController: NavController,
+    context: Context,
+    query: String
+) {
     val items = mutableListOf<Dishfordb>()
     try {
         val fetchedItems = fetchSuggestionsFromOpenAI(context, query)
@@ -297,7 +530,7 @@ suspend fun ProcessVoiceInput( sharedViewModel: SharedViewModel,navController: N
             items.addAll(distinct)
         }
         Log.d("itemSelection", "Fetched items: $items")
-        sharedViewModel.setItems(items);
+        sharedViewModel.setItems(items)
         navController.navigate("itemSelection")
     } catch (e: Exception) {
         e.printStackTrace()
@@ -401,8 +634,6 @@ fun CategoryBox(categoryName: String, iconResId: Int, onClick: () -> Unit) {
 }
 
 
-
-
 @Composable
 fun WeeklySpecial(
     isDarkTheme: Boolean,
@@ -451,7 +682,6 @@ fun WeeklySpecial(
         }
     }
 }
-
 
 
 @Composable

@@ -59,8 +59,8 @@ import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
+import com.example.parawaleapp.DataClasses.Dishfordb
 import com.example.parawaleapp.R
-import com.example.parawaleapp.database.Dishfordb
 import com.example.parawaleapp.mainScreen.truncateString
 
 @Composable

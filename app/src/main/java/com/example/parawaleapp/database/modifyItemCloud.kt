@@ -18,6 +18,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
+import com.example.parawaleapp.DataClasses.Dishfordb
 
 @Composable
 fun ModifyItemScreen(dish: Dishfordb, onEditClicked: () -> Unit) {

@@ -1,4 +1,4 @@
-package com.example.parawaleapp.sign_in
+package com.example.parawaleapp.DataClasses
 
 data class SignInResult(
     val data: UserData?,
@@ -6,18 +6,23 @@ data class SignInResult(
     var isGoogleSignIn: Boolean = false
 )
 
+
 data class UserAddressDetails(
-    val name: String,
-    val phone: String,
-    val pincode: String,
-    val address: String,
-    val landmark: String,
-    val city: String,
-    val state: String,
+    val LocId: String = "",
+    val name: String = "",
+    val phone: String = "",
+    val pincode: String = "",
+    val address: String = "",
+    val landmark: String = "",
+    val city: String = "",
+    val state: String = "",
+    val latitude: String = "",
+    val longitude: String = "",
     val isHome: Boolean = true,
     val isWork: Boolean = false,
     val isDefault: Boolean = false
 )
+
 
 
 data class UserData(
@@ -29,7 +34,8 @@ data class UserData(
     val isAdmin: Boolean,
     val isVerified: Boolean = false,
     val isMerchant: Boolean = false,
-    var addressDetails: List<UserAddressDetails>? = null
+    var userAddressDetails: List<UserAddressDetails>? = null,
+    var defaultAddress: UserAddressDetails? = null
 )
 
 

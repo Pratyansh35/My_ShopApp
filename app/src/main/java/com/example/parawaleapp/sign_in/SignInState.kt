@@ -1,5 +1,7 @@
 package com.example.parawaleapp.sign_in
 
+import com.example.parawaleapp.DataClasses.UserData
+
 data class SignInState(
     val isLoading: Boolean = false,
     val signInError: String? = null,

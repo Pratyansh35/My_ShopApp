@@ -2,24 +2,22 @@ package com.example.parawaleapp.sign_in
 
 import android.app.Activity
 import android.util.Log
-import androidx.activity.ComponentActivity
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.parawaleapp.DataClasses.SignInResult
+import com.example.parawaleapp.DataClasses.UserData
 import com.example.parawaleapp.Notifications.storeDeviceToken
 import com.example.parawaleapp.database.datareference
-import com.example.parawaleapp.database.img
 import com.google.firebase.FirebaseException
 import com.google.firebase.auth.PhoneAuthCredential
 import com.google.firebase.auth.PhoneAuthOptions
 import com.google.firebase.auth.PhoneAuthProvider
 import com.google.firebase.auth.ktx.auth
-import com.google.firebase.database.values
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.messaging.ktx.messaging
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.await
 import java.util.concurrent.TimeUnit
 
 class SignInViewModel : ViewModel() {

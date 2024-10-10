@@ -36,9 +36,7 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.example.parawaleapp.R
 import com.example.parawaleapp.database.img
-import com.example.parawaleapp.sign_in.UserData
-import com.example.parawaleapp.sign_in.updatePhoneNumberWithOTP
-
+import com.example.parawaleapp.DataClasses.UserData
 
 
 @Composable
