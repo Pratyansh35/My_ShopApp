@@ -3,13 +3,27 @@
   <component name="AppInsightsSettings">
     <option name="tabSettings">
       <map>
+        <entry key="Android Vitals">
+          <value>
+            <InsightsFilterSettings>
+              <option name="connection">
+                <ConnectionSetting>
+                  <option name="appId" value="com.parawale.GrocEase" />
+                </ConnectionSetting>
+              </option>
+              <option name="signal" value="SIGNAL_UNSPECIFIED" />
+              <option name="timeIntervalDays" value="SEVEN_DAYS" />
+              <option name="visibilityType" value="ALL" />
+            </InsightsFilterSettings>
+          </value>
+        </entry>
         <entry key="Firebase Crashlytics">
           <value>
             <InsightsFilterSettings>
               <option name="connection">
                 <ConnectionSetting>
-                  <option name="appId" value="com.example.parawaleapp" />
-                  <option name="mobileSdkAppId" value="1:252813628903:android:c2ce694224054687169942" />
+                  <option name="appId" value="com.parawale.GrocEase" />
+                  <option name="mobileSdkAppId" value="1:252813628903:android:3b75126380f48eb9169942" />
                   <option name="projectId" value="myparawale-app" />
                   <option name="projectNumber" value="252813628903" />
                 </ConnectionSetting>
