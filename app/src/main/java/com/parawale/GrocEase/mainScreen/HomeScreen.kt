@@ -125,7 +125,7 @@ fun HomeScreen(
     lifecycleOwner: LifecycleOwner = LocalLifecycleOwner.current,
     sharedViewModel: SharedViewModel
 ) {
-    var backPressedTime by remember { mutableLongStateOf(0L) }
+
     var voiceInputResult by remember { mutableStateOf("") }
     val suggestions by remember { mutableStateOf(emptyList<Dishfordb>()) }
     var currentLocation by remember { mutableStateOf("Fetching current location...") }
@@ -137,16 +137,7 @@ fun HomeScreen(
     val scope = rememberCoroutineScope()
 
     // Back button handler logic
-    BackHandler {
-        val currentTime = System.currentTimeMillis()
-        if (currentTime - backPressedTime > 2000) {
-            Toast.makeText(context, "Press again to exit", Toast.LENGTH_SHORT).show()
-            backPressedTime = currentTime
-        } else {
-            context as Activity
-            context.finish()
-        }
-    }
+
 
     val speechRecognizer = remember { SpeechRecognizer.createSpeechRecognizer(context) }
     val listening = remember { mutableStateOf(false) }

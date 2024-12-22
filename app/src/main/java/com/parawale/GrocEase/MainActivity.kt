@@ -16,6 +16,7 @@ import SettingScreen
 import User_Location
 import ViewOrder
 import android.Manifest
+import android.app.Activity
 import android.content.pm.PackageManager
 import android.location.Location
 import android.os.Build
@@ -23,6 +24,7 @@ import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.result.IntentSenderRequest
@@ -32,6 +34,7 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.BottomNavigation
 import androidx.compose.material.BottomNavigationItem
 import androidx.compose.material.Icon
@@ -42,10 +45,12 @@ import androidx.compose.material.Text
 import androidx.compose.material.rememberScaffoldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableDoubleStateOf
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -53,9 +58,13 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.input.nestedscroll.NestedScrollSource.Companion.SideEffect
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.core.content.ContextCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -107,6 +116,15 @@ import com.parawale.GrocEase.ui.theme.MyAppTheme
 import com.google.android.gms.auth.api.identity.Identity
 import com.google.firebase.FirebaseApp
 import com.google.gson.Gson
+import com.parawale.GrocEase.DataClasses.LiveLocation
+import com.parawale.GrocEase.DataClasses.Merchant
+import com.parawale.GrocEase.DataClasses.MerchantAddress
+import com.parawale.GrocEase.database.forMerchants.fetchMerchantItems
+import com.parawale.GrocEase.database.forMerchants.getAllMerchants
+import com.parawale.GrocEase.mainScreen.diffLayouts.MerchantCard
+import com.parawale.GrocEase.mainScreen.diffLayouts.MerchantsGrid
+//import com.parawale.GrocEase.mainScreen.diffLayouts.MerchantsList
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
@@ -134,6 +152,7 @@ class MainActivity : ComponentActivity() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             checkNotificationPermission()
         }
+
         setContent {
             MyApp()
         }
@@ -163,17 +182,22 @@ class MainActivity : ComponentActivity() {
             val navController = rememberNavController()
             val context = LocalContext.current
 
+
             var userData by remember { mutableStateOf<UserData?>(null) }
 
             Log.d("MainActivity userData", "User data: $userData")
             userData = getUserFromSharedPreferences(context)
             val userState = remember { mutableStateOf(userData) }
+            val insetsController = WindowInsetsControllerCompat(window, window.decorView)
+
+
             LaunchedEffect(isSystemDark) {
                 isDarkTheme = isSystemDark
             }
-
-
-
+            LaunchedEffect(isDarkTheme) {
+                window.statusBarColor = if (isDarkTheme)   Color(0xFF000000).toArgb() else Color(0xFFFFFFFF).toArgb()
+                insetsController.isAppearanceLightStatusBars = !isDarkTheme
+            }
 
             LaunchedEffect(key1 = userState.value) {
                 if (userState.value != null) {
@@ -184,7 +208,7 @@ class MainActivity : ComponentActivity() {
                         Toast.LENGTH_SHORT
                     ).show()
 
-                    navController.navigate("MainScreen") {
+                    navController.navigate("MerchantScreen") {
                         popUpTo("sign_in") { inclusive = true }
                     }
                 }
@@ -192,16 +216,52 @@ class MainActivity : ComponentActivity() {
 
             NavHost(
                 navController = navController,
-                startDestination = if (userState.value != null) "MainScreen" else "sign_in"
+                startDestination = if (userState.value != null) "MerchantScreen" else "sign_in"
             ) {
+
                 composable("sign_in") { SignIn(navController, onDishDataChange = { dishData = it }) }
-                composable("MainScreen") {
+
+                composable("MerchantScreen"){
+                    val merchants = remember { mutableStateOf<List<Merchant>>(emptyList()) }
+
+                    var backPressedTime by remember { mutableLongStateOf(0L) }
+                    BackHandler {
+                        val currentTime = System.currentTimeMillis()
+                        if (currentTime - backPressedTime > 2000) {
+                            Toast.makeText(context, "Press again to exit", Toast.LENGTH_SHORT).show()
+                            backPressedTime = currentTime
+                        } else {
+                            context as Activity
+                            context.finish()
+                        }
+                    }
+                    LaunchedEffect(Unit) {
+                            val fetchedMerchants = getAllMerchants()
+                            merchants.value = fetchedMerchants
+                    }
+
+                    MerchantsGrid(
+                        merchants = merchants.value,
+                        onViewItemsClick = { merchant ->
+                            navController.navigate("MainScreen/${merchant}")
+                        }
+                    )
+                }
+                composable("MainScreen/{merchant}"){ it ->
                     val viewModel = viewModel<SignInViewModel>()
                     val state by viewModel.state.collectAsStateWithLifecycle()
+
+                    val items = remember { mutableStateOf<List<Dishfordb>>(emptyList()) }
+                    val merchant = it.arguments?.getString("merchant")
+
+                    LaunchedEffect(merchant) {
+                        items.value = fetchMerchantItems(merchant.toString())
+
+                    }
                     MainScreen(
                         navController,
                         googleAuthUiClient = googleAuthUiClient,
-                        dishData = dishData,
+                        dishData = items.value,
                         isDarkTheme = { isDarkTheme = it },
                         isDark = isDarkTheme,
                         state = state,
