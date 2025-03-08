@@ -19,5 +19,4 @@ val CustomTypography = Typography(
         fontWeight = FontWeight.Bold,
         fontSize = 24.sp
     ),
-    // Define other text styles as needed
 )

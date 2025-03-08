@@ -23,7 +23,7 @@ suspend fun getAllMerchants(): List<Merchant> {
                 if (merchant != null) {
                     merchantsList.add(merchant)
                 }
-                Log.e("FirebaseData", "Items for merchant: ${merchant?.items}")
+                Log.d("FirebaseData", "Items for merchant: ${merchant?.items}")
             } catch (e: Exception) {
                 Log.e("FirebaseData", "Error parsing merchant: ${e.message}")
 
@@ -40,7 +40,7 @@ suspend fun getAllMerchants(): List<Merchant> {
 
 suspend fun fetchMerchantItems(merchantKey: String): List<Dishfordb> {
     val database = Firebase.database.reference
-    val itemsRef = database.child("merchants").child(merchantKey).child("items")
+    val itemsRef = database.child("merchants").child("Items")
     val dishesList = mutableListOf<Dishfordb>()
 
     return try {

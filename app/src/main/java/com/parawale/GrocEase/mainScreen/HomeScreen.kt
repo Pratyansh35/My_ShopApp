@@ -1,6 +1,5 @@
 package com.parawale.GrocEase.mainScreen
 
-
 import android.Manifest
 import android.app.Activity
 import android.content.Context
@@ -11,7 +10,6 @@ import android.os.Vibrator
 import android.speech.SpeechRecognizer
 import android.util.Log
 import android.widget.Toast
-import androidx.activity.compose.BackHandler
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
@@ -62,7 +60,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -98,12 +95,12 @@ import com.parawale.GrocEase.R
 import com.parawale.GrocEase.ViewModels.SharedViewModel
 import com.parawale.GrocEase.VoiceRequests.startListening
 import com.parawale.GrocEase.VoiceRequests.stopListening
-import com.parawale.GrocEase.mainScreen.diffLayouts.GridLayoutItems
-import com.parawale.GrocEase.mainScreen.diffLayouts.LinearLayoutItems
 import com.parawale.GrocEase.mainScreen.UpperPanels.UpperPanel
 import com.parawale.GrocEase.mainScreen.UpperPanels.UpperPanel2
 import com.parawale.GrocEase.mainScreen.UpperPanels.UpperPanel3
 import com.parawale.GrocEase.mainScreen.diffLayouts.DishDetailsSheet
+import com.parawale.GrocEase.mainScreen.diffLayouts.GridLayoutItems
+import com.parawale.GrocEase.mainScreen.diffLayouts.LinearLayoutItems
 import com.parawale.GrocEase.ui.theme.MyAppTheme
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -135,9 +132,6 @@ fun HomeScreen(
 
     val sheetState = rememberModalBottomSheetState(initialValue = ModalBottomSheetValue.Hidden)
     val scope = rememberCoroutineScope()
-
-    // Back button handler logic
-
 
     val speechRecognizer = remember { SpeechRecognizer.createSpeechRecognizer(context) }
     val listening = remember { mutableStateOf(false) }

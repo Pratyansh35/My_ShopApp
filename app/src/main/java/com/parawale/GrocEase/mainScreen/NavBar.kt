@@ -41,10 +41,6 @@ fun NavBar(
     val cartIcon = if (isDarkTheme) R.drawable.ic_cart_dark else R.drawable.ic_cart_light
     val menuIcon = if (isDarkTheme) R.drawable.ic_menu_light else R.drawable.ic_menu_dark
 
-    Log.d("NavBar", "isDarkTheme: $isDarkTheme")
-    Log.d("NavBar", "cartIcon: ${if (isDarkTheme) "ic_cart_dark" else "ic_cart_light"}")
-    Log.d("NavBar", "menuIcon: ${if (isDarkTheme) "ic_menu_dark" else "ic_menu_light"}")
-
     Row(
         horizontalArrangement = Arrangement.SpaceBetween,
         modifier = Modifier

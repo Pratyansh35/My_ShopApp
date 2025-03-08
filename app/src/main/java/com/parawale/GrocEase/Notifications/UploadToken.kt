@@ -17,4 +17,4 @@ fun removeDeviceToken(email: String?) {
                 datareference.child("UsersToken").child(formattedEmail).child("/deviceToken")
             tokenRef.removeValue()
         }
-    }
+}

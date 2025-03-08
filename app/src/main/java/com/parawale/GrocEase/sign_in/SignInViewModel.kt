@@ -26,7 +26,7 @@ class SignInViewModel : ViewModel() {
     val phoneAuthCallbacks = object : PhoneAuthProvider.OnVerificationStateChangedCallbacks() {
         override fun onVerificationCompleted(credential: PhoneAuthCredential) {
             Log.d("SignInViewModel", "onVerificationCompleted: $credential")
-            linkPhoneAuthCredential(credential)
+            signInWithPhoneAuthCredential(credential)
         }
 
         override fun onVerificationFailed(e: FirebaseException) {
@@ -85,10 +85,6 @@ class SignInViewModel : ViewModel() {
             }
         }
     }
-
-
-
-
 
 
     fun onSignInResult(result: SignInResult) {

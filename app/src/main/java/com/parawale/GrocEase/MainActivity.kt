@@ -34,7 +34,6 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.BottomNavigation
 import androidx.compose.material.BottomNavigationItem
 import androidx.compose.material.Icon
@@ -45,7 +44,6 @@ import androidx.compose.material.Text
 import androidx.compose.material.rememberScaffoldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableDoubleStateOf
@@ -60,7 +58,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
-import androidx.compose.ui.input.nestedscroll.NestedScrollSource.Companion.SideEffect
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.core.content.ContextCompat
@@ -72,10 +69,14 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.google.android.gms.auth.api.identity.Identity
+import com.google.firebase.FirebaseApp
+import com.google.gson.Gson
 import com.parawale.GrocEase.Ai.ItemSelectionPopup
 import com.parawale.GrocEase.AppLayout.AppLayoutScreen
 import com.parawale.GrocEase.ClothesScreen.ClothesScreen
 import com.parawale.GrocEase.DataClasses.Dishfordb
+import com.parawale.GrocEase.DataClasses.Merchant
 import com.parawale.GrocEase.DataClasses.UserAddressDetails
 import com.parawale.GrocEase.DataClasses.UserData
 import com.parawale.GrocEase.ElectronicScreen.ElectronicHomePage
@@ -97,6 +98,7 @@ import com.parawale.GrocEase.cartScreen.ConfirmCart
 import com.parawale.GrocEase.cartScreen.PreviousOrders
 import com.parawale.GrocEase.database.ManageItem
 import com.parawale.GrocEase.database.clearDataFromSharedPreferences
+import com.parawale.GrocEase.database.forMerchants.getAllMerchants
 import com.parawale.GrocEase.database.getAllDishes
 import com.parawale.GrocEase.database.getUserFromSharedPreferences
 import com.parawale.GrocEase.database.saveUserToSharedPreferences
@@ -107,24 +109,13 @@ import com.parawale.GrocEase.mainScreen.HomeScreen
 import com.parawale.GrocEase.mainScreen.ItemDescription
 import com.parawale.GrocEase.mainScreen.MenuListScreen
 import com.parawale.GrocEase.mainScreen.NavBar
+import com.parawale.GrocEase.mainScreen.diffLayouts.MerchantsGrid
 import com.parawale.GrocEase.printer.BluetoothScreen
 import com.parawale.GrocEase.sign_in.GoogleAuthUiClient
 import com.parawale.GrocEase.sign_in.SignInScreen
 import com.parawale.GrocEase.sign_in.SignInState
 import com.parawale.GrocEase.sign_in.SignInViewModel
 import com.parawale.GrocEase.ui.theme.MyAppTheme
-import com.google.android.gms.auth.api.identity.Identity
-import com.google.firebase.FirebaseApp
-import com.google.gson.Gson
-import com.parawale.GrocEase.DataClasses.LiveLocation
-import com.parawale.GrocEase.DataClasses.Merchant
-import com.parawale.GrocEase.DataClasses.MerchantAddress
-import com.parawale.GrocEase.database.forMerchants.fetchMerchantItems
-import com.parawale.GrocEase.database.forMerchants.getAllMerchants
-import com.parawale.GrocEase.mainScreen.diffLayouts.MerchantCard
-import com.parawale.GrocEase.mainScreen.diffLayouts.MerchantsGrid
-//import com.parawale.GrocEase.mainScreen.diffLayouts.MerchantsList
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
@@ -149,9 +140,7 @@ class MainActivity : ComponentActivity() {
         FirebaseApp.initializeApp(this)
         createNotificationChannel(this)
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            checkNotificationPermission()
-        }
+        checkNotificationPermission()
 
         setContent {
             MyApp()
@@ -201,7 +190,7 @@ class MainActivity : ComponentActivity() {
 
             LaunchedEffect(key1 = userState.value) {
                 if (userState.value != null) {
-                    dishData = getAllDishes().orEmpty()
+                    dishData = getAllDishes()
                     Toast.makeText(
                         applicationContext,
                         "Welcome back, ${userState.value?.userName}",
@@ -255,7 +244,7 @@ class MainActivity : ComponentActivity() {
                     val merchant = it.arguments?.getString("merchant")
 
                     LaunchedEffect(merchant) {
-                        items.value = fetchMerchantItems(merchant.toString())
+                        items.value = getAllDishes()
 
                     }
                     MainScreen(
@@ -295,7 +284,7 @@ class MainActivity : ComponentActivity() {
 
                 onDishDataChange(getAllDishes())
                 saveUserToSharedPreferences(context, state.userData)
-                navController.navigate("MainScreen") {
+                navController.navigate("MerchantScreen") {
                     popUpTo("sign_in") { inclusive = true }
                 }
                 viewModel.resetState()
@@ -417,7 +406,7 @@ fun MainScreen(
                 )
             },
             bottomBar = { MyBottomNavigation(navController = innerNavController, userData ) }
-        ) { paddingValues ->
+        ) {  paddingValues ->
             Box(Modifier.padding(paddingValues)) {
                 NavHost(navController = innerNavController, startDestination = Home.route) {
                     composable(Home.route) {

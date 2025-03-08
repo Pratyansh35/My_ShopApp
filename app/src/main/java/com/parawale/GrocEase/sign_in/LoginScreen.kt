@@ -41,6 +41,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -82,9 +83,7 @@ fun SignInScreen(
     val context = LocalContext.current as Activity
     val focusRequesters = remember { List(6) { FocusRequester() } }
     val isFocusOnTextField = remember { mutableStateOf(false) }
-
-    var backPressedTime by remember { mutableStateOf(0L) }
-
+    var backPressedTime by remember { mutableLongStateOf(0L) }
     LaunchedEffect(key1 = state.signInError) {
         state.signInError?.let {
             Toast.makeText(context, it, Toast.LENGTH_LONG).show()
@@ -148,7 +147,7 @@ fun SignInScreen(
                     Text(
                         text = "keep ordering amazing",
                         fontSize = 24.sp,
-                        fontWeight = FontWeight.Bold,
+                        fontWeight = FontWeight.Bold, 
                         color = Color.Black,
                         modifier = Modifier
                             .padding(bottom = if (isFocusOnTextField.value) WindowInsets.ime.asPaddingValues().calculateBottomPadding() + 20.dp else 20.dp)

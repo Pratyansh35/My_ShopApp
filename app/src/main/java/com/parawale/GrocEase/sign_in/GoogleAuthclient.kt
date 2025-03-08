@@ -18,6 +18,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.auth.PhoneAuthProvider
 import com.google.firebase.auth.auth
+import com.parawale.GrocEase.BuildConfig
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.tasks.await
 import java.util.concurrent.CancellationException
@@ -35,7 +36,7 @@ class GoogleAuthUiClient(
     private val oneTapClient: SignInClient
 ) {
     private val auth = Firebase.auth
-
+    private val webClientId = BuildConfig.WEB_CLIENTID
     suspend fun signIn(): IntentSender? {
         return try {
             val result = oneTapClient.beginSignIn(buildSignInRequest()).await()
@@ -127,7 +128,7 @@ class GoogleAuthUiClient(
                 GoogleIdTokenRequestOptions.Builder()
                     .setSupported(true)
                     .setFilterByAuthorizedAccounts(false)
-                    .setServerClientId(context.getString(R.string.Web_clientId))
+                    .setServerClientId(webClientId)
                     .build()
             )
             .setAutoSelectEnabled(true)
