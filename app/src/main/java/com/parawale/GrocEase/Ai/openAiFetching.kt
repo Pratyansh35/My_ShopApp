@@ -2,12 +2,8 @@ package com.parawale.GrocEase.Ai
 
 import android.content.Context
 import android.util.Log
-import androidx.core.os.BuildCompat
-import com.google.firebase.BuildConfig
 import com.parawale.GrocEase.DataClasses.Dishfordb
-import com.parawale.GrocEase.R
 import com.parawale.GrocEase.database.datareference
-import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -27,7 +23,7 @@ import java.io.IOException
 import java.util.Locale
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
-
+import com.parawale.GrocEase.BuildConfig
 suspend fun fetchCategoriesAndNamesFromFirebase(): Pair<List<String>, List<String>> {
     val categories = mutableSetOf<String>()
     val names = mutableSetOf<String>()
@@ -61,7 +57,7 @@ suspend fun fetchCategoriesAndNamesFromFirebase(): Pair<List<String>, List<Strin
 
 
 suspend fun fetchSuggestionsFromOpenAI(context: Context, query: String): List<Dishfordb>? {
-    val apiKey = com.parawale.GrocEase.BuildConfig.OPENAI_API_KEY
+    val apiKey = BuildConfig.OPENAI_API_KEY
 
     val (categories, names) = fetchCategoriesAndNamesFromFirebase()
     Log.d("FetchSuggestions", "Fetched Categories: $categories, Names: $names")
