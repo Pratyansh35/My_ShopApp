@@ -91,7 +91,7 @@ fun barCodeScreen(showItemScreen: (Dishfordb) -> Unit, DishData: List<Dishfordb>
                 try {
                     val cameraProvider: ProcessCameraProvider = cameraProviderFuture.get()
                     val preview = Preview.Builder().build().also {
-                        it.setSurfaceProvider(previewView.surfaceProvider)
+                        it.surfaceProvider = previewView.surfaceProvider
                     }
 
                     val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
