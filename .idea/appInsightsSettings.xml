@@ -23,7 +23,7 @@
               <option name="connection">
                 <ConnectionSetting>
                   <option name="appId" value="com.parawale.GrocEase" />
-                  <option name="mobileSdkAppId" value="1:252813628903:android:3b75126380f48eb9169942" />
+                  <option name="mobileSdkAppId" value="1:252813628903:android:a9f061159f323890169942" />
                   <option name="projectId" value="myparawale-app" />
                   <option name="projectNumber" value="252813628903" />
                 </ConnectionSetting>

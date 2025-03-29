@@ -66,6 +66,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import com.parawale.GrocEase.R
+import androidx.core.net.toUri
 
 suspend fun getRelatedItems(query: String): List<Dishfordb>? {
     return try {
@@ -208,7 +209,7 @@ fun AddItemScreen() {
                             weight = suggestion.weight
                             itemmrp = suggestion.mrp.removePrefix("₹")
                             itembarcode = suggestion.barcode
-                            images = suggestion.imagesUrl.map { Uri.parse(it) }
+                            images = suggestion.imagesUrl.map { it.toUri() }
                             suggestions = emptyList() // Clear suggestions after selection
                             focusManager.clearFocus()
                         },
