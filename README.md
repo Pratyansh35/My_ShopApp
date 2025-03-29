@@ -16,14 +16,9 @@ GrocMerchants is a modern Android application built with **Jetpack Compose** for
 Below are sample UI screenshots from the app:
 
 <img src="images/ss1.png" width="250"> <img src="images/ss2.png" width="250"> <img src="images/ss3.png" width="250">
-<img src="images/ss2.png" width="250"> <img src="images/ss2.png" width="250"> <img src="images/ss3.png" width="250">
-<img src="images/ss3.png" width="250"> <img src="images/ss2.png" width="250"> <img src="images/ss3.png" width="250">
-<img src="images/ss4.png" width="250"> <img src="images/ss2.png" width="250"> <img src="images/ss3.png" width="250">
-<img src="images/ss5.png" width="250"> <img src="images/ss2.png" width="250"> <img src="images/ss3.png" width="250">
-<img src="images/ss6.png" width="250"> <img src="images/ss2.png" width="250"> <img src="images/ss3.png" width="250">
-<img src="images/ss7.png" width="250"> <img src="images/ss5.png" width="250"> <img src="images/ss6.png" width="250">
-<img src="images/ss8.png" width="250"> <img src="images/ss8.png" width="250"> <img src="images/ss9.png" width="250">
-<img src="images/ss9.png" width="250"> <img src="images/ss2.png" width="250"> <img src="images/ss3.png" width="250">
+<img src="images/ss4.png" width="250"> <img src="images/ss5.png" width="250"> <img src="images/ss6.png" width="250">
+<img src="images/ss7.png" width="250"> <img src="images/ss8.png" width="250"> <img src="images/ss9.png" width="250">
+
 ## Tech Stack
 
 - **Kotlin** – Primary language
@@ -44,7 +39,7 @@ Below are sample UI screenshots from the app:
 
 1. Clone the repository:
    ```sh
-   git clone https://github.com/yourusername/GrocMerchants.git
+   git clone https://github.com/Pratyansh/My_ShopApp.git
    ```
 2. Open the project in **Android Studio**.
 3. Sync Gradle and resolve dependencies.
