@@ -38,6 +38,7 @@ class GoogleAuthUiClient(
     private val auth = Firebase.auth
     private val webClientId = BuildConfig.WEB_CLIENTID
     suspend fun signIn(): IntentSender? {
+
         return try {
             val result = oneTapClient.beginSignIn(buildSignInRequest()).await()
             result?.pendingIntent?.intentSender

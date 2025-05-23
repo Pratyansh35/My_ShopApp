@@ -238,7 +238,7 @@ fun ConfirmCart(navController: NavController? = null, userData: UserData?, cartI
             Button(
                 onClick = {
                     //sendOrders(context , userData = userData, cartItems = cartItems, totalMrp = totalmrp ,total = total)
-                    if (selectedAddress == null){
+                    if(selectedAddress == null){
                         navController?.navigate("mapScreen")
                     }else {
                         navController?.navigate("PaymentScreen/$totalmrp/$total")

@@ -230,24 +230,28 @@ class MainActivity : ComponentActivity() {
                     }
 
                     MerchantsGrid(
+
                         merchants = merchants.value,
-                        onViewItemsClick = { merchant ->
-                            navController.navigate("MainScreen/${merchant}")
+                        onViewItemsClick = { merchant , merchantCode->
+                            navController.navigate("MainScreen/${merchant}/${merchantCode}") {
+                                popUpTo("MerchantScreen") { inclusive = true }
+                            }
                         }
                     )
                 }
-                composable("MainScreen/{merchant}"){ it ->
+                composable("MainScreen/{merchant}/{merchantCode}"){ it ->
                     val viewModel = viewModel<SignInViewModel>()
                     val state by viewModel.state.collectAsStateWithLifecycle()
 
                     val items = remember { mutableStateOf<List<Dishfordb>>(emptyList()) }
                     val merchant = it.arguments?.getString("merchant")
-
+                    val merchantCode = it.arguments?.getString("merchantCode")
                     LaunchedEffect(merchant) {
                         items.value = getAllDishes()
 
                     }
                     MainScreen(
+                        merchantCode = merchantCode ?:"",
                         navController,
                         googleAuthUiClient = googleAuthUiClient,
                         dishData = items.value,
@@ -327,6 +331,7 @@ class MainActivity : ComponentActivity() {
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @Composable
 fun MainScreen(
+    merchantCode: String,
     navController: NavController,
     googleAuthUiClient: GoogleAuthUiClient,
     dishData: List<Dishfordb>,
@@ -516,7 +521,8 @@ fun MainScreen(
                                 state = state,
                                 linkWithOtpClick = linkWithOtpClick,
                                 onSendVerificationCodeClick = onSendVerificationCodeClick,
-                                location = selectedAddress
+                                location = selectedAddress,
+                                merchantCode = merchantCode
                             )
                         }
                     }

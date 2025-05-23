@@ -42,13 +42,13 @@ import com.parawale.GrocEase.R
 @Composable
 fun MerchantCard(
     merchant: Merchant,
-    onViewItemsClick: (String) -> Unit
+    onViewItemsClick: (String, String) -> Unit
 ) {
     Card(
         modifier = Modifier
             .padding(8.dp)
             .width(180.dp)
-            .clickable { onViewItemsClick(merchant.contact) },
+            .clickable { onViewItemsClick(merchant.contact, merchant.merchantCode) },
         shape = RoundedCornerShape(16.dp),
         elevation = 8.dp
     ) {
@@ -122,7 +122,7 @@ fun MerchantCard(
             }
             // Action Button
             Button(
-                onClick = { onViewItemsClick(merchant.contact) },
+                onClick = { onViewItemsClick(merchant.contact, merchant.merchantCode) },
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(8.dp)
@@ -137,7 +137,7 @@ fun MerchantCard(
 @Composable
 fun MerchantsGrid(
     merchants: List<Merchant>,
-    onViewItemsClick: (String) -> Unit
+    onViewItemsClick: (String, String) -> Unit
 ) {
     LazyVerticalGrid(
         columns = GridCells.Fixed(2), // 2 cards per row

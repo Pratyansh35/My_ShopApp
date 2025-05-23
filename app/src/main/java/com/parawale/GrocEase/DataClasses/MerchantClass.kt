@@ -1,6 +1,7 @@
 package com.parawale.GrocEase.DataClasses
 
 data class Merchant(
+    val merchantCode: String = "",
     val name: String = "",
     val category: String = "",
     val contact: String = "",

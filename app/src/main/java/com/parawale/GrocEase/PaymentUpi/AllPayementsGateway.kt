@@ -51,16 +51,16 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.lifecycleScope
+import com.google.android.exoplayer2.util.Log
 import com.parawale.GrocEase.DataClasses.Dishfordb
 import com.parawale.GrocEase.DataClasses.UserAddressDetails
+import com.parawale.GrocEase.DataClasses.UserData
 import com.parawale.GrocEase.Notifications.sendNotificationToUser
 import com.parawale.GrocEase.R
 import com.parawale.GrocEase.SendViewOrders.sendOrders
 import com.parawale.GrocEase.sign_in.PhoneNumberLinkingDialog
 import com.parawale.GrocEase.sign_in.SignInState
 import com.parawale.GrocEase.sign_in.SignInViewModel
-import com.parawale.GrocEase.DataClasses.UserData
-import com.google.android.exoplayer2.util.Log
 import kotlinx.coroutines.launch
 import java.util.UUID
 
@@ -74,9 +74,11 @@ fun PaymentScreenLayout(
     state: SignInState,
     linkWithOtpClick: (String) -> Unit = {},
     onSendVerificationCodeClick: (String) -> Unit,
-    location: UserAddressDetails?
+    location: UserAddressDetails?,
+    merchantCode: String
 ) {
     val merchantId = "PGTESTPAYUAT"
+
     val context = LocalContext.current
     var specialCode by remember { mutableStateOf("") }
     var selectedPercentage by remember { mutableFloatStateOf(10f) }
@@ -244,7 +246,6 @@ fun PaymentScreenLayout(
                     .padding(start = 16.dp, end = 16.dp)
                     .background(color = MaterialTheme.colors.background)
             ) {
-
                     UPIIconButton(
                         specialCode = specialCode,
                         context = context,
@@ -253,6 +254,7 @@ fun PaymentScreenLayout(
                         totalMrp = totalMrp,
                         totalValue = totalValue,
                         merchantId = merchantId,
+                        merchantCode = merchantCode,
                         iconRes = R.drawable.bhimupi,
                         onClick = { vpa, name, note, merchantTransactionId, transactionUrl ->
                             SignInViewModel().startLoading()
@@ -282,7 +284,8 @@ fun PaymentScreenLayout(
                             totalMrp = totalMrp,
                             totalValue = totalValue,
                             transactionId = System.currentTimeMillis().toString(),
-                            merchantCode = merchantId,
+                            merchantId = merchantId,
+                            merchantCode = merchantCode,
                             amountReceived = "0",
                             amountRemaining = totalValue.toString(),
                             onPhoneLinkRequired = { showPhoneLinkDialog = true },
@@ -342,6 +345,7 @@ fun UPIIconButton(
     totalMrp: Double,
     totalValue: Double,
     merchantId: String,
+    merchantCode: String,
     iconRes: Int,
     onClick: (vpa: String, name: String, note: String, transactionId: String, transactionUrl: String) -> Unit,
     onPhoneLinkRequired: () -> Unit,
@@ -359,7 +363,8 @@ fun UPIIconButton(
                 totalMrp,
                 totalValue,
                 System.currentTimeMillis().toString(),
-                merchantId,
+                merchantId = merchantId,
+                merchantCode = merchantCode,
                 amountReceived = "0",
                 amountRemaining = totalValue.toString(),
                 onPhoneLinkRequired = onPhoneLinkRequired,

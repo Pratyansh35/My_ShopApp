@@ -1,15 +1,17 @@
 package com.parawale.GrocEase.SendViewOrders
 
 import android.content.Context
+import android.os.Build
 import android.util.Log
 import android.widget.Toast
+import androidx.annotation.RequiresApi
 import com.parawale.GrocEase.DataClasses.Dishfordb
 import com.parawale.GrocEase.DataClasses.UserAddressDetails
 import com.parawale.GrocEase.DataClasses.UserData
 import com.parawale.GrocEase.database.datareference
 import com.parawale.GrocEase.sign_in.SignInViewModel
 
-
+@Suppress("MissingPermission")
 fun sendOrders(
     context: Context,
     userData: UserData?,
@@ -18,6 +20,7 @@ fun sendOrders(
     totalValue: Double,
     transactionId: String,
     merchantCode: String,
+    merchantId: String,
     amountReceived: String,
     amountRemaining: String,
     onPhoneLinkRequired: () -> Unit,
@@ -26,6 +29,7 @@ fun sendOrders(
     location: UserAddressDetails?
 ) {
     val merchantEmail = "pratyansh35@gmail.com"
+
     if (userData == null) {
         Toast.makeText(context, "Please Sign In", Toast.LENGTH_SHORT).show()
         return
@@ -34,47 +38,81 @@ fun sendOrders(
         Toast.makeText(context, "Cart is Empty", Toast.LENGTH_SHORT).show()
         return
     }
-    if(location == null){
-       onAddressRequired()
+    if (location == null) {
+        onAddressRequired()
+        return
     }
 
-//    if (userData.userPhoneNumber.isNullOrEmpty()) {
-//        // Show linking dialog
-//        onPhoneLinkRequired()
-//        return
-//    }
+    val username = userData.userName ?: "N/A"
+    val userPhone = userData.userPhoneNumber ?: "N/A"
+    val useremail = userData.userEmail?.replace(".", ",") ?: "N/A"
 
+    val currentTime = java.time.ZonedDateTime.now(java.time.ZoneOffset.UTC).toString()
 
-    val username = userData.userName
-    val useremail = userData.userEmail?.replace(
-        ".",
-        ","
-    ) // Replace '.' with ',' to avoid issues in Firebase keys
-
-    val orderDetails = mapOf(
-        "location" to location,
-        "totalMrp" to totalMrp,
-        "total" to totalValue,
-        "items" to cartItems,
-        "Order Status" to "Pending",
-        "Transaction ID" to transactionId,
-        "Merchant Code" to merchantCode,
-        "Amount received" to amountReceived,
-        "Amount remaining" to amountRemaining
+    val orderStatusHistory = listOf(
+        mapOf(
+            "status" to "PENDING",
+            "updatedAt" to currentTime,
+            "updatedBy" to "Customer"
+        )
     )
 
-    useremail?.let {
-        val userRef = datareference.child("OnlineOrders").child(it)
+    val paymentDetails = mapOf(
+        "amountReceived" to amountReceived.replace("₹", "").toDoubleOrNull(),
+        "amountRemaining" to amountRemaining.replace("₹", "").toDoubleOrNull(),
+        "paymentMode" to "Cash",
+        "paymentStatus" to "PENDING"
+    )
 
-        userRef.child("username").setValue(username)
-        userRef.child("contactno").setValue(userData.userPhoneNumber)
-        userRef.child("orders").child(transactionId).setValue(orderDetails).addOnSuccessListener {
-                Toast.makeText(context, "Order Placed Successfully", Toast.LENGTH_SHORT).show()
-                SignInViewModel().stopLoading()
-                onSuccessSendNotification()
-            }.addOnFailureListener { exception ->
-                Toast.makeText(context, exception.message, Toast.LENGTH_SHORT).show()
-                Log.d("booking", "sendOrders: ${exception.message}")
-            }
+    val customerDetails = mapOf(
+        "customerName" to username,
+        "customerPhone" to userPhone,
+        "customerEmail" to userData.userEmail,
+        "customerAddress" to location.address,
+        "latitude" to location.latitude.toDoubleOrNull(),
+        "longitude" to location.longitude.toDoubleOrNull()
+    )
+
+    // Convert Dishfordb to OrderedItem manually
+    val orderedItems = cartItems.map {
+        mapOf(
+            "productId" to (it.barcode ?: ""),
+            "variantId" to (it.barcode+3 ?: ""),
+            "name" to (it.name ?: ""),
+            "brand" to (it.mainCategory ?: ""),
+            "count" to it.count,
+            "price" to it.price.toString().replace("₹", "").toDoubleOrNull() ,
+            "mrp" to it.mrp.toString().replace("₹", "").toDoubleOrNull()
+        )
     }
+
+    val orderDetails = mapOf(
+        "customerDetails" to customerDetails,
+        "totalMRP" to totalMrp,
+        "totalPrice" to totalValue,
+        "orderedItems" to orderedItems,
+        "orderStatus" to "PENDING",
+        "orderStatusHistory" to orderStatusHistory,
+        "transactionId" to transactionId,
+        "merchantCode" to merchantId,
+        "paymentDetails" to paymentDetails,
+        "date" to currentTime.substringBefore("T"),
+        "time" to currentTime
+    )
+
+    val merchantOrdersRef = datareference
+        .child("merchants")
+        .child(merchantCode)
+        .child("orders")
+
+    merchantOrdersRef.child(transactionId).setValue(orderDetails)
+        .addOnSuccessListener {
+            Toast.makeText(context, "Order Placed Successfully", Toast.LENGTH_SHORT).show()
+            SignInViewModel().stopLoading()
+            onSuccessSendNotification()
+        }
+        .addOnFailureListener { exception ->
+            Toast.makeText(context, exception.message, Toast.LENGTH_SHORT).show()
+            Log.d("sendOrders", "Error: ${exception.message}")
+        }
 }

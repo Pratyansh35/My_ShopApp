@@ -34,7 +34,7 @@ android {
         buildConfigField("String", "OPENAI_API_KEY", "\"" + localProperties['OPENAI_API_KEY'] + "\"")
         buildConfigField("String", "OPENAI_ASSISTANT", "\"" + localProperties['OPENAI_ASSISTANT'] + "\"")
         buildConfigField("String", "FIREBASE_MESSAGE_URL", "\"" + localProperties['FIREBASE_MESSAGE_URL'] + "\"")
-
+        resValue "string", "google_maps_key", "\"${localProperties['GOOGLE_MAPS_API_KEY']}\""
     }
 
     buildToolsVersion = "34.0.0"

@@ -20,19 +20,22 @@ suspend fun getAllMerchants(): List<Merchant> {
         for (childSnapshot in snapshot.children) {
             try {
                 val merchant = childSnapshot.getValue(Merchant::class.java)
-                if (merchant != null) {
-                    merchantsList.add(merchant)
+                val merchantCode = childSnapshot.key // <-- key like "7007254934"
+
+                if (merchant != null && merchantCode != null) {
+                    // Create a new Merchant object with the key injected
+                    val updatedMerchant = merchant.copy(merchantCode = merchantCode)
+                    Log.d("FirebaseData", "Merchant: $updatedMerchant")
+                    merchantsList.add(updatedMerchant)
+
                 }
-                Log.d("FirebaseData", "Items for merchant: ${merchant?.items}")
             } catch (e: Exception) {
                 Log.e("FirebaseData", "Error parsing merchant: ${e.message}")
-
             }
         }
         merchantsList
     } catch (e: Exception) {
         Log.e("FirebaseData", "Error fetching merchants: ${e.message}")
-
         emptyList()
     }
 }
